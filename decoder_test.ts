@@ -29,6 +29,12 @@ test(function decodeShortUintInvalid() {
   assertThrows(() => createDecoder(new Uint8Array([0])).decodeShortUint());
 });
 
+test(function decodeLongUint() {
+  assertEquals(createDecoder(new Uint8Array([0, 0, 0, 0])).decodeLongUint(), 0);
+  assertEquals(createDecoder(new Uint8Array([0, 0, 0, 137])).decodeLongUint(), 137);
+  assertEquals(createDecoder(new Uint8Array([0, 0, 1, 201])).decodeLongUint(), 457);
+})
+
 test(function decodeShortString() {
   assertEquals(
     createDecoder(new Uint8Array([3, 97, 98, 99])).decodeShortString(),

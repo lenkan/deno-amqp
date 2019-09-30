@@ -107,7 +107,29 @@ connect()
       const decoder = createDecoder(data);
       const type = decoder.decodeOctet();
       const channel = decoder.decodeShortUint();
-      const length = decoder.decodeLongUint();
+      const size = decoder.decodeLongUint();
+      if (type === FRAME_METHOD) {
+        const classId = decoder.decodeShortUint();
+        const methodId = decoder.decodeShortUint();
+        if (classId === 10 && methodId === 10) {
+          const versionMajor = decoder.decodeOctet();
+          const versionMinor = decoder.decodeOctet();
+          const serverProperties = decoder.decodeTable();
+          const mechanisms = decoder.decodeLongString();
+          const locales = decoder.decodeLongString();
+          console.log(new TextEncoder().encode(locales));
+          console.log(JSON.stringify({
+            classId,
+            methodId,
+            versionMajor,
+            versionMinor,
+            serverProperties,
+            mechanisms,
+            locales
+          }, null, 2));
+        }
+        console.log({ classId, methodId });
+      }
     }
     // const result = await socket.read();
     // console.log(result);
