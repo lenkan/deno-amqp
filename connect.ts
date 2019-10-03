@@ -1,9 +1,7 @@
 type Listener = Deno.Listener;
 type Conn = Deno.Conn;
-type Reader = Deno.Reader;
-type Writer = Deno.Writer;
-const { dial } = Deno;
-import * as e from "./encoding.ts";
+const { dial, Buffer } = Deno;
+import { createEncoder } from "./encoder.ts";
 import { createDecoder } from "./decoder.ts";
 
 async function connect() {
@@ -42,109 +40,88 @@ const FRAME_HEADER = 2;
 const FRAME_BODY = 3;
 const FRAME_HEARTBEAT = 4;
 const FRAME_END = 0xce;
+const NULL_CHAR = String.fromCharCode(0);
+
+const user = "guest";
+const password = "guest";
+
+interface HeartbeatFrame {
+  channel: number;
+  type: 4;
+}
+
+interface MethodFrame {
+  type: 1;
+  channel: number;
+  classId: number;
+  methodId: number;
+  payload: Uint8Array;
+}
+
+type Frame = HeartbeatFrame | MethodFrame;
+
+function decodeFrame(data: Uint8Array): Frame {
+  const decoder = createDecoder(data);
+  const type = decoder.decodeOctet();
+  const channel = decoder.decodeShortUint();
+  const size = decoder.decodeLongUint();
+
+  if (type === FRAME_METHOD) {
+    const classId = decoder.decodeShortUint();
+    const methodId = decoder.decodeShortUint();
+    const bytes  = decoder.bytes();
+    const payload = bytes.slice(0, bytes.length -1 );
+    return { classId, methodId, payload, channel, type };
+  }
+}
+
+function encodeFrame(frame: Frame) {
+  const encoder = createEncoder();
+  encoder.encodeOctet(frame.type);
+  encoder.encodeShortUint(frame.channel);
+  switch (frame.type) {
+    case FRAME_METHOD:
+      encoder.encodeLongUint(frame.payload.length + 4);
+      encoder.encodeShortUint(frame.classId);
+      encoder.encodeShortUint(frame.methodId);
+      encoder.write(frame.payload);
+      break;
+  }
+  encoder.encodeOctet(FRAME_END);
+  return encoder.bytes();
+}
 
 connect()
   .then(createSocket)
   .then(async socket => {
-    const array = new Uint8Array({ length: 1 });
-
-    interface FrameParams {
-      type: number;
-      channel: number;
-      payload: Uint8Array;
-    }
-
-    function frame(params: FrameParams) {
-      return new Uint8Array([
-        ...e.encodeOctet(params.type),
-        ...e.encodeShortUint(params.channel),
-        ...e.encodeLongUint(params.payload.byteLength),
-        ...params.payload,
-        0xce
-      ]);
-    }
-
-    interface StartParams {
-      versionMajor?: number;
-      versionMinor?: number;
-      serverProperties: Record<string, string>;
-      mechanisms?: string;
-      locales?: string;
-    }
-
-    function start(params: StartParams) {
-      return new Uint8Array([
-        ...e.encodeOctet(10),
-        ...e.encodeOctet(10),
-        ...e.encodeOctet(params.versionMajor || 0),
-        ...e.encodeOctet(params.versionMinor || 0),
-        ...e.encodeTable({}),
-        ...e.encodeLongString(params.mechanisms || "PLAIN"),
-        ...e.encodeLongString(params.locales || "en_US")
-      ]);
-    }
-
-    interface StartOkParams {
-      clientProperties?: Record<string, string>;
-      mechanism?: string;
-      response: string;
-      locale?: string;
-    }
-
-    function startOk(params: StartOkParams) {
-      return new Uint8Array([
-        ...e.encodeOctet(10),
-        ...e.encodeOctet(11),
-        ...e.encodeTable(params.clientProperties || {}),
-        ...e.encodeLongString(params.response),
-        ...e.encodeShortString(params.locale || "en_US")
-      ]);
-    }
-
     await socket.write(new Uint8Array([65, 77, 81, 80, 0, 0, 9, 1]));
     while (true) {
       const data = await socket.read();
-      const decoder = createDecoder(data);
-      const type = decoder.decodeOctet();
-      const channel = decoder.decodeShortUint();
-      const size = decoder.decodeLongUint();
-      if (type === FRAME_METHOD) {
-        const classId = decoder.decodeShortUint();
-        const methodId = decoder.decodeShortUint();
-        if (classId === 10 && methodId === 10) {
-          const versionMajor = decoder.decodeOctet();
-          const versionMinor = decoder.decodeOctet();
-          const serverProperties = decoder.decodeTable();
-          const mechanisms = decoder.decodeLongString();
-          const locales = decoder.decodeLongString();
-          console.log(new TextEncoder().encode(locales));
-          console.log(JSON.stringify({
-            classId,
-            methodId,
-            versionMajor,
-            versionMinor,
-            serverProperties,
-            mechanisms,
-            locales
-          }, null, 2));
+      const frame = decodeFrame(data);
+
+      if (frame.type === FRAME_METHOD) {
+        const method = decodeMethod(frame);
+        if (method.classId === 10 && method.methodId === 10) {
+          const mechanism = method.mechanisms.split(" ")[0];
+          const send = encodeFrame(
+            encodeMethod({
+              channel: method.channel,
+              classId: 10,
+              methodId: 11,
+              clientProperties: {},
+              locale: method.locales,
+              mechanism: mechanism,
+              response: `${NULL_CHAR}${user}${NULL_CHAR}${password}`
+            })
+          );
+          socket.write(send);
         }
-        console.log({ classId, methodId });
       }
     }
-    // const result = await socket.read();
-    // console.log(result);
   })
   .catch(e => {
     console.error(e);
     Deno.exit(1);
   });
-// writer.
-
-// // https://deno.land/std/http
-// import {
-//   BufReader,
-//   BufWriter,
-//   UnexpectedEOFError
-// } from "https://deno.land/std/io/bufio.ts";
 
 console.log("hej");
