@@ -4,9 +4,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "start";
-      classId: 10;
-      methodId: 10;
+      name: "connection.start";
       args: {
         ["version-major"]: any;
         ["version-minor"]: any;
@@ -18,9 +16,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "start-ok";
-      classId: 10;
-      methodId: 11;
+      name: "connection.start-ok";
       args: {
         ["client-properties"]: any;
         ["mechanism"]: any;
@@ -31,9 +27,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "secure";
-      classId: 10;
-      methodId: 20;
+      name: "connection.secure";
       args: {
         ["challenge"]: any;
       };
@@ -41,9 +35,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "secure-ok";
-      classId: 10;
-      methodId: 21;
+      name: "connection.secure-ok";
       args: {
         ["response"]: any;
       };
@@ -51,9 +43,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "tune";
-      classId: 10;
-      methodId: 30;
+      name: "connection.tune";
       args: {
         ["channel-max"]: any;
         ["frame-max"]: any;
@@ -63,9 +53,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "tune-ok";
-      classId: 10;
-      methodId: 31;
+      name: "connection.tune-ok";
       args: {
         ["channel-max"]: any;
         ["frame-max"]: any;
@@ -75,9 +63,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "open";
-      classId: 10;
-      methodId: 40;
+      name: "connection.open";
       args: {
         ["virtual-host"]: any;
         ["capabilities"]: any;
@@ -87,9 +73,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "open-ok";
-      classId: 10;
-      methodId: 41;
+      name: "connection.open-ok";
       args: {
         ["known-hosts"]: any;
       };
@@ -97,9 +81,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "close";
-      classId: 10;
-      methodId: 50;
+      name: "connection.close";
       args: {
         ["reply-code"]: any;
         ["reply-text"]: any;
@@ -110,17 +92,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "close-ok";
-      classId: 10;
-      methodId: 51;
+      name: "connection.close-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "blocked";
-      classId: 10;
-      methodId: 60;
+      name: "connection.blocked";
       args: {
         ["reason"]: any;
       };
@@ -128,17 +106,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "unblocked";
-      classId: 10;
-      methodId: 61;
+      name: "connection.unblocked";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "update-secret";
-      classId: 10;
-      methodId: 70;
+      name: "connection.update-secret";
       args: {
         ["new-secret"]: any;
         ["reason"]: any;
@@ -147,17 +121,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "update-secret-ok";
-      classId: 10;
-      methodId: 71;
+      name: "connection.update-secret-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "open";
-      classId: 20;
-      methodId: 10;
+      name: "channel.open";
       args: {
         ["out-of-band"]: any;
       };
@@ -165,9 +135,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "open-ok";
-      classId: 20;
-      methodId: 11;
+      name: "channel.open-ok";
       args: {
         ["channel-id"]: any;
       };
@@ -175,9 +143,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "flow";
-      classId: 20;
-      methodId: 20;
+      name: "channel.flow";
       args: {
         ["active"]: any;
       };
@@ -185,9 +151,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "flow-ok";
-      classId: 20;
-      methodId: 21;
+      name: "channel.flow-ok";
       args: {
         ["active"]: any;
       };
@@ -195,9 +159,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "close";
-      classId: 20;
-      methodId: 40;
+      name: "channel.close";
       args: {
         ["reply-code"]: any;
         ["reply-text"]: any;
@@ -208,17 +170,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "close-ok";
-      classId: 20;
-      methodId: 41;
+      name: "channel.close-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "request";
-      classId: 30;
-      methodId: 10;
+      name: "access.request";
       args: {
         ["realm"]: any;
         ["exclusive"]: any;
@@ -231,9 +189,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "request-ok";
-      classId: 30;
-      methodId: 11;
+      name: "access.request-ok";
       args: {
         ["ticket"]: any;
       };
@@ -241,9 +197,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "declare";
-      classId: 40;
-      methodId: 10;
+      name: "exchange.declare";
       args: {
         ["ticket"]: any;
         ["exchange"]: any;
@@ -259,17 +213,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "declare-ok";
-      classId: 40;
-      methodId: 11;
+      name: "exchange.declare-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "delete";
-      classId: 40;
-      methodId: 20;
+      name: "exchange.delete";
       args: {
         ["ticket"]: any;
         ["exchange"]: any;
@@ -280,17 +230,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "delete-ok";
-      classId: 40;
-      methodId: 21;
+      name: "exchange.delete-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "bind";
-      classId: 40;
-      methodId: 30;
+      name: "exchange.bind";
       args: {
         ["ticket"]: any;
         ["destination"]: any;
@@ -303,17 +249,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "bind-ok";
-      classId: 40;
-      methodId: 31;
+      name: "exchange.bind-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "unbind";
-      classId: 40;
-      methodId: 40;
+      name: "exchange.unbind";
       args: {
         ["ticket"]: any;
         ["destination"]: any;
@@ -326,17 +268,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "unbind-ok";
-      classId: 40;
-      methodId: 51;
+      name: "exchange.unbind-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "declare";
-      classId: 50;
-      methodId: 10;
+      name: "queue.declare";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -351,9 +289,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "declare-ok";
-      classId: 50;
-      methodId: 11;
+      name: "queue.declare-ok";
       args: {
         ["queue"]: any;
         ["message-count"]: any;
@@ -363,9 +299,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "bind";
-      classId: 50;
-      methodId: 20;
+      name: "queue.bind";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -378,17 +312,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "bind-ok";
-      classId: 50;
-      methodId: 21;
+      name: "queue.bind-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "purge";
-      classId: 50;
-      methodId: 30;
+      name: "queue.purge";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -398,9 +328,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "purge-ok";
-      classId: 50;
-      methodId: 31;
+      name: "queue.purge-ok";
       args: {
         ["message-count"]: any;
       };
@@ -408,9 +336,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "delete";
-      classId: 50;
-      methodId: 40;
+      name: "queue.delete";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -422,9 +348,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "delete-ok";
-      classId: 50;
-      methodId: 41;
+      name: "queue.delete-ok";
       args: {
         ["message-count"]: any;
       };
@@ -432,9 +356,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "unbind";
-      classId: 50;
-      methodId: 50;
+      name: "queue.unbind";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -446,17 +368,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "unbind-ok";
-      classId: 50;
-      methodId: 51;
+      name: "queue.unbind-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "qos";
-      classId: 60;
-      methodId: 10;
+      name: "basic.qos";
       args: {
         ["prefetch-size"]: any;
         ["prefetch-count"]: any;
@@ -466,17 +384,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "qos-ok";
-      classId: 60;
-      methodId: 11;
+      name: "basic.qos-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "consume";
-      classId: 60;
-      methodId: 20;
+      name: "basic.consume";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -491,9 +405,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "consume-ok";
-      classId: 60;
-      methodId: 21;
+      name: "basic.consume-ok";
       args: {
         ["consumer-tag"]: any;
       };
@@ -501,9 +413,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "cancel";
-      classId: 60;
-      methodId: 30;
+      name: "basic.cancel";
       args: {
         ["consumer-tag"]: any;
         ["nowait"]: any;
@@ -512,9 +422,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "cancel-ok";
-      classId: 60;
-      methodId: 31;
+      name: "basic.cancel-ok";
       args: {
         ["consumer-tag"]: any;
       };
@@ -522,9 +430,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "publish";
-      classId: 60;
-      methodId: 40;
+      name: "basic.publish";
       args: {
         ["ticket"]: any;
         ["exchange"]: any;
@@ -536,9 +442,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "return";
-      classId: 60;
-      methodId: 50;
+      name: "basic.return";
       args: {
         ["reply-code"]: any;
         ["reply-text"]: any;
@@ -549,9 +453,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "deliver";
-      classId: 60;
-      methodId: 60;
+      name: "basic.deliver";
       args: {
         ["consumer-tag"]: any;
         ["delivery-tag"]: any;
@@ -563,9 +465,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "get";
-      classId: 60;
-      methodId: 70;
+      name: "basic.get";
       args: {
         ["ticket"]: any;
         ["queue"]: any;
@@ -575,9 +475,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "get-ok";
-      classId: 60;
-      methodId: 71;
+      name: "basic.get-ok";
       args: {
         ["delivery-tag"]: any;
         ["redelivered"]: any;
@@ -589,9 +487,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "get-empty";
-      classId: 60;
-      methodId: 72;
+      name: "basic.get-empty";
       args: {
         ["cluster-id"]: any;
       };
@@ -599,9 +495,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "ack";
-      classId: 60;
-      methodId: 80;
+      name: "basic.ack";
       args: {
         ["delivery-tag"]: any;
         ["multiple"]: any;
@@ -610,9 +504,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "reject";
-      classId: 60;
-      methodId: 90;
+      name: "basic.reject";
       args: {
         ["delivery-tag"]: any;
         ["requeue"]: any;
@@ -621,9 +513,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "recover-async";
-      classId: 60;
-      methodId: 100;
+      name: "basic.recover-async";
       args: {
         ["requeue"]: any;
       };
@@ -631,9 +521,7 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "recover";
-      classId: 60;
-      methodId: 110;
+      name: "basic.recover";
       args: {
         ["requeue"]: any;
       };
@@ -641,17 +529,13 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "recover-ok";
-      classId: 60;
-      methodId: 111;
+      name: "basic.recover-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "nack";
-      classId: 60;
-      methodId: 120;
+      name: "basic.nack";
       args: {
         ["delivery-tag"]: any;
         ["multiple"]: any;
@@ -661,57 +545,43 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "select";
-      classId: 90;
-      methodId: 10;
+      name: "tx.select";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "select-ok";
-      classId: 90;
-      methodId: 11;
+      name: "tx.select-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "commit";
-      classId: 90;
-      methodId: 20;
+      name: "tx.commit";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "commit-ok";
-      classId: 90;
-      methodId: 21;
+      name: "tx.commit-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "rollback";
-      classId: 90;
-      methodId: 30;
+      name: "tx.rollback";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "rollback-ok";
-      classId: 90;
-      methodId: 31;
+      name: "tx.rollback-ok";
       args: {};
     }
   | {
       type: 1;
       channel: number;
-      name: "select";
-      classId: 85;
-      methodId: 10;
+      name: "confirm.select";
       args: {
         ["nowait"]: any;
       };
@@ -719,796 +589,878 @@ export type Method =
   | {
       type: 1;
       channel: number;
-      name: "select-ok";
-      classId: 85;
-      methodId: 11;
+      name: "confirm.select-ok";
       args: {};
     };
 
 export function encodeMethodPayload(method: Method): Uint8Array {
-  if (method.classId === 10) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeOctet(
-        method.args["version-major"] !== undefined
-          ? method.args["version-major"]
-          : 0
-      );
-      encoder.encodeOctet(
-        method.args["version-minor"] !== undefined
-          ? method.args["version-minor"]
-          : 9
-      );
-      encoder.encodeTable(method.args["server-properties"]);
-      encoder.encodeLongString(
-        method.args["mechanisms"] !== undefined
-          ? method.args["mechanisms"]
-          : "PLAIN"
-      );
-      encoder.encodeLongString(
-        method.args["locales"] !== undefined ? method.args["locales"] : "en_US"
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-      encoder.encodeTable(method.args["client-properties"]);
-      encoder.encodeShortString(
-        method.args["mechanism"] !== undefined
-          ? method.args["mechanism"]
-          : "PLAIN"
-      );
-      encoder.encodeLongString(method.args["response"]);
-      encoder.encodeShortString(
-        method.args["locale"] !== undefined ? method.args["locale"] : "en_US"
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-      encoder.encodeLongString(method.args["challenge"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-      encoder.encodeLongString(method.args["response"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 30) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["channel-max"] !== undefined
-          ? method.args["channel-max"]
-          : 0
-      );
-      encoder.encodeLongUint(
-        method.args["frame-max"] !== undefined ? method.args["frame-max"] : 0
-      );
-      encoder.encodeShortUint(
-        method.args["heartbeat"] !== undefined ? method.args["heartbeat"] : 0
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 31) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["channel-max"] !== undefined
-          ? method.args["channel-max"]
-          : 0
-      );
-      encoder.encodeLongUint(
-        method.args["frame-max"] !== undefined ? method.args["frame-max"] : 0
-      );
-      encoder.encodeShortUint(
-        method.args["heartbeat"] !== undefined ? method.args["heartbeat"] : 0
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 40) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["virtual-host"] !== undefined
-          ? method.args["virtual-host"]
-          : "/"
-      );
-      encoder.encodeShortString(
-        method.args["capabilities"] !== undefined
-          ? method.args["capabilities"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["insist"] !== undefined ? method.args["insist"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 41) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["known-hosts"] !== undefined
-          ? method.args["known-hosts"]
-          : ""
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 50) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(method.args["reply-code"]);
-      encoder.encodeShortString(
-        method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
-      );
-      encoder.encodeShortUint(method.args["class-id"]);
-      encoder.encodeShortUint(method.args["method-id"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 51) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 60) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["reason"] !== undefined ? method.args["reason"] : ""
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 61) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 70) {
-      const encoder = createEncoder();
-      encoder.encodeLongString(method.args["new-secret"]);
-      encoder.encodeShortString(method.args["reason"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 71) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
+  if (method.name === "connection.start") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(10);
+    encoder.encodeOctet(
+      method.args["version-major"] !== undefined
+        ? method.args["version-major"]
+        : 0
+    );
+    encoder.encodeOctet(
+      method.args["version-minor"] !== undefined
+        ? method.args["version-minor"]
+        : 9
+    );
+    encoder.encodeTable(method.args["server-properties"]);
+    encoder.encodeLongString(
+      method.args["mechanisms"] !== undefined
+        ? method.args["mechanisms"]
+        : "PLAIN"
+    );
+    encoder.encodeLongString(
+      method.args["locales"] !== undefined ? method.args["locales"] : "en_US"
+    );
+    return encoder.bytes();
   }
 
-  if (method.classId === 20) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["out-of-band"] !== undefined
-          ? method.args["out-of-band"]
-          : ""
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-      encoder.encodeLongString(
-        method.args["channel-id"] !== undefined ? method.args["channel-id"] : ""
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-      encoder.encodeBit(method.args["active"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-      encoder.encodeBit(method.args["active"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 40) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(method.args["reply-code"]);
-      encoder.encodeShortString(
-        method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
-      );
-      encoder.encodeShortUint(method.args["class-id"]);
-      encoder.encodeShortUint(method.args["method-id"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 41) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
+  if (method.name === "connection.start-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(11);
+    encoder.encodeTable(method.args["client-properties"]);
+    encoder.encodeShortString(
+      method.args["mechanism"] !== undefined
+        ? method.args["mechanism"]
+        : "PLAIN"
+    );
+    encoder.encodeLongString(method.args["response"]);
+    encoder.encodeShortString(
+      method.args["locale"] !== undefined ? method.args["locale"] : "en_US"
+    );
+    return encoder.bytes();
   }
 
-  if (method.classId === 30) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["realm"] !== undefined ? method.args["realm"] : "/data"
-      );
-      encoder.encodeBit(
-        method.args["exclusive"] !== undefined
-          ? method.args["exclusive"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["passive"] !== undefined ? method.args["passive"] : true
-      );
-      encoder.encodeBit(
-        method.args["active"] !== undefined ? method.args["active"] : true
-      );
-      encoder.encodeBit(
-        method.args["write"] !== undefined ? method.args["write"] : true
-      );
-      encoder.encodeBit(
-        method.args["read"] !== undefined ? method.args["read"] : true
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 1
-      );
-      return encoder.bytes();
-    }
+  if (method.name === "connection.secure") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(20);
+    encoder.encodeLongString(method.args["challenge"]);
+    return encoder.bytes();
   }
 
-  if (method.classId === 40) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(
-        method.args["type"] !== undefined ? method.args["type"] : "direct"
-      );
-      encoder.encodeBit(
-        method.args["passive"] !== undefined ? method.args["passive"] : false
-      );
-      encoder.encodeBit(
-        method.args["durable"] !== undefined ? method.args["durable"] : false
-      );
-      encoder.encodeBit(
-        method.args["auto-delete"] !== undefined
-          ? method.args["auto-delete"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["internal"] !== undefined ? method.args["internal"] : false
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeBit(
-        method.args["if-unused"] !== undefined
-          ? method.args["if-unused"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 30) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(method.args["destination"]);
-      encoder.encodeShortString(method.args["source"]);
-      encoder.encodeShortString(
-        method.args["routing-key"] !== undefined
-          ? method.args["routing-key"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 31) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 40) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(method.args["destination"]);
-      encoder.encodeShortString(method.args["source"]);
-      encoder.encodeShortString(
-        method.args["routing-key"] !== undefined
-          ? method.args["routing-key"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 51) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
+  if (method.name === "connection.secure-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(21);
+    encoder.encodeLongString(method.args["response"]);
+    return encoder.bytes();
   }
 
-  if (method.classId === 50) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeBit(
-        method.args["passive"] !== undefined ? method.args["passive"] : false
-      );
-      encoder.encodeBit(
-        method.args["durable"] !== undefined ? method.args["durable"] : false
-      );
-      encoder.encodeBit(
-        method.args["exclusive"] !== undefined
-          ? method.args["exclusive"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["auto-delete"] !== undefined
-          ? method.args["auto-delete"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(method.args["queue"]);
-      encoder.encodeLongUint(method.args["message-count"]);
-      encoder.encodeLongUint(method.args["consumer-count"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(
-        method.args["routing-key"] !== undefined
-          ? method.args["routing-key"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 30) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 31) {
-      const encoder = createEncoder();
-      encoder.encodeLongUint(method.args["message-count"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 40) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeBit(
-        method.args["if-unused"] !== undefined
-          ? method.args["if-unused"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["if-empty"] !== undefined ? method.args["if-empty"] : false
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 41) {
-      const encoder = createEncoder();
-      encoder.encodeLongUint(method.args["message-count"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 50) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(
-        method.args["routing-key"] !== undefined
-          ? method.args["routing-key"]
-          : ""
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 51) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
+  if (method.name === "connection.tune") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(30);
+    encoder.encodeShortUint(
+      method.args["channel-max"] !== undefined ? method.args["channel-max"] : 0
+    );
+    encoder.encodeLongUint(
+      method.args["frame-max"] !== undefined ? method.args["frame-max"] : 0
+    );
+    encoder.encodeShortUint(
+      method.args["heartbeat"] !== undefined ? method.args["heartbeat"] : 0
+    );
+    return encoder.bytes();
   }
 
-  if (method.classId === 60) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeLongUint(
-        method.args["prefetch-size"] !== undefined
-          ? method.args["prefetch-size"]
-          : 0
-      );
-      encoder.encodeShortUint(
-        method.args["prefetch-count"] !== undefined
-          ? method.args["prefetch-count"]
-          : 0
-      );
-      encoder.encodeBit(
-        method.args["global"] !== undefined ? method.args["global"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeShortString(
-        method.args["consumer-tag"] !== undefined
-          ? method.args["consumer-tag"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["no-local"] !== undefined ? method.args["no-local"] : false
-      );
-      encoder.encodeBit(
-        method.args["no-ack"] !== undefined ? method.args["no-ack"] : false
-      );
-      encoder.encodeBit(
-        method.args["exclusive"] !== undefined
-          ? method.args["exclusive"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      encoder.encodeTable(
-        method.args["arguments"] !== undefined ? method.args["arguments"] : {}
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(method.args["consumer-tag"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 30) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(method.args["consumer-tag"]);
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 31) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(method.args["consumer-tag"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 40) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["exchange"] !== undefined ? method.args["exchange"] : ""
-      );
-      encoder.encodeShortString(
-        method.args["routing-key"] !== undefined
-          ? method.args["routing-key"]
-          : ""
-      );
-      encoder.encodeBit(
-        method.args["mandatory"] !== undefined
-          ? method.args["mandatory"]
-          : false
-      );
-      encoder.encodeBit(
-        method.args["immediate"] !== undefined
-          ? method.args["immediate"]
-          : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 50) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(method.args["reply-code"]);
-      encoder.encodeShortString(
-        method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(method.args["routing-key"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 60) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(method.args["consumer-tag"]);
-      encoder.encodeLongLongUint(method.args["delivery-tag"]);
-      encoder.encodeBit(
-        method.args["redelivered"] !== undefined
-          ? method.args["redelivered"]
-          : false
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(method.args["routing-key"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 70) {
-      const encoder = createEncoder();
-      encoder.encodeShortUint(
-        method.args["ticket"] !== undefined ? method.args["ticket"] : 0
-      );
-      encoder.encodeShortString(
-        method.args["queue"] !== undefined ? method.args["queue"] : ""
-      );
-      encoder.encodeBit(
-        method.args["no-ack"] !== undefined ? method.args["no-ack"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 71) {
-      const encoder = createEncoder();
-      encoder.encodeLongLongUint(method.args["delivery-tag"]);
-      encoder.encodeBit(
-        method.args["redelivered"] !== undefined
-          ? method.args["redelivered"]
-          : false
-      );
-      encoder.encodeShortString(method.args["exchange"]);
-      encoder.encodeShortString(method.args["routing-key"]);
-      encoder.encodeLongUint(method.args["message-count"]);
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 72) {
-      const encoder = createEncoder();
-      encoder.encodeShortString(
-        method.args["cluster-id"] !== undefined ? method.args["cluster-id"] : ""
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 80) {
-      const encoder = createEncoder();
-      encoder.encodeLongLongUint(
-        method.args["delivery-tag"] !== undefined
-          ? method.args["delivery-tag"]
-          : 0
-      );
-      encoder.encodeBit(
-        method.args["multiple"] !== undefined ? method.args["multiple"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 90) {
-      const encoder = createEncoder();
-      encoder.encodeLongLongUint(method.args["delivery-tag"]);
-      encoder.encodeBit(
-        method.args["requeue"] !== undefined ? method.args["requeue"] : true
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 100) {
-      const encoder = createEncoder();
-      encoder.encodeBit(
-        method.args["requeue"] !== undefined ? method.args["requeue"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 110) {
-      const encoder = createEncoder();
-      encoder.encodeBit(
-        method.args["requeue"] !== undefined ? method.args["requeue"] : false
-      );
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 111) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 120) {
-      const encoder = createEncoder();
-      encoder.encodeLongLongUint(
-        method.args["delivery-tag"] !== undefined
-          ? method.args["delivery-tag"]
-          : 0
-      );
-      encoder.encodeBit(
-        method.args["multiple"] !== undefined ? method.args["multiple"] : false
-      );
-      encoder.encodeBit(
-        method.args["requeue"] !== undefined ? method.args["requeue"] : true
-      );
-      return encoder.bytes();
-    }
+  if (method.name === "connection.tune-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(31);
+    encoder.encodeShortUint(
+      method.args["channel-max"] !== undefined ? method.args["channel-max"] : 0
+    );
+    encoder.encodeLongUint(
+      method.args["frame-max"] !== undefined ? method.args["frame-max"] : 0
+    );
+    encoder.encodeShortUint(
+      method.args["heartbeat"] !== undefined ? method.args["heartbeat"] : 0
+    );
+    return encoder.bytes();
   }
 
-  if (method.classId === 90) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 20) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 21) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 30) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
-
-    if (method.methodId === 31) {
-      const encoder = createEncoder();
-
-      return encoder.bytes();
-    }
+  if (method.name === "connection.open") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(40);
+    encoder.encodeShortString(
+      method.args["virtual-host"] !== undefined
+        ? method.args["virtual-host"]
+        : "/"
+    );
+    encoder.encodeShortString(
+      method.args["capabilities"] !== undefined
+        ? method.args["capabilities"]
+        : ""
+    );
+    encoder.encodeBit(
+      method.args["insist"] !== undefined ? method.args["insist"] : false
+    );
+    return encoder.bytes();
   }
 
-  if (method.classId === 85) {
-    if (method.methodId === 10) {
-      const encoder = createEncoder();
-      encoder.encodeBit(
-        method.args["nowait"] !== undefined ? method.args["nowait"] : false
-      );
-      return encoder.bytes();
-    }
+  if (method.name === "connection.open-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(41);
+    encoder.encodeShortString(
+      method.args["known-hosts"] !== undefined ? method.args["known-hosts"] : ""
+    );
+    return encoder.bytes();
+  }
 
-    if (method.methodId === 11) {
-      const encoder = createEncoder();
+  if (method.name === "connection.close") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(method.args["reply-code"]);
+    encoder.encodeShortString(
+      method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
+    );
+    encoder.encodeShortUint(method.args["class-id"]);
+    encoder.encodeShortUint(method.args["method-id"]);
+    return encoder.bytes();
+  }
 
-      return encoder.bytes();
-    }
+  if (method.name === "connection.close-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(51);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "connection.blocked") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(60);
+    encoder.encodeShortString(
+      method.args["reason"] !== undefined ? method.args["reason"] : ""
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "connection.unblocked") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(61);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "connection.update-secret") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(70);
+    encoder.encodeLongString(method.args["new-secret"]);
+    encoder.encodeShortString(method.args["reason"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "connection.update-secret-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(71);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.open") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(10);
+    encoder.encodeShortString(
+      method.args["out-of-band"] !== undefined ? method.args["out-of-band"] : ""
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.open-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(11);
+    encoder.encodeLongString(
+      method.args["channel-id"] !== undefined ? method.args["channel-id"] : ""
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.flow") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(20);
+    encoder.encodeBit(method.args["active"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.flow-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(21);
+    encoder.encodeBit(method.args["active"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.close") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(method.args["reply-code"]);
+    encoder.encodeShortString(
+      method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
+    );
+    encoder.encodeShortUint(method.args["class-id"]);
+    encoder.encodeShortUint(method.args["method-id"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "channel.close-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(41);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "access.request") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(30);
+    encoder.encodeShortUint(10);
+    encoder.encodeShortString(
+      method.args["realm"] !== undefined ? method.args["realm"] : "/data"
+    );
+    encoder.encodeBit(
+      method.args["exclusive"] !== undefined ? method.args["exclusive"] : false
+    );
+    encoder.encodeBit(
+      method.args["passive"] !== undefined ? method.args["passive"] : true
+    );
+    encoder.encodeBit(
+      method.args["active"] !== undefined ? method.args["active"] : true
+    );
+    encoder.encodeBit(
+      method.args["write"] !== undefined ? method.args["write"] : true
+    );
+    encoder.encodeBit(
+      method.args["read"] !== undefined ? method.args["read"] : true
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "access.request-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(30);
+    encoder.encodeShortUint(11);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 1
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.declare") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(
+      method.args["type"] !== undefined ? method.args["type"] : "direct"
+    );
+    encoder.encodeBit(
+      method.args["passive"] !== undefined ? method.args["passive"] : false
+    );
+    encoder.encodeBit(
+      method.args["durable"] !== undefined ? method.args["durable"] : false
+    );
+    encoder.encodeBit(
+      method.args["auto-delete"] !== undefined
+        ? method.args["auto-delete"]
+        : false
+    );
+    encoder.encodeBit(
+      method.args["internal"] !== undefined ? method.args["internal"] : false
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.declare-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(11);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.delete") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeBit(
+      method.args["if-unused"] !== undefined ? method.args["if-unused"] : false
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.delete-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(21);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.bind") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(30);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(method.args["destination"]);
+    encoder.encodeShortString(method.args["source"]);
+    encoder.encodeShortString(
+      method.args["routing-key"] !== undefined ? method.args["routing-key"] : ""
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.bind-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(31);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.unbind") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(method.args["destination"]);
+    encoder.encodeShortString(method.args["source"]);
+    encoder.encodeShortString(
+      method.args["routing-key"] !== undefined ? method.args["routing-key"] : ""
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "exchange.unbind-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(51);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.declare") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(10);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeBit(
+      method.args["passive"] !== undefined ? method.args["passive"] : false
+    );
+    encoder.encodeBit(
+      method.args["durable"] !== undefined ? method.args["durable"] : false
+    );
+    encoder.encodeBit(
+      method.args["exclusive"] !== undefined ? method.args["exclusive"] : false
+    );
+    encoder.encodeBit(
+      method.args["auto-delete"] !== undefined
+        ? method.args["auto-delete"]
+        : false
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.declare-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(11);
+    encoder.encodeShortString(method.args["queue"]);
+    encoder.encodeLongUint(method.args["message-count"]);
+    encoder.encodeLongUint(method.args["consumer-count"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.bind") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(
+      method.args["routing-key"] !== undefined ? method.args["routing-key"] : ""
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.bind-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(21);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.purge") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(30);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.purge-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(31);
+    encoder.encodeLongUint(method.args["message-count"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.delete") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeBit(
+      method.args["if-unused"] !== undefined ? method.args["if-unused"] : false
+    );
+    encoder.encodeBit(
+      method.args["if-empty"] !== undefined ? method.args["if-empty"] : false
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.delete-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(41);
+    encoder.encodeLongUint(method.args["message-count"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.unbind") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(
+      method.args["routing-key"] !== undefined ? method.args["routing-key"] : ""
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "queue.unbind-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(51);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.qos") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(10);
+    encoder.encodeLongUint(
+      method.args["prefetch-size"] !== undefined
+        ? method.args["prefetch-size"]
+        : 0
+    );
+    encoder.encodeShortUint(
+      method.args["prefetch-count"] !== undefined
+        ? method.args["prefetch-count"]
+        : 0
+    );
+    encoder.encodeBit(
+      method.args["global"] !== undefined ? method.args["global"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.qos-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(11);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.consume") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(20);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeShortString(
+      method.args["consumer-tag"] !== undefined
+        ? method.args["consumer-tag"]
+        : ""
+    );
+    encoder.encodeBit(
+      method.args["no-local"] !== undefined ? method.args["no-local"] : false
+    );
+    encoder.encodeBit(
+      method.args["no-ack"] !== undefined ? method.args["no-ack"] : false
+    );
+    encoder.encodeBit(
+      method.args["exclusive"] !== undefined ? method.args["exclusive"] : false
+    );
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    encoder.encodeTable(
+      method.args["arguments"] !== undefined ? method.args["arguments"] : {}
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.consume-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(21);
+    encoder.encodeShortString(method.args["consumer-tag"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.cancel") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(30);
+    encoder.encodeShortString(method.args["consumer-tag"]);
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.cancel-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(31);
+    encoder.encodeShortString(method.args["consumer-tag"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.publish") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(40);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["exchange"] !== undefined ? method.args["exchange"] : ""
+    );
+    encoder.encodeShortString(
+      method.args["routing-key"] !== undefined ? method.args["routing-key"] : ""
+    );
+    encoder.encodeBit(
+      method.args["mandatory"] !== undefined ? method.args["mandatory"] : false
+    );
+    encoder.encodeBit(
+      method.args["immediate"] !== undefined ? method.args["immediate"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.return") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(50);
+    encoder.encodeShortUint(method.args["reply-code"]);
+    encoder.encodeShortString(
+      method.args["reply-text"] !== undefined ? method.args["reply-text"] : ""
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(method.args["routing-key"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.deliver") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(60);
+    encoder.encodeShortString(method.args["consumer-tag"]);
+    encoder.encodeLongLongUint(method.args["delivery-tag"]);
+    encoder.encodeBit(
+      method.args["redelivered"] !== undefined
+        ? method.args["redelivered"]
+        : false
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(method.args["routing-key"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.get") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(70);
+    encoder.encodeShortUint(
+      method.args["ticket"] !== undefined ? method.args["ticket"] : 0
+    );
+    encoder.encodeShortString(
+      method.args["queue"] !== undefined ? method.args["queue"] : ""
+    );
+    encoder.encodeBit(
+      method.args["no-ack"] !== undefined ? method.args["no-ack"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.get-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(71);
+    encoder.encodeLongLongUint(method.args["delivery-tag"]);
+    encoder.encodeBit(
+      method.args["redelivered"] !== undefined
+        ? method.args["redelivered"]
+        : false
+    );
+    encoder.encodeShortString(method.args["exchange"]);
+    encoder.encodeShortString(method.args["routing-key"]);
+    encoder.encodeLongUint(method.args["message-count"]);
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.get-empty") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(72);
+    encoder.encodeShortString(
+      method.args["cluster-id"] !== undefined ? method.args["cluster-id"] : ""
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.ack") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(80);
+    encoder.encodeLongLongUint(
+      method.args["delivery-tag"] !== undefined
+        ? method.args["delivery-tag"]
+        : 0
+    );
+    encoder.encodeBit(
+      method.args["multiple"] !== undefined ? method.args["multiple"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.reject") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(90);
+    encoder.encodeLongLongUint(method.args["delivery-tag"]);
+    encoder.encodeBit(
+      method.args["requeue"] !== undefined ? method.args["requeue"] : true
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.recover-async") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(100);
+    encoder.encodeBit(
+      method.args["requeue"] !== undefined ? method.args["requeue"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.recover") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(110);
+    encoder.encodeBit(
+      method.args["requeue"] !== undefined ? method.args["requeue"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.recover-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(111);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "basic.nack") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(60);
+    encoder.encodeShortUint(120);
+    encoder.encodeLongLongUint(
+      method.args["delivery-tag"] !== undefined
+        ? method.args["delivery-tag"]
+        : 0
+    );
+    encoder.encodeBit(
+      method.args["multiple"] !== undefined ? method.args["multiple"] : false
+    );
+    encoder.encodeBit(
+      method.args["requeue"] !== undefined ? method.args["requeue"] : true
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.select") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(10);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.select-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(11);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.commit") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(20);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.commit-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(21);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.rollback") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(30);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "tx.rollback-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(90);
+    encoder.encodeShortUint(31);
+
+    return encoder.bytes();
+  }
+
+  if (method.name === "confirm.select") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(85);
+    encoder.encodeShortUint(10);
+    encoder.encodeBit(
+      method.args["nowait"] !== undefined ? method.args["nowait"] : false
+    );
+    return encoder.bytes();
+  }
+
+  if (method.name === "confirm.select-ok") {
+    const encoder = createEncoder();
+    encoder.encodeShortUint(85);
+    encoder.encodeShortUint(11);
+
+    return encoder.bytes();
   }
 }
 
@@ -1518,1006 +1470,858 @@ export function decodeMethodPayload(
   methodId: number,
   data: Uint8Array
 ): Method {
-  if (classId === 10) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "start",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["version-major"]: decoder.decodeOctet(),
-          ["version-minor"]: decoder.decodeOctet(),
-          ["server-properties"]: decoder.decodeTable(),
-          ["mechanisms"]: decoder.decodeLongString(),
-          ["locales"]: decoder.decodeLongString()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "start-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["client-properties"]: decoder.decodeTable(),
-          ["mechanism"]: decoder.decodeShortString(),
-          ["response"]: decoder.decodeLongString(),
-          ["locale"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "secure",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["challenge"]: decoder.decodeLongString()
-        }
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "secure-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["response"]: decoder.decodeLongString()
-        }
-      };
-    }
-
-    if (methodId === 30) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "tune",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["channel-max"]: decoder.decodeShortUint(),
-          ["frame-max"]: decoder.decodeLongUint(),
-          ["heartbeat"]: decoder.decodeShortUint()
-        }
-      };
-    }
-
-    if (methodId === 31) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "tune-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["channel-max"]: decoder.decodeShortUint(),
-          ["frame-max"]: decoder.decodeLongUint(),
-          ["heartbeat"]: decoder.decodeShortUint()
-        }
-      };
-    }
-
-    if (methodId === 40) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "open",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["virtual-host"]: decoder.decodeShortString(),
-          ["capabilities"]: decoder.decodeShortString(),
-          ["insist"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 41) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "open-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["known-hosts"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 50) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "close",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["reply-code"]: decoder.decodeShortUint(),
-          ["reply-text"]: decoder.decodeShortString(),
-          ["class-id"]: decoder.decodeShortUint(),
-          ["method-id"]: decoder.decodeShortUint()
-        }
-      };
-    }
-
-    if (methodId === 51) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "close-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 60) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "blocked",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["reason"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 61) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "unblocked",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 70) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "update-secret",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["new-secret"]: decoder.decodeLongString(),
-          ["reason"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 71) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "update-secret-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.start",
+      channel,
+      args: {
+        ["version-major"]: decoder.decodeOctet(),
+        ["version-minor"]: decoder.decodeOctet(),
+        ["server-properties"]: decoder.decodeTable(),
+        ["mechanisms"]: decoder.decodeLongString(),
+        ["locales"]: decoder.decodeLongString()
+      }
+    };
   }
 
-  if (classId === 20) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "open",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["out-of-band"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "open-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["channel-id"]: decoder.decodeLongString()
-        }
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "flow",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["active"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "flow-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["active"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 40) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "close",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["reply-code"]: decoder.decodeShortUint(),
-          ["reply-text"]: decoder.decodeShortString(),
-          ["class-id"]: decoder.decodeShortUint(),
-          ["method-id"]: decoder.decodeShortUint()
-        }
-      };
-    }
-
-    if (methodId === 41) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "close-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.start-ok",
+      channel,
+      args: {
+        ["client-properties"]: decoder.decodeTable(),
+        ["mechanism"]: decoder.decodeShortString(),
+        ["response"]: decoder.decodeLongString(),
+        ["locale"]: decoder.decodeShortString()
+      }
+    };
   }
 
-  if (classId === 30) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "request",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["realm"]: decoder.decodeShortString(),
-          ["exclusive"]: decoder.decodeBit(),
-          ["passive"]: decoder.decodeBit(),
-          ["active"]: decoder.decodeBit(),
-          ["write"]: decoder.decodeBit(),
-          ["read"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "request-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint()
-        }
-      };
-    }
+  if (classId === 10 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.secure",
+      channel,
+      args: {
+        ["challenge"]: decoder.decodeLongString()
+      }
+    };
   }
 
-  if (classId === 40) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "declare",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["type"]: decoder.decodeShortString(),
-          ["passive"]: decoder.decodeBit(),
-          ["durable"]: decoder.decodeBit(),
-          ["auto-delete"]: decoder.decodeBit(),
-          ["internal"]: decoder.decodeBit(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "declare-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "delete",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["if-unused"]: decoder.decodeBit(),
-          ["nowait"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "delete-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 30) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "bind",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["destination"]: decoder.decodeShortString(),
-          ["source"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 31) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "bind-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 40) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "unbind",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["destination"]: decoder.decodeShortString(),
-          ["source"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 51) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "unbind-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.secure-ok",
+      channel,
+      args: {
+        ["response"]: decoder.decodeLongString()
+      }
+    };
   }
 
-  if (classId === 50) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "declare",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["passive"]: decoder.decodeBit(),
-          ["durable"]: decoder.decodeBit(),
-          ["exclusive"]: decoder.decodeBit(),
-          ["auto-delete"]: decoder.decodeBit(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "declare-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["queue"]: decoder.decodeShortString(),
-          ["message-count"]: decoder.decodeLongUint(),
-          ["consumer-count"]: decoder.decodeLongUint()
-        }
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "bind",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "bind-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 30) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "purge",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["nowait"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 31) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "purge-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["message-count"]: decoder.decodeLongUint()
-        }
-      };
-    }
-
-    if (methodId === 40) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "delete",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["if-unused"]: decoder.decodeBit(),
-          ["if-empty"]: decoder.decodeBit(),
-          ["nowait"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 41) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "delete-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["message-count"]: decoder.decodeLongUint()
-        }
-      };
-    }
-
-    if (methodId === 50) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "unbind",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 51) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "unbind-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 30) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.tune",
+      channel,
+      args: {
+        ["channel-max"]: decoder.decodeShortUint(),
+        ["frame-max"]: decoder.decodeLongUint(),
+        ["heartbeat"]: decoder.decodeShortUint()
+      }
+    };
   }
 
-  if (classId === 60) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "qos",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["prefetch-size"]: decoder.decodeLongUint(),
-          ["prefetch-count"]: decoder.decodeShortUint(),
-          ["global"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "qos-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "consume",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["consumer-tag"]: decoder.decodeShortString(),
-          ["no-local"]: decoder.decodeBit(),
-          ["no-ack"]: decoder.decodeBit(),
-          ["exclusive"]: decoder.decodeBit(),
-          ["nowait"]: decoder.decodeBit(),
-          ["arguments"]: decoder.decodeTable()
-        }
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "consume-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["consumer-tag"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 30) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "cancel",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["consumer-tag"]: decoder.decodeShortString(),
-          ["nowait"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 31) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "cancel-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["consumer-tag"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 40) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "publish",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["mandatory"]: decoder.decodeBit(),
-          ["immediate"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 50) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "return",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["reply-code"]: decoder.decodeShortUint(),
-          ["reply-text"]: decoder.decodeShortString(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 60) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "deliver",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["consumer-tag"]: decoder.decodeShortString(),
-          ["delivery-tag"]: decoder.decodeLongLongUint(),
-          ["redelivered"]: decoder.decodeBit(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 70) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "get",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["ticket"]: decoder.decodeShortUint(),
-          ["queue"]: decoder.decodeShortString(),
-          ["no-ack"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 71) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "get-ok",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["delivery-tag"]: decoder.decodeLongLongUint(),
-          ["redelivered"]: decoder.decodeBit(),
-          ["exchange"]: decoder.decodeShortString(),
-          ["routing-key"]: decoder.decodeShortString(),
-          ["message-count"]: decoder.decodeLongUint()
-        }
-      };
-    }
-
-    if (methodId === 72) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "get-empty",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["cluster-id"]: decoder.decodeShortString()
-        }
-      };
-    }
-
-    if (methodId === 80) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "ack",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["delivery-tag"]: decoder.decodeLongLongUint(),
-          ["multiple"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 90) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "reject",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["delivery-tag"]: decoder.decodeLongLongUint(),
-          ["requeue"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 100) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "recover-async",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["requeue"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 110) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "recover",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["requeue"]: decoder.decodeBit()
-        }
-      };
-    }
-
-    if (methodId === 111) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "recover-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 120) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "nack",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["delivery-tag"]: decoder.decodeLongLongUint(),
-          ["multiple"]: decoder.decodeBit(),
-          ["requeue"]: decoder.decodeBit()
-        }
-      };
-    }
+  if (classId === 10 && methodId === 31) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.tune-ok",
+      channel,
+      args: {
+        ["channel-max"]: decoder.decodeShortUint(),
+        ["frame-max"]: decoder.decodeLongUint(),
+        ["heartbeat"]: decoder.decodeShortUint()
+      }
+    };
   }
 
-  if (classId === 90) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "select",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "select-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 20) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "commit",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 21) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "commit-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 30) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "rollback",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
-
-    if (methodId === 31) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "rollback-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 40) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.open",
+      channel,
+      args: {
+        ["virtual-host"]: decoder.decodeShortString(),
+        ["capabilities"]: decoder.decodeShortString(),
+        ["insist"]: decoder.decodeBit()
+      }
+    };
   }
 
-  if (classId === 85) {
-    if (methodId === 10) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "select",
-        classId,
-        methodId,
-        channel,
-        args: {
-          ["nowait"]: decoder.decodeBit()
-        }
-      };
-    }
+  if (classId === 10 && methodId === 41) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.open-ok",
+      channel,
+      args: {
+        ["known-hosts"]: decoder.decodeShortString()
+      }
+    };
+  }
 
-    if (methodId === 11) {
-      const decoder = createDecoder(data);
-      return {
-        type: 1,
-        name: "select-ok",
-        classId,
-        methodId,
-        channel,
-        args: {}
-      };
-    }
+  if (classId === 10 && methodId === 50) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.close",
+      channel,
+      args: {
+        ["reply-code"]: decoder.decodeShortUint(),
+        ["reply-text"]: decoder.decodeShortString(),
+        ["class-id"]: decoder.decodeShortUint(),
+        ["method-id"]: decoder.decodeShortUint()
+      }
+    };
+  }
+
+  if (classId === 10 && methodId === 51) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.close-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 10 && methodId === 60) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.blocked",
+      channel,
+      args: {
+        ["reason"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 10 && methodId === 61) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.unblocked",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 10 && methodId === 70) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.update-secret",
+      channel,
+      args: {
+        ["new-secret"]: decoder.decodeLongString(),
+        ["reason"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 10 && methodId === 71) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "connection.update-secret-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 20 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.open",
+      channel,
+      args: {
+        ["out-of-band"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 20 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.open-ok",
+      channel,
+      args: {
+        ["channel-id"]: decoder.decodeLongString()
+      }
+    };
+  }
+
+  if (classId === 20 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.flow",
+      channel,
+      args: {
+        ["active"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 20 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.flow-ok",
+      channel,
+      args: {
+        ["active"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 20 && methodId === 40) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.close",
+      channel,
+      args: {
+        ["reply-code"]: decoder.decodeShortUint(),
+        ["reply-text"]: decoder.decodeShortString(),
+        ["class-id"]: decoder.decodeShortUint(),
+        ["method-id"]: decoder.decodeShortUint()
+      }
+    };
+  }
+
+  if (classId === 20 && methodId === 41) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "channel.close-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 30 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "access.request",
+      channel,
+      args: {
+        ["realm"]: decoder.decodeShortString(),
+        ["exclusive"]: decoder.decodeBit(),
+        ["passive"]: decoder.decodeBit(),
+        ["active"]: decoder.decodeBit(),
+        ["write"]: decoder.decodeBit(),
+        ["read"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 30 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "access.request-ok",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint()
+      }
+    };
+  }
+
+  if (classId === 40 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.declare",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["type"]: decoder.decodeShortString(),
+        ["passive"]: decoder.decodeBit(),
+        ["durable"]: decoder.decodeBit(),
+        ["auto-delete"]: decoder.decodeBit(),
+        ["internal"]: decoder.decodeBit(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 40 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.declare-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 40 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.delete",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["if-unused"]: decoder.decodeBit(),
+        ["nowait"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 40 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.delete-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 40 && methodId === 30) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.bind",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["destination"]: decoder.decodeShortString(),
+        ["source"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 40 && methodId === 31) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.bind-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 40 && methodId === 40) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.unbind",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["destination"]: decoder.decodeShortString(),
+        ["source"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 40 && methodId === 51) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "exchange.unbind-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 50 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.declare",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["passive"]: decoder.decodeBit(),
+        ["durable"]: decoder.decodeBit(),
+        ["exclusive"]: decoder.decodeBit(),
+        ["auto-delete"]: decoder.decodeBit(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.declare-ok",
+      channel,
+      args: {
+        ["queue"]: decoder.decodeShortString(),
+        ["message-count"]: decoder.decodeLongUint(),
+        ["consumer-count"]: decoder.decodeLongUint()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.bind",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.bind-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 50 && methodId === 30) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.purge",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["nowait"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 31) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.purge-ok",
+      channel,
+      args: {
+        ["message-count"]: decoder.decodeLongUint()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 40) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.delete",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["if-unused"]: decoder.decodeBit(),
+        ["if-empty"]: decoder.decodeBit(),
+        ["nowait"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 41) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.delete-ok",
+      channel,
+      args: {
+        ["message-count"]: decoder.decodeLongUint()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 50) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.unbind",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 50 && methodId === 51) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "queue.unbind-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 60 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.qos",
+      channel,
+      args: {
+        ["prefetch-size"]: decoder.decodeLongUint(),
+        ["prefetch-count"]: decoder.decodeShortUint(),
+        ["global"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.qos-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 60 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.consume",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["consumer-tag"]: decoder.decodeShortString(),
+        ["no-local"]: decoder.decodeBit(),
+        ["no-ack"]: decoder.decodeBit(),
+        ["exclusive"]: decoder.decodeBit(),
+        ["nowait"]: decoder.decodeBit(),
+        ["arguments"]: decoder.decodeTable()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.consume-ok",
+      channel,
+      args: {
+        ["consumer-tag"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 30) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.cancel",
+      channel,
+      args: {
+        ["consumer-tag"]: decoder.decodeShortString(),
+        ["nowait"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 31) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.cancel-ok",
+      channel,
+      args: {
+        ["consumer-tag"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 40) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.publish",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["mandatory"]: decoder.decodeBit(),
+        ["immediate"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 50) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.return",
+      channel,
+      args: {
+        ["reply-code"]: decoder.decodeShortUint(),
+        ["reply-text"]: decoder.decodeShortString(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 60) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.deliver",
+      channel,
+      args: {
+        ["consumer-tag"]: decoder.decodeShortString(),
+        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["redelivered"]: decoder.decodeBit(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 70) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.get",
+      channel,
+      args: {
+        ["ticket"]: decoder.decodeShortUint(),
+        ["queue"]: decoder.decodeShortString(),
+        ["no-ack"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 71) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.get-ok",
+      channel,
+      args: {
+        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["redelivered"]: decoder.decodeBit(),
+        ["exchange"]: decoder.decodeShortString(),
+        ["routing-key"]: decoder.decodeShortString(),
+        ["message-count"]: decoder.decodeLongUint()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 72) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.get-empty",
+      channel,
+      args: {
+        ["cluster-id"]: decoder.decodeShortString()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 80) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.ack",
+      channel,
+      args: {
+        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["multiple"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 90) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.reject",
+      channel,
+      args: {
+        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["requeue"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 100) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.recover-async",
+      channel,
+      args: {
+        ["requeue"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 110) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.recover",
+      channel,
+      args: {
+        ["requeue"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 60 && methodId === 111) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.recover-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 60 && methodId === 120) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "basic.nack",
+      channel,
+      args: {
+        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["multiple"]: decoder.decodeBit(),
+        ["requeue"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 90 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.select",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 90 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.select-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 90 && methodId === 20) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.commit",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 90 && methodId === 21) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.commit-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 90 && methodId === 30) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.rollback",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 90 && methodId === 31) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "tx.rollback-ok",
+      channel,
+      args: {}
+    };
+  }
+
+  if (classId === 85 && methodId === 10) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "confirm.select",
+      channel,
+      args: {
+        ["nowait"]: decoder.decodeBit()
+      }
+    };
+  }
+
+  if (classId === 85 && methodId === 11) {
+    const decoder = createDecoder(data);
+    return {
+      type: 1,
+      name: "confirm.select-ok",
+      channel,
+      args: {}
+    };
   }
 }

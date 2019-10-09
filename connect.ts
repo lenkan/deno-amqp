@@ -70,9 +70,7 @@ function encodeFrame(frame: DecodedFrame) {
   switch (frame.type) {
     case FRAME_METHOD:
       const payload = encodeMethodPayload(frame);
-      encoder.encodeLongUint(payload.length + 4);
-      encoder.encodeShortUint(frame.classId);
-      encoder.encodeShortUint(frame.methodId);
+      encoder.encodeLongUint(payload.length);
       encoder.write(payload);
       break;
   }
@@ -89,14 +87,12 @@ connect()
       const frame = decodeFrame(data);
 
       if (frame.type === FRAME_METHOD) {
-        if (frame.name === "start") {
+        if (frame.name === "connection.start") {
           const mechanism = frame.args.mechanisms.split(" ")[0];
           const locale = frame.args.locales.split(" ")[0];
           const payload = encodeFrame({
             type: FRAME_METHOD,
-            classId: 10,
-            methodId: 11,
-            name: "start-ok",
+            name: "connection.start-ok",
             channel: frame.channel,
             args: {
               ["client-properties"]: {},
@@ -109,8 +105,28 @@ connect()
           socket.write(payload);
         }
 
-        // challenge
-        if(frame.classId === 10 && frame.methodId === 30) {
+        if (frame.name === "connection.tune") {
+          const payload = encodeFrame({
+            type: FRAME_METHOD,
+            name: "connection.tune-ok",
+            channel: frame.channel,
+            args: {
+              "channel-max": frame.args["channel-max"],
+              "frame-max": frame.args["frame-max"],
+              heartbeat: frame.args["heartbeat"]
+            }
+          });
+
+          await socket.write(payload);
+
+          await socket.write(
+            encodeFrame({
+              type: FRAME_METHOD,
+              name: "connection.open",
+              channel: frame.channel,
+              args: { "virtual-host": "/", capabilities: "", insist: true }
+            })
+          );
         }
       }
     }

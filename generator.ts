@@ -7,6 +7,7 @@ interface Spec {
 interface ClassDefinition {
   id: number;
   methods: MethodDefinition[];
+  name: string;
 }
 
 interface MethodDefinition {
@@ -24,17 +25,15 @@ interface ArgumentDefinition {
 }
 
 function generateMethodInterface(spec: Spec) {
+  const methods = flattenMethods(spec);
   return `
-export type Method = ${spec.classes
-    .reduce<string[]>((result, clazz) => {
-      for (const method of clazz.methods) {
-        const properties = `
+export type Method = ${methods
+    .map(method => {
+      const properties = `
         {
           type: 1;
           channel: number;
           name: "${method.name}";
-          classId: ${clazz.id};
-          methodId: ${method.id};
           args: {
           ${method.arguments
             .map(arg => {
@@ -44,12 +43,26 @@ export type Method = ${spec.classes
           }
         }
         `;
-        result.push(properties); //`{ ${properties.("")} }`);
-      }
-      return result;
-    }, [])
+      return properties;
+    })
     .join(" | ")}
 `;
+}
+
+function flattenMethods(spec: Spec) {
+  const methods = spec.classes.reduce<
+    (MethodDefinition & { classId: number })[]
+  >((methods, clazz) => {
+    return [
+      ...methods,
+      ...clazz.methods.map(m => ({
+        ...m,
+        classId: clazz.id,
+        name: `${clazz.name}.${m.name}`
+      }))
+    ];
+  }, []);
+  return methods;
 }
 
 function generateEncodeMethod(spec: Spec) {
@@ -73,17 +86,17 @@ function generateEncodeMethod(spec: Spec) {
     return `method.args["${arg.name}"]`;
   }
 
+  const methods = flattenMethods(spec);
+
   return `
 export function encodeMethodPayload(method: Method): Uint8Array {
-  ${spec.classes
-    .map(clazz => {
+  ${methods
+    .map(method => {
       return `
-    if(method.classId === ${clazz.id}) {
-      ${clazz.methods
-        .map(method => {
-          return `
-        if(method.methodId === ${method.id}) {
+        if(method.name === "${method.name}") {
           const encoder = createEncoder();
+          encoder.encodeShortUint(${method.classId});
+          encoder.encodeShortUint(${method.id});
           ${method.arguments
             .map(argument => {
               const value = resolveValue(argument);
@@ -112,14 +125,10 @@ export function encodeMethodPayload(method: Method): Uint8Array {
           return encoder.bytes();
         }
         `;
-        })
-        .join("")}
-    }
-    `;
     })
     .join("")}
-}
-`;
+    }
+    `;
 }
 
 function resolveType(domains: Spec["domains"], arg: ArgumentDefinition) {
@@ -134,31 +143,18 @@ function resolveType(domains: Spec["domains"], arg: ArgumentDefinition) {
 }
 
 function generateDecodeMethod(spec: Spec) {
-  function resolveParameter(arg: ArgumentDefinition) {
-    if (arg["default-value"] !== undefined) {
-      return `method.args["${arg.name}"] !== undefined ? method.args["${
-        arg.name
-      }"] : ${JSON.stringify(arg["default-value"])}`;
-    }
-    return `method.args["${arg.name}"]`;
-  }
+  const methods = flattenMethods(spec);
 
   return `
 export function decodeMethodPayload(channel: number, classId: number, methodId: number, data: Uint8Array): Method {
-  ${spec.classes
-    .map(clazz => {
+  ${methods
+    .map(method => {
       return `
-    if(classId === ${clazz.id}) {
-      ${clazz.methods
-        .map(method => {
-          return `
-        if(methodId === ${method.id}) {
+        if(classId === ${method.classId} && methodId === ${method.id}) {
           const decoder = createDecoder(data);
           return {
             type: 1,
             name: "${method.name}",
-            classId,
-            methodId,
             channel,
             args: {
               ${method.arguments.map(argument => {
@@ -181,21 +177,19 @@ export function decodeMethodPayload(channel: number, classId: number, methodId: 
                   case "longlong":
                     return `${name}: decoder.decodeLongLongUint()`;
                   default:
-                    throw new Error(`Cannot decode ${resolveType(spec.domains, argument)}`);
+                    throw new Error(
+                      `Cannot decode ${resolveType(spec.domains, argument)}`
+                    );
                 }
               })}
             }
           }
         }
         `;
-        })
-        .join("")}
-    }
-    `;
     })
     .join("")}
-}
-`;
+    }
+    `;
 }
 
 const { args, readFileSync, writeFileSync } = Deno;
