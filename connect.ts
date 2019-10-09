@@ -1,8 +1,9 @@
 type Listener = Deno.Listener;
 type Conn = Deno.Conn;
-const { dial, Buffer } = Deno;
+const { dial } = Deno;
 import { createEncoder } from "./encoder.ts";
 import { createDecoder } from "./decoder.ts";
+import { encodeMethodPayload, Method, decodeMethodPayload } from "./output.ts";
 
 async function connect() {
   const writer = await dial({
@@ -45,22 +46,7 @@ const NULL_CHAR = String.fromCharCode(0);
 const user = "guest";
 const password = "guest";
 
-interface HeartbeatFrame {
-  channel: number;
-  type: 4;
-}
-
-interface MethodFrame {
-  type: 1;
-  channel: number;
-  classId: number;
-  methodId: number;
-  payload: Uint8Array;
-}
-
-type Frame = HeartbeatFrame | MethodFrame;
-
-function decodeFrame(data: Uint8Array): Frame {
+function decodeFrame(data: Uint8Array): DecodedFrame {
   const decoder = createDecoder(data);
   const type = decoder.decodeOctet();
   const channel = decoder.decodeShortUint();
@@ -69,22 +55,25 @@ function decodeFrame(data: Uint8Array): Frame {
   if (type === FRAME_METHOD) {
     const classId = decoder.decodeShortUint();
     const methodId = decoder.decodeShortUint();
-    const bytes  = decoder.bytes();
-    const payload = bytes.slice(0, bytes.length -1 );
-    return { classId, methodId, payload, channel, type };
+    const bytes = decoder.bytes();
+    const payload = bytes.slice(0, bytes.length - 1);
+    return decodeMethodPayload(channel, classId, methodId, payload);
   }
 }
 
-function encodeFrame(frame: Frame) {
+type DecodedFrame = Method | { type: 4; channel: number };
+
+function encodeFrame(frame: DecodedFrame) {
   const encoder = createEncoder();
   encoder.encodeOctet(frame.type);
   encoder.encodeShortUint(frame.channel);
   switch (frame.type) {
     case FRAME_METHOD:
-      encoder.encodeLongUint(frame.payload.length + 4);
+      const payload = encodeMethodPayload(frame);
+      encoder.encodeLongUint(payload.length + 4);
       encoder.encodeShortUint(frame.classId);
       encoder.encodeShortUint(frame.methodId);
-      encoder.write(frame.payload);
+      encoder.write(payload);
       break;
   }
   encoder.encodeOctet(FRAME_END);
@@ -100,21 +89,28 @@ connect()
       const frame = decodeFrame(data);
 
       if (frame.type === FRAME_METHOD) {
-        const method = decodeMethod(frame);
-        if (method.classId === 10 && method.methodId === 10) {
-          const mechanism = method.mechanisms.split(" ")[0];
-          const send = encodeFrame(
-            encodeMethod({
-              channel: method.channel,
-              classId: 10,
-              methodId: 11,
-              clientProperties: {},
-              locale: method.locales,
-              mechanism: mechanism,
+        if (frame.name === "start") {
+          const mechanism = frame.args.mechanisms.split(" ")[0];
+          const locale = frame.args.locales.split(" ")[0];
+          const payload = encodeFrame({
+            type: FRAME_METHOD,
+            classId: 10,
+            methodId: 11,
+            name: "start-ok",
+            channel: frame.channel,
+            args: {
+              ["client-properties"]: {},
+              locale,
+              mechanism,
               response: `${NULL_CHAR}${user}${NULL_CHAR}${password}`
-            })
-          );
-          socket.write(send);
+            }
+          });
+
+          socket.write(payload);
+        }
+
+        // challenge
+        if(frame.classId === 10 && frame.methodId === 30) {
         }
       }
     }

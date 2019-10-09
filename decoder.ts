@@ -42,6 +42,14 @@ export function createDecoder(data: Uint8Array) {
     return value;
   }
 
+  function decodeLongLongUint() {
+    throw new Error("Not implemented");
+  }
+
+  function decodeBit() {
+    throw new Error("Not implemented");
+  }
+
   function decodeShortString(): string {
     if (rest.length < 1) {
       throw new Error("Not enough data in array");
@@ -116,6 +124,8 @@ export function createDecoder(data: Uint8Array) {
     decodeLongString,
     decodeShortString,
     decodeTable,
+    decodeLongLongUint,
+    decodeBit,
     bytes: () => rest
   };
 }

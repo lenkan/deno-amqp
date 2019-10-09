@@ -7,7 +7,9 @@ test(function encodeDecodeTable() {
   const encoder = createEncoder();
   const table = {
     foo: "bar",
-    longString: Array.from<string>({ length: 350 }).fill("a").join(""),
+    longString: Array.from<string>({ length: 350 })
+      .fill("a")
+      .join(""),
     bar: 123,
     nested: {
       foo: "bar"

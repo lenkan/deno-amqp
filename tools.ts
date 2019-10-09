@@ -1,8 +1,7 @@
-
 const data = {
-  Boolean:  "t",
-  ShortShortInt:  "b",
-  ShortShortUInt:  "B",
+  Boolean: "t",
+  ShortShortInt: "b",
+  ShortShortUInt: "B",
   ShortInt: "s",
   ShortUInt: "u",
   LongInt: "I",
@@ -18,11 +17,11 @@ const data = {
   FieldTable: "F",
   ByteArray: "x",
   NoValue: "V"
-}
+};
 
 const encoder = new TextEncoder();
-console.log(`enum FieldType = {`)
+console.log(`enum FieldType = {`);
 Object.keys(data).map(key => {
-  console.log(`${key} = ${encoder.encode(data[key])}, // ${data[key]}`)
-})
-console.log(`}`)
+  console.log(`${key} = ${encoder.encode(data[key])}, // ${data[key]}`);
+});
+console.log(`}`);

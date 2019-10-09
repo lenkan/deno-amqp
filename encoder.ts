@@ -45,6 +45,10 @@ export function createEncoder() {
     buffer.writeSync(new Uint8Array([encoded.length, ...encoded]));
   }
 
+  function encodeBit(value: number) {
+    throw new Error("Not implemented");
+  }
+
   function encodeLongString(value: string) {
     const encoded = textEncoder.encode(value);
 
@@ -112,6 +116,7 @@ export function createEncoder() {
     encodeLongLongUint,
     encodeLongString,
     encodeShortString,
+    encodeBit,
     write: (bytes: Uint8Array) => buffer.writeSync(bytes),
     bytes: () => buffer.bytes()
   };

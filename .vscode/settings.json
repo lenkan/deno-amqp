@@ -1,5 +1,5 @@
 {
   "deno.enable": true,
   "deno.autoFmtOnSave": true,
-  "deno.alwaysShowStatus": true,
+  "deno.alwaysShowStatus": true
 }

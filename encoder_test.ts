@@ -3,7 +3,7 @@ import {
   assertEquals,
   assertThrows
 } from "https://deno.land/std/testing/asserts.ts";
-import  { createEncoder } from "./encoder.ts";
+import { createEncoder } from "./encoder.ts";
 
 const { Buffer } = Deno;
 
@@ -12,7 +12,7 @@ function arrayOf(a: number[]) {
 }
 
 function octet(n: number) {
-  const e = createEncoder()
+  const e = createEncoder();
   e.encodeOctet(n);
   return e.bytes();
 }
@@ -73,10 +73,7 @@ test(function encodeLongUint() {
   assertEquals(longUint(0), arrayOf([0, 0, 0, 0]));
   assertEquals(longUint(137), arrayOf([0, 0, 0, 137]));
   assertEquals(longUint(65535), arrayOf([0, 0, 255, 255]));
-  assertEquals(
-    longUint(4294967295),
-    arrayOf([255, 255, 255, 255])
-  );
+  assertEquals(longUint(4294967295), arrayOf([255, 255, 255, 255]));
 });
 
 test(function encodeLongUintInvalid() {
@@ -98,10 +95,7 @@ test(function encodeShortStringInvalid() {
 });
 
 test(function encodeLongString() {
-  assertEquals(
-    longString("abc"),
-    arrayOf([0, 0, 0, 3, 97, 98, 99])
-  );
+  assertEquals(longString("abc"), arrayOf([0, 0, 0, 3, 97, 98, 99]));
   assertEquals(longString("ö"), arrayOf([0, 0, 0, 2, 195, 182]));
   assertEquals(longString(""), arrayOf([0, 0, 0, 0]));
 });

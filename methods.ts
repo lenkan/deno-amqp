@@ -53,7 +53,7 @@ export function decodeMethod(frame: MethodFrame): Method {
     };
   }
 
-  throw new Error(`Can't handle method ${frame.classId}/${frame.methodId}`)
+  throw new Error(`Can't handle method ${frame.classId}/${frame.methodId}`);
 }
 
 export function encodeMethod(method: Method): MethodFrame {
@@ -73,5 +73,5 @@ export function encodeMethod(method: Method): MethodFrame {
     };
   }
 
-  throw new Error(`Can't handle method ${method.classId}/${method.methodId}`)
+  throw new Error(`Can't handle method ${method.classId}/${method.methodId}`);
 }

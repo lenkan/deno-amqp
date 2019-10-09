@@ -28,14 +28,23 @@ function generateMethodInterface(spec: Spec) {
 export type Method = ${spec.classes
     .reduce<string[]>((result, clazz) => {
       for (const method of clazz.methods) {
-        const properties = [
-          `classId: ${clazz.id}`,
-          `methodId: ${method.id}`,
-          ...method.arguments.map(arg => {
-            return `["${arg.name}"]: any`;
-          })
-        ];
-        result.push(`{ ${properties.join(";")} }`);
+        const properties = `
+        {
+          type: 1;
+          channel: number;
+          name: "${method.name}";
+          classId: ${clazz.id};
+          methodId: ${method.id};
+          args: {
+          ${method.arguments
+            .map(arg => {
+              return `["${arg.name}"]: any`;
+            })
+            .join(";")}
+          }
+        }
+        `;
+        result.push(properties); //`{ ${properties.("")} }`);
       }
       return result;
     }, [])
@@ -57,15 +66,15 @@ function generateEncodeMethod(spec: Spec) {
 
   function resolveValue(arg: ArgumentDefinition) {
     if (arg["default-value"] !== undefined) {
-      return `method["${arg.name}"] !== undefined ? method["${
+      return `method.args["${arg.name}"] !== undefined ? method.args["${
         arg.name
       }"] : ${JSON.stringify(arg["default-value"])}`;
     }
-    return `method["${arg.name}"]`;
+    return `method.args["${arg.name}"]`;
   }
 
   return `
-function encodeMethod(method: Method): MethodFrame {
+export function encodeMethodPayload(method: Method): Uint8Array {
   ${spec.classes
     .map(clazz => {
       return `
@@ -89,9 +98,94 @@ function encodeMethod(method: Method): MethodFrame {
                   return `encoder.encodeOctet(${value})`;
                 case "short":
                   return `encoder.encodeShortUint(${value})`;
+                case "long":
+                  return `encoder.encodeLongUint(${value})`;
+                case "bit":
+                  return `encoder.encodeBit(${value})`;
+                case "longlong":
+                  return `encoder.encodeLongLongUint(${value})`;
+                default:
+                  throw new Error(`Cannot encode ${resolveType(argument)}`);
               }
             })
             .join("\n")}
+          return encoder.bytes();
+        }
+        `;
+        })
+        .join("")}
+    }
+    `;
+    })
+    .join("")}
+}
+`;
+}
+
+function resolveType(domains: Spec["domains"], arg: ArgumentDefinition) {
+  if (arg.type !== undefined) {
+    return arg.type;
+  }
+  if (arg.domain !== undefined) {
+    const domain = domains.find(d => d[0] === arg.domain);
+    return domain[1];
+  }
+  throw new Error(`Cannot determine type ${arg}`);
+}
+
+function generateDecodeMethod(spec: Spec) {
+  function resolveParameter(arg: ArgumentDefinition) {
+    if (arg["default-value"] !== undefined) {
+      return `method.args["${arg.name}"] !== undefined ? method.args["${
+        arg.name
+      }"] : ${JSON.stringify(arg["default-value"])}`;
+    }
+    return `method.args["${arg.name}"]`;
+  }
+
+  return `
+export function decodeMethodPayload(channel: number, classId: number, methodId: number, data: Uint8Array): Method {
+  ${spec.classes
+    .map(clazz => {
+      return `
+    if(classId === ${clazz.id}) {
+      ${clazz.methods
+        .map(method => {
+          return `
+        if(methodId === ${method.id}) {
+          const decoder = createDecoder(data);
+          return {
+            type: 1,
+            name: "${method.name}",
+            classId,
+            methodId,
+            channel,
+            args: {
+              ${method.arguments.map(argument => {
+                const name = `["${argument.name}"]`;
+                switch (resolveType(spec.domains, argument)) {
+                  case "table":
+                    return `${name}: decoder.decodeTable()`;
+                  case "longstr":
+                    return `${name}: decoder.decodeLongString()`;
+                  case "shortstr":
+                    return `${name}: decoder.decodeShortString()`;
+                  case "octet":
+                    return `${name}: decoder.decodeOctet()`;
+                  case "short":
+                    return `${name}: decoder.decodeShortUint()`;
+                  case "long":
+                    return `${name}: decoder.decodeLongUint()`;
+                  case "bit":
+                    return `${name}: decoder.decodeBit()`;
+                  case "longlong":
+                    return `${name}: decoder.decodeLongLongUint()`;
+                  default:
+                    throw new Error(`Cannot decode ${resolveType(spec.domains, argument)}`);
+                }
+              })}
+            }
+          }
         }
         `;
         })
@@ -110,11 +204,15 @@ const amqpSpec = JSON.parse(decoder.decode(readFileSync(args[1])));
 
 const interfaces = generateMethodInterface(amqpSpec);
 const encodeMethod = generateEncodeMethod(amqpSpec);
+const decodeMethod = generateDecodeMethod(amqpSpec);
 
 const encoder = new TextEncoder();
 const imports = [
-  `import { createEncoder } from "./encoder"`,
-  `import { createDecoder } from "./decoder"`
+  `import { createEncoder } from "./encoder.ts"`,
+  `import { createDecoder } from "./decoder.ts"`
 ].join("\n");
 
-writeFileSync("output.ts", encoder.encode(imports + interfaces + encodeMethod));
+writeFileSync(
+  "output.ts",
+  encoder.encode(imports + interfaces + encodeMethod + decodeMethod)
+);
