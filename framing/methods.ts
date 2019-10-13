@@ -2,7 +2,7 @@ import { createEncoder } from "./encoder.ts";
 import { createDecoder } from "./decoder.ts";
 export type Method =
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.start";
       args: {
@@ -14,7 +14,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.start-ok";
       args: {
@@ -25,7 +25,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.secure";
       args: {
@@ -33,7 +33,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.secure-ok";
       args: {
@@ -41,7 +41,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.tune";
       args: {
@@ -51,7 +51,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.tune-ok";
       args: {
@@ -61,7 +61,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.open";
       args: {
@@ -71,7 +71,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.open-ok";
       args: {
@@ -79,7 +79,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.close";
       args: {
@@ -90,13 +90,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.close-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.blocked";
       args: {
@@ -104,13 +104,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.unblocked";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.update-secret";
       args: {
@@ -119,13 +119,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "connection.update-secret-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.open";
       args: {
@@ -133,7 +133,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.open-ok";
       args: {
@@ -141,7 +141,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.flow";
       args: {
@@ -149,7 +149,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.flow-ok";
       args: {
@@ -157,7 +157,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.close";
       args: {
@@ -168,13 +168,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "channel.close-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "access.request";
       args: {
@@ -187,7 +187,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "access.request-ok";
       args: {
@@ -195,7 +195,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.declare";
       args: {
@@ -211,13 +211,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.declare-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.delete";
       args: {
@@ -228,13 +228,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.delete-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.bind";
       args: {
@@ -247,13 +247,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.bind-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.unbind";
       args: {
@@ -266,13 +266,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "exchange.unbind-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.declare";
       args: {
@@ -287,7 +287,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.declare-ok";
       args: {
@@ -297,7 +297,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.bind";
       args: {
@@ -310,13 +310,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.bind-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.purge";
       args: {
@@ -326,7 +326,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.purge-ok";
       args: {
@@ -334,7 +334,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.delete";
       args: {
@@ -346,7 +346,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.delete-ok";
       args: {
@@ -354,7 +354,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.unbind";
       args: {
@@ -366,13 +366,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "queue.unbind-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.qos";
       args: {
@@ -382,13 +382,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.qos-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.consume";
       args: {
@@ -403,7 +403,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.consume-ok";
       args: {
@@ -411,7 +411,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.cancel";
       args: {
@@ -420,7 +420,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.cancel-ok";
       args: {
@@ -428,7 +428,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.publish";
       args: {
@@ -440,7 +440,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.return";
       args: {
@@ -451,7 +451,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.deliver";
       args: {
@@ -463,7 +463,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.get";
       args: {
@@ -473,7 +473,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.get-ok";
       args: {
@@ -485,7 +485,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.get-empty";
       args: {
@@ -493,7 +493,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.ack";
       args: {
@@ -502,7 +502,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.reject";
       args: {
@@ -511,7 +511,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.recover-async";
       args: {
@@ -519,7 +519,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.recover";
       args: {
@@ -527,13 +527,13 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.recover-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "basic.nack";
       args: {
@@ -543,43 +543,43 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.select";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.select-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.commit";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.commit-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.rollback";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "tx.rollback-ok";
       args: {};
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "confirm.select";
       args: {
@@ -587,7 +587,7 @@ export type Method =
       };
     }
   | {
-      type: 1;
+      type: "method";
       channel: number;
       name: "confirm.select-ok";
       args: {};
@@ -1473,7 +1473,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.start",
       channel,
       args: {
@@ -1489,7 +1489,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.start-ok",
       channel,
       args: {
@@ -1504,7 +1504,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.secure",
       channel,
       args: {
@@ -1516,7 +1516,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.secure-ok",
       channel,
       args: {
@@ -1528,7 +1528,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.tune",
       channel,
       args: {
@@ -1542,7 +1542,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.tune-ok",
       channel,
       args: {
@@ -1556,7 +1556,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.open",
       channel,
       args: {
@@ -1570,7 +1570,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.open-ok",
       channel,
       args: {
@@ -1582,7 +1582,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.close",
       channel,
       args: {
@@ -1597,7 +1597,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.close-ok",
       channel,
       args: {}
@@ -1607,7 +1607,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 60) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.blocked",
       channel,
       args: {
@@ -1619,7 +1619,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 61) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.unblocked",
       channel,
       args: {}
@@ -1629,7 +1629,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 70) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.update-secret",
       channel,
       args: {
@@ -1642,7 +1642,7 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 71) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "connection.update-secret-ok",
       channel,
       args: {}
@@ -1652,7 +1652,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.open",
       channel,
       args: {
@@ -1664,7 +1664,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.open-ok",
       channel,
       args: {
@@ -1676,7 +1676,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.flow",
       channel,
       args: {
@@ -1688,7 +1688,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.flow-ok",
       channel,
       args: {
@@ -1700,7 +1700,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.close",
       channel,
       args: {
@@ -1715,7 +1715,7 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "channel.close-ok",
       channel,
       args: {}
@@ -1725,7 +1725,7 @@ export function decodeMethodPayload(
   if (classId === 30 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "access.request",
       channel,
       args: {
@@ -1742,7 +1742,7 @@ export function decodeMethodPayload(
   if (classId === 30 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "access.request-ok",
       channel,
       args: {
@@ -1754,7 +1754,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.declare",
       channel,
       args: {
@@ -1774,7 +1774,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.declare-ok",
       channel,
       args: {}
@@ -1784,7 +1784,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.delete",
       channel,
       args: {
@@ -1799,7 +1799,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.delete-ok",
       channel,
       args: {}
@@ -1809,7 +1809,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.bind",
       channel,
       args: {
@@ -1826,7 +1826,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.bind-ok",
       channel,
       args: {}
@@ -1836,7 +1836,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.unbind",
       channel,
       args: {
@@ -1853,7 +1853,7 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "exchange.unbind-ok",
       channel,
       args: {}
@@ -1863,7 +1863,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.declare",
       channel,
       args: {
@@ -1882,7 +1882,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.declare-ok",
       channel,
       args: {
@@ -1896,7 +1896,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.bind",
       channel,
       args: {
@@ -1913,7 +1913,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.bind-ok",
       channel,
       args: {}
@@ -1923,7 +1923,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.purge",
       channel,
       args: {
@@ -1937,7 +1937,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.purge-ok",
       channel,
       args: {
@@ -1949,7 +1949,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.delete",
       channel,
       args: {
@@ -1965,7 +1965,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.delete-ok",
       channel,
       args: {
@@ -1977,7 +1977,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.unbind",
       channel,
       args: {
@@ -1993,7 +1993,7 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "queue.unbind-ok",
       channel,
       args: {}
@@ -2003,7 +2003,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.qos",
       channel,
       args: {
@@ -2017,7 +2017,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.qos-ok",
       channel,
       args: {}
@@ -2027,7 +2027,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.consume",
       channel,
       args: {
@@ -2046,7 +2046,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.consume-ok",
       channel,
       args: {
@@ -2058,7 +2058,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.cancel",
       channel,
       args: {
@@ -2071,7 +2071,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.cancel-ok",
       channel,
       args: {
@@ -2083,7 +2083,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.publish",
       channel,
       args: {
@@ -2099,7 +2099,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.return",
       channel,
       args: {
@@ -2114,7 +2114,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 60) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.deliver",
       channel,
       args: {
@@ -2130,7 +2130,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 70) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.get",
       channel,
       args: {
@@ -2144,7 +2144,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 71) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.get-ok",
       channel,
       args: {
@@ -2160,7 +2160,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 72) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.get-empty",
       channel,
       args: {
@@ -2172,7 +2172,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 80) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.ack",
       channel,
       args: {
@@ -2185,7 +2185,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 90) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.reject",
       channel,
       args: {
@@ -2198,7 +2198,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 100) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.recover-async",
       channel,
       args: {
@@ -2210,7 +2210,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 110) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.recover",
       channel,
       args: {
@@ -2222,7 +2222,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 111) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.recover-ok",
       channel,
       args: {}
@@ -2232,7 +2232,7 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 120) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "basic.nack",
       channel,
       args: {
@@ -2246,7 +2246,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.select",
       channel,
       args: {}
@@ -2256,7 +2256,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.select-ok",
       channel,
       args: {}
@@ -2266,7 +2266,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.commit",
       channel,
       args: {}
@@ -2276,7 +2276,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.commit-ok",
       channel,
       args: {}
@@ -2286,7 +2286,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.rollback",
       channel,
       args: {}
@@ -2296,7 +2296,7 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "tx.rollback-ok",
       channel,
       args: {}
@@ -2306,7 +2306,7 @@ export function decodeMethodPayload(
   if (classId === 85 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "confirm.select",
       channel,
       args: {
@@ -2318,7 +2318,7 @@ export function decodeMethodPayload(
   if (classId === 85 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
-      type: 1,
+      type: "method",
       name: "confirm.select-ok",
       channel,
       args: {}

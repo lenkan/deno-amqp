@@ -31,7 +31,7 @@ export type Method = ${methods
     .map(method => {
       const properties = `
         {
-          type: 1;
+          type: "method";
           channel: number;
           name: "${method.name}";
           args: {
@@ -153,7 +153,7 @@ export function decodeMethodPayload(channel: number, classId: number, methodId: 
         if(classId === ${method.classId} && methodId === ${method.id}) {
           const decoder = createDecoder(data);
           return {
-            type: 1,
+            type: "method",
             name: "${method.name}",
             channel,
             args: {
@@ -207,6 +207,6 @@ const imports = [
 ].join("\n");
 
 writeFileSync(
-  "output.ts",
+  "framing/methods.ts",
   encoder.encode(imports + interfaces + encodeMethod + decodeMethod)
 );
