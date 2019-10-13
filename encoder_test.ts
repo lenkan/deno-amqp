@@ -47,6 +47,14 @@ function longString(s: string) {
   return buffer.bytes();
 }
 
+function bits(values: boolean[]) {
+  const buffer = createEncoder();
+  for (const val of values) {
+    buffer.encodeBit(val);
+  }
+  return buffer.bytes();
+}
+
 test(function encodeOctet() {
   assertEquals(octet(0), arrayOf([0]));
   assertEquals(octet(137), arrayOf([137]));
@@ -98,4 +106,23 @@ test(function encodeLongString() {
   assertEquals(longString("abc"), arrayOf([0, 0, 0, 3, 97, 98, 99]));
   assertEquals(longString("ö"), arrayOf([0, 0, 0, 2, 195, 182]));
   assertEquals(longString(""), arrayOf([0, 0, 0, 0]));
+});
+
+test(function encodeBit() {
+  assertEquals(bits([true]), arrayOf([0b00000001]));
+  assertEquals(bits([true, false, true]), arrayOf([0b00000101]));
+  assertEquals(
+    bits([true, false, true, false, false, false, false, false, true]),
+    arrayOf([0b00000101, 0x01])
+  );
+});
+
+test(function encodeBitsAndOctet() {
+  const encoder = createEncoder();
+  encoder.encodeBit(true);
+  encoder.encodeBit(false);
+  encoder.encodeBit(true);
+  encoder.encodeOctet(0xde);
+  const result = encoder.bytes();
+  assertEquals(result, [0b00000101, 0xde]);
 });

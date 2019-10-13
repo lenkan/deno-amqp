@@ -4,13 +4,20 @@ const textEncoder = new TextEncoder();
 
 export function createEncoder() {
   const buffer = new Deno.Buffer();
+  let bitField = 0;
+  let bitPointer = -1;
+
+  function write(data: Uint8Array) {
+    flushBitField();
+    buffer.writeSync(data);
+  }
 
   function encodeOctet(value: number) {
     if (value < 0 || value > 0xff) {
       throw new Error("Invalid value for octet");
     }
 
-    buffer.writeSync(new Uint8Array([value]));
+    write(new Uint8Array([value]));
   }
 
   function encodeShortUint(value: number) {
@@ -18,7 +25,7 @@ export function createEncoder() {
       throw new Error("Invalid value for short-uint");
     }
 
-    buffer.writeSync(new Uint8Array([value >>> 8, value]));
+    write(new Uint8Array([value >>> 8, value]));
   }
 
   function encodeLongUint(value: number) {
@@ -26,9 +33,7 @@ export function createEncoder() {
       throw new Error("Invalid value for long-uint");
     }
 
-    buffer.writeSync(
-      new Uint8Array([value >>> 24, value >>> 16, value >>> 8, value])
-    );
+    write(new Uint8Array([value >>> 24, value >>> 16, value >>> 8, value]));
   }
 
   function encodeLongLongUint(value: number) {
@@ -42,11 +47,23 @@ export function createEncoder() {
       throw new Error("Value is too long for short string");
     }
 
-    buffer.writeSync(new Uint8Array([encoded.length, ...encoded]));
+    write(new Uint8Array([encoded.length, ...encoded]));
   }
 
-  function encodeBit(value: number) {
-    throw new Error("Not implemented");
+  function encodeBit(value: boolean) {
+    if (bitPointer === -1) {
+      bitField = 0;
+      bitPointer = 0;
+    }
+
+    if(bitPointer === 8) {
+      flushBitField();
+      bitField = 0;
+      bitPointer = 0;
+    }
+
+    const comparator = (value ? 1 : 0) << bitPointer++;
+    bitField = bitField | comparator;
   }
 
   function encodeLongString(value: string) {
@@ -57,7 +74,7 @@ export function createEncoder() {
     }
 
     encodeLongUint(encoded.length);
-    buffer.writeSync(encoded);
+    write(encoded);
   }
 
   function encodeTable(table: Record<string, unknown>) {
@@ -105,7 +122,20 @@ export function createEncoder() {
 
     const result = encoder.bytes();
     encodeLongUint(result.length);
-    buffer.writeSync(result);
+    write(result);
+  }
+
+  function flushBitField() {
+    if (bitPointer >= 0) {
+      buffer.writeSync(new Uint8Array([bitField]));
+      bitPointer = -1;
+      bitField = 0;
+    }
+  }
+
+  function getBytes() {
+    flushBitField();
+    return buffer.bytes();
   }
 
   return {
@@ -117,7 +147,7 @@ export function createEncoder() {
     encodeLongString,
     encodeShortString,
     encodeBit,
-    write: (bytes: Uint8Array) => buffer.writeSync(bytes),
-    bytes: () => buffer.bytes()
+    write,
+    bytes: getBytes
   };
 }

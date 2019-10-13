@@ -5,10 +5,14 @@ const textDecoder = new TextDecoder();
 export function createDecoder(data: Uint8Array) {
   let offset: number = 0;
   let rest = data;
+  let bitField: number = 0;
+  let bitPointer: number = -1;
 
   function advance(numBytes: number) {
     offset += numBytes;
     rest = data.slice(offset, data.length);
+    bitPointer = -1;
+    bitField = 0;
   }
 
   function decodeOctet() {
@@ -42,12 +46,25 @@ export function createDecoder(data: Uint8Array) {
     return value;
   }
 
-  function decodeLongLongUint() {
-    throw new Error("Not implemented");
+  function decodeLongLongUint(): Uint8Array {
+    const data = new Uint8Array([...rest.slice(0, 8)]);
+    advance(8);
+    return data;
   }
 
   function decodeBit() {
-    throw new Error("Not implemented");
+    if(bitPointer === -1) {
+      bitField = decodeOctet();
+      bitPointer = 0;
+    }
+
+    if(bitPointer === 8) {
+      bitField = decodeOctet();
+      bitPointer = 0;
+    }
+
+    const comparator = 0x01 << bitPointer++;
+    return (bitField & comparator) !== 0;
   }
 
   function decodeShortString(): string {
