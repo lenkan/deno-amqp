@@ -53,12 +53,12 @@ export function createDecoder(data: Uint8Array) {
   }
 
   function decodeBit() {
-    if(bitPointer === -1) {
+    if (bitPointer === -1) {
       bitField = decodeOctet();
       bitPointer = 0;
     }
 
-    if(bitPointer === 8) {
+    if (bitPointer === 8) {
       bitField = decodeOctet();
       bitPointer = 0;
     }

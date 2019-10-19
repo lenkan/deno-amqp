@@ -1,6 +1,7 @@
 import { createEncoder } from "./encoder.ts";
 import { createDecoder } from "./decoder.ts";
-import { encodeMethodPayload, Method, decodeMethodPayload } from "./methods.ts";
+import { encodeMethodPayload, MethodPayload as OutgoingMethodPayload } from "./method_encoder.ts";
+import { decodeMethodPayload, MethodPayload as IncomingMethodPayload } from "./method_decoder.ts";
 
 const FRAME_METHOD = 1;
 const FRAME_HEADER = 2;
@@ -10,22 +11,24 @@ const FRAME_END = 0xce;
 const { dial } = Deno;
 
 export type Heartbeat = { type: "heartbeat"; channel: number };
-export type Frame = Method | Heartbeat;
+export type IncomingMethod = { type: "method", channel: number } & IncomingMethodPayload;
+export type OutgoingMethod = { type: "method", channel: number } & OutgoingMethodPayload;
+
+export type IncomingFrame = IncomingMethod | Heartbeat;
+export type OutgoingFrame = OutgoingMethod | Heartbeat;
 
 export interface ConnectOptions {
   hostname: string;
   port: number;
 }
 
-export interface AmqpConnection {
+export interface AmqpSocket {
   start(): Promise<void>;
-  read(): Promise<Frame>;
-  write(frame: Frame): Promise<void>;
+  read(): Promise<IncomingFrame>;
+  write(frame: OutgoingFrame): Promise<void>;
 }
 
-export async function connect(
-  options: ConnectOptions
-): Promise<AmqpConnection> {
+export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   const conn = await dial({
     hostname: options.hostname,
     port: options.port,
@@ -34,13 +37,22 @@ export async function connect(
 
   async function readBytes(length: number) {
     const chunk = new Uint8Array(length);
-    const n = await conn.read(chunk);
-    if (n === length) {
-      return chunk;
+    let n: number | null = null;
+
+    while (n === null) {
+      n = await conn.read(chunk);
+      if (n === length) {
+        return chunk;
+      }
     }
 
     // TODO: Handle this
-    throw new Error(`Unable to read desired length from connection`);
+    throw new Error(
+      `Unable to read desired length from connection ${JSON.stringify({
+        n,
+        length
+      })}`
+    );
   }
 
   async function readHeader() {
@@ -52,7 +64,7 @@ export async function connect(
     return { type, channel, size };
   }
 
-  async function read(): Promise<Frame> {
+  async function read(): Promise<IncomingFrame> {
     const { type, channel, size } = await readHeader();
 
     const payload = await readBytes(size + 1); // size + frame end
@@ -61,7 +73,12 @@ export async function connect(
     if (type === FRAME_METHOD) {
       const classId = decoder.decodeShortUint();
       const methodId = decoder.decodeShortUint();
-      return decodeMethodPayload(channel, classId, methodId, decoder.bytes());
+      const result = decodeMethodPayload(classId, methodId, decoder.bytes());
+      return { 
+        channel, 
+        type: "method",
+        ...result
+       }
     }
 
     if (type === FRAME_HEARTBEAT) {
@@ -82,7 +99,7 @@ export async function connect(
     throw new Error(`Unknown frame type ${type}`);
   }
 
-  function encodeFrame(frame: Frame) {
+  function encodeFrame(frame: OutgoingFrame) {
     if (frame.type === "method") {
       const encoder = createEncoder();
       const payload = encodeMethodPayload(frame);
@@ -103,10 +120,10 @@ export async function connect(
       return encoder.bytes();
     }
 
-    throw new Error(`Cannot encode frame type ${frame}`)
+    throw new Error(`Cannot encode frame type ${frame}`);
   }
 
-  async function write(frame: Frame) {
+  async function write(frame: OutgoingFrame) {
     const data = encodeFrame(frame);
     await conn.write(data);
   }

@@ -36,7 +36,7 @@ export function createEncoder() {
     write(new Uint8Array([value >>> 24, value >>> 16, value >>> 8, value]));
   }
 
-  function encodeLongLongUint(value: number) {
+  function encodeLongLongUint(value: Uint8Array | number) {
     throw new Error("Not implemented");
   }
 
@@ -56,7 +56,7 @@ export function createEncoder() {
       bitPointer = 0;
     }
 
-    if(bitPointer === 8) {
+    if (bitPointer === 8) {
       flushBitField();
       bitField = 0;
       bitPointer = 0;
