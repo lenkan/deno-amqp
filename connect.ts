@@ -22,9 +22,6 @@ interface AmqpConnection {
 
 type ConnectionState = "opening" | "running" | "closed";
 type FrameHandler = (frame: IncomingFrame) => void;
-interface FrameListener {
-  handler: FrameHandler;
-}
 
 async function connect(options: Options) {
   const socket = await dial({ hostname: "localhost", port: 5672 });
@@ -33,18 +30,27 @@ async function connect(options: Options) {
   await socket.start();
   let heartbeatTimer: number;
 
-  let listeners: FrameHandler[] = [];
+  async function receiveMethod<T extends IncomingMethod, U extends T["name"]>(
+    name: U,
+    channel: number
+  ): Promise<Extract<T, { name: U }>> {
+    return new Promise((resolve, reject) => {
+      const unsubscribe = socket.listen(frame => {
+        if (frame.type === "method" && frame.name === "connection.close") {
+          unsubscribe();
+          return reject(`Channel closed`);
+        }
 
-  function once(listener: FrameHandler) {
-    const wrapper = (frame: IncomingFrame) => {
-      listeners.splice(listeners.indexOf(wrapper), 1);
-      listener(frame);
-    };
-    listeners.push(wrapper);
-  }
+        if (frame.channel !== channel) {
+          return;
+        }
 
-  function on(listener: FrameHandler) {
-    listeners.push(listener);
+        if (frame.type === "method" && frame.name === name) {
+          unsubscribe();
+          return resolve(frame as Extract<T, { name: U }>);
+        }
+      });
+    });
   }
 
   function handleMethod(method: IncomingMethod) {}
@@ -63,120 +69,109 @@ async function connect(options: Options) {
     }, interval);
   }
 
+  function stopHeartbeat() {
+    clearInterval(heartbeatTimer);
+  }
+
   function cleanup() {
     clearInterval(heartbeatTimer);
   }
 
-  async function open() {
-    while (true) {
-      const frame = await socket.read();
-      console.log("[connection] received", JSON.stringify(frame, null, 2));
+  function open() {
+    return new Promise((resolve, reject) => {
+      const listeners: (() => void)[] = [];
+      const unsubscribe = () => listeners.forEach(l => l());
 
-      if (frame.type === "method") {
-        if (frame.name === "connection.start") {
-          const mechanism = frame.args.mechanisms.split(" ")[0];
-          const locale = frame.args.locales.split(" ")[0];
+      receiveMethod("connection.start", 0).then(async frame => {
+        const mechanism = frame.args.mechanisms.split(" ")[0];
+        const locale = frame.args.locales.split(" ")[0];
 
-          await socket.write({
-            type: "method",
-            name: "connection.start-ok",
-            channel: frame.channel,
-            args: {
-              ["client-properties"]: {},
-              locale,
-              mechanism,
-              response: `${NULL_CHAR}${user}${NULL_CHAR}${password}`
-            }
-          });
-        }
+        await socket.write({
+          type: "method",
+          name: "connection.start-ok",
+          channel: frame.channel,
+          args: {
+            ["client-properties"]: {},
+            locale,
+            mechanism,
+            response: `${NULL_CHAR}${user}${NULL_CHAR}${password}`
+          }
+        });
+      });
 
-        if (frame.name === "connection.tune") {
-          await socket.write({
-            type: "method",
-            name: "connection.tune-ok",
-            channel: frame.channel,
-            args: {
-              "channel-max": frame.args["channel-max"],
-              "frame-max": frame.args["frame-max"],
-              heartbeat: frame.args["heartbeat"]
-            }
-          });
+      receiveMethod("connection.tune", 0).then(async frame => {
+        await socket.write({
+          type: "method",
+          name: "connection.tune-ok",
+          channel: frame.channel,
+          args: {
+            "channel-max": frame.args["channel-max"],
+            "frame-max": frame.args["frame-max"],
+            heartbeat: frame.args["heartbeat"]
+          }
+        });
 
-          startHeartbeat(frame.args.heartbeat);
+        startHeartbeat(frame.args.heartbeat);
 
-          await socket.write({
-            type: "method",
-            name: "connection.open",
-            channel: frame.channel,
-            args: { "virtual-host": "/", capabilities: "", insist: true }
-          });
-        }
+        await socket.write({
+          type: "method",
+          name: "connection.open",
+          channel: frame.channel,
+          args: { "virtual-host": "/", capabilities: "", insist: true }
+        });
+      });
 
-        if (frame.name === "connection.open-ok") {
-          return;
-        }
+      receiveMethod("connection.open-ok", 0).then(async _ => {
+        return resolve();
+      });
 
-        if (frame.name === "connection.close") {
-          cleanup();
-          await socket.write({
-            type: "method",
-            name: "connection.close-ok",
-            channel: frame.channel,
-            args: {}
-          });
+      receiveMethod("connection.close", 0).then(async frame => {
+        stopHeartbeat();
+        await socket.write({
+          type: "method",
+          name: "connection.close-ok",
+          channel: frame.channel,
+          args: {}
+        });
 
-          throw new Error(
-            `Connection handshake failed:  ${JSON.stringify(frame.args)}`
-          );
-        }
-      }
-    }
+        return reject(new Error(`Connection handshake failed`));
+      });
+    });
   }
 
   await open();
 
-  async function startReceiving() {
-    while (true) {
-      const frame = await socket.read();
-      console.log(`Received frame: ${JSON.stringify(frame)}`);
-
-      if (frame.type === "method" && frame.className === "connection") {
-        if(frame.channel !== 0) {
-          await socket.write({
-            type: "method",
-            name: "connection.close",
-            channel: 0,
-            args: {
-              "reply-code": 501,
-              "reply-text": `Received heartbeat on channel ${frame.channel}`,
-              "class-id": frame.classId,
-              "method-id": frame.methodId,
-            }
-          })
+  socket.listen(async frame => {
+    if(frame.type === "method" && frame.className === "connection" && frame.channel !== 0) {
+      await socket.write({
+        type: "method",
+        name: "connection.close",
+        channel: 0,
+        args: {
+            "reply-code": 501,
+            "reply-text": `Received connection method on channel ${frame.channel}`,
+            "class-id": frame.classId,
+            "method-id": frame.methodId
         }
-        if (frame.name === "connection.close") {
-          console.log("Connection closing", JSON.stringify(frame.args));
-          cleanup();
-          await socket.write({
-            type: "method",
-            name: "connection.close-ok",
-            channel: frame.channel,
-            args: {}
-          });
-        }
-
-        return;
-      }
-
-      if(frame.type)
-
-      listeners.forEach(listener => listener(frame));
+      })
+      await receiveMethod("connection.close-ok", 0);
+      console.log("Close ok")
     }
-  }
-
-  startReceiving().catch(error => {
-    console.error(`Fatal error`, error);
   });
+
+  socket.listen(async frame => {
+    if(frame.type === "method" && frame.name === "connection.close") {
+        console.log("Connection closing", JSON.stringify(frame.args));
+        // TODO: Notify listeners about close
+        cleanup();
+        await socket.write({
+          type: "method",
+          name: "connection.close-ok",
+          channel: frame.channel,
+          args: {}
+        });
+      }
+  })
 
   async function createChannel() {
     await socket.write({
@@ -186,18 +181,9 @@ async function connect(options: Options) {
       args: { "out-of-band": "" }
     });
 
-    return new Promise((resolve, reject) => {
-      on(frame => {
-        if (
-          frame.channel === 1 &&
-          frame.type === "method" &&
-          frame.name === "channel.open-ok"
-        ) {
-          console.log("Opened channel");
-          return resolve();
-        }
-      });
-    });
+    const response = await receiveMethod("channel.open-ok", 1);
+    console.log("Channel opened");
+    console.log(JSON.stringify(response));
   }
 
   async function declareQueue() {
@@ -209,20 +195,30 @@ async function connect(options: Options) {
         queue: "foo-bar"
       }
     });
+
+    const response = await receiveMethod("queue.declare-ok", 1);
+    console.log("Queue declared");
+    console.log(JSON.stringify(response));
   }
 
   async function close() {
     await socket.write({
       type: "method",
       name: "connection.close",
+      channel: 0,
       args: {
-
-
+        "reply-code": 302,
+        "class-id": 0,
+        "method-id": 0
       }
-    })
+    });
+    stopHeartbeat();
+
+    await receiveMethod("connection.close-ok", 0);
+    socket.close();
   }
 
-  return { createChannel, declareQueue };
+  return { createChannel, declareQueue, close };
 }
 
 connect({
@@ -234,6 +230,8 @@ connect({
   .then(async connection => {
     await connection.createChannel();
     await connection.declareQueue();
+
+    setTimeout(() => connection.close(), 10000);
   })
   .catch(e => {
     console.error(e);
