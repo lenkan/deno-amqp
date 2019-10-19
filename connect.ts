@@ -70,7 +70,7 @@ async function connect(options: Options) {
   async function open() {
     while (true) {
       const frame = await socket.read();
-      console.log("Received", JSON.stringify(frame, null, 2));
+      console.log("[connection] received", JSON.stringify(frame, null, 2));
 
       if (frame.type === "method") {
         if (frame.name === "connection.start") {
@@ -138,10 +138,21 @@ async function connect(options: Options) {
   async function startReceiving() {
     while (true) {
       const frame = await socket.read();
-      listeners.forEach(listener => listener(frame));
+      console.log(`Received frame: ${JSON.stringify(frame)}`);
 
-      if (frame.type === "method") {
-        if (frame.name.startsWith("connection.")) {
+      if (frame.type === "method" && frame.className === "connection") {
+        if(frame.channel !== 0) {
+          await socket.write({
+            type: "method",
+            name: "connection.close",
+            channel: 0,
+            args: {
+              "reply-code": 501,
+              "reply-text": `Received heartbeat on channel ${frame.channel}`,
+              "class-id": frame.classId,
+              "method-id": frame.methodId,
+            }
+          })
         }
         if (frame.name === "connection.close") {
           console.log("Connection closing", JSON.stringify(frame.args));
@@ -154,8 +165,12 @@ async function connect(options: Options) {
           });
         }
 
-        handleMethod(frame);
+        return;
       }
+
+      if(frame.type)
+
+      listeners.forEach(listener => listener(frame));
     }
   }
 
@@ -191,9 +206,20 @@ async function connect(options: Options) {
       name: "queue.declare",
       channel: 1,
       args: {
-        queue: "foo-bar",
+        queue: "foo-bar"
       }
     });
+  }
+
+  async function close() {
+    await socket.write({
+      type: "method",
+      name: "connection.close",
+      args: {
+
+
+      }
+    })
   }
 
   return { createChannel, declareQueue };

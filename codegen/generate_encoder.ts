@@ -1,77 +1,16 @@
-interface Spec {
-  classes: ClassDefinition[];
-  domains: [string, string];
-  constants: { name: string; value: number; class: string };
-}
-
-interface ClassDefinition {
-  id: number;
-  methods: MethodDefinition[];
-  name: string;
-}
-
-interface MethodDefinition {
-  id: number;
-  arguments: ArgumentDefinition[];
-  synchronous?: boolean;
-  name: string;
-}
-
-interface ArgumentDefinition {
-  type?: string;
-  domain?: string;
-  name: string;
-  ["default-value"]: string | number | boolean | object;
-}
+import {
+  Spec,
+  ArgumentDefinition,
+  resolveArgumentType,
+  flattenMethods,
+  resolveType
+} from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
 const decoder = new TextDecoder("utf-8");
 const spec = JSON.parse(decoder.decode(readFileSync(args[1]))) as Spec;
 
-const methods = spec.classes.reduce<(MethodDefinition & { classId: number })[]>(
-  (methods, clazz) => {
-    return [
-      ...methods,
-      ...clazz.methods.map(m => ({
-        ...m,
-        classId: clazz.id,
-        name: `${clazz.name}.${m.name}`
-      }))
-    ];
-  },
-  []
-);
-
-function resolveArgumentType(arg: ArgumentDefinition) {
-  let type = resolveType(arg);
-  switch (type) {
-    case "table":
-      return `Record<string, any>`;
-    case "longstr":
-    case "shortstr":
-      return `string`;
-    case "octet":
-    case "short":
-    case "long":
-      return `number`;
-    case "bit":
-      return `boolean`;
-    case "longlong":
-      return `Uint8Array`;
-  }
-  throw new Error(`Cannot determine type ${arg}`);
-}
-
-function resolveType(arg: ArgumentDefinition) {
-  if (arg.type !== undefined) {
-    return arg.type;
-  }
-  if (arg.domain !== undefined) {
-    const domain = spec.domains.find(d => d[0] === arg.domain);
-    return domain[1];
-  }
-  throw new Error(`Cannot determine type ${arg}`);
-}
+const methods = flattenMethods(spec);
 
 function resolveArgShape(
   args: ArgumentDefinition[],
@@ -86,7 +25,7 @@ function resolveArgShape(
       const optional = !readOnly && arg["default-value"] !== undefined;
       return `/** ${comment} */ ["${arg.name}"]${
         optional ? "?" : ""
-      }: ${resolveArgumentType(arg)}`;
+      }: ${resolveArgumentType(spec, arg)}`;
     })
     .join(";")} }`;
 }
@@ -107,14 +46,14 @@ import { createEncoder } from "./encoder.ts"
 export type MethodArgs = {
   ${methods
     .map(method => {
-      return `["${method.name}"]: ${resolveArgShape(method.arguments)}`;
+      return `["${method.fullName}"]: ${resolveArgShape(method.arguments)}`;
     })
     .join(";")}
 }
 
 export type MethodPayload = ${methods
     .map(method => {
-      return `{ name: "${method.name}", args: MethodArgs["${method.name}"] }`;
+      return `{ name: "${method.fullName}", args: MethodArgs["${method.fullName}"] }`;
     })
     .join(" | ")}
 
@@ -123,14 +62,15 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
   ${methods
     .map(method => {
       return `
-        if(name === "${method.name}") {
+        if(name === "${method.fullName}") {
           const encoder = createEncoder();
           encoder.encodeShortUint(${method.classId});
           encoder.encodeShortUint(${method.id});
           ${method.arguments
             .map(argument => {
               const value = resolveValue(argument);
-              switch (resolveType(argument)) {
+              const type = resolveType(spec, argument);
+              switch (type) {
                 case "table":
                   return `encoder.encodeTable(${value})`;
                 case "longstr":
@@ -148,7 +88,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
                 case "longlong":
                   return `encoder.encodeLongLongUint(${value})`;
                 default:
-                  throw new Error(`Cannot encode ${resolveType(argument)}`);
+                  throw new Error(`Cannot encode ${type}`);
               }
             })
             .join("\n")}

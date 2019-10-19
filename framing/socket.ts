@@ -1,7 +1,13 @@
 import { createEncoder } from "./encoder.ts";
 import { createDecoder } from "./decoder.ts";
-import { encodeMethodPayload, MethodPayload as OutgoingMethodPayload } from "./method_encoder.ts";
-import { decodeMethodPayload, MethodPayload as IncomingMethodPayload } from "./method_decoder.ts";
+import {
+  encodeMethodPayload,
+  MethodPayload as OutgoingMethodPayload
+} from "./method_encoder.ts";
+import {
+  decodeMethodPayload,
+  MethodPayload as IncomingMethodPayload
+} from "./method_decoder.ts";
 
 const FRAME_METHOD = 1;
 const FRAME_HEADER = 2;
@@ -11,8 +17,14 @@ const FRAME_END = 0xce;
 const { dial } = Deno;
 
 export type Heartbeat = { type: "heartbeat"; channel: number };
-export type IncomingMethod = { type: "method", channel: number } & IncomingMethodPayload;
-export type OutgoingMethod = { type: "method", channel: number } & OutgoingMethodPayload;
+export type IncomingMethod = {
+  type: "method";
+  channel: number;
+} & IncomingMethodPayload;
+export type OutgoingMethod = {
+  type: "method";
+  channel: number;
+} & OutgoingMethodPayload;
 
 export type IncomingFrame = IncomingMethod | Heartbeat;
 export type OutgoingFrame = OutgoingMethod | Heartbeat;
@@ -74,11 +86,11 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
       const classId = decoder.decodeShortUint();
       const methodId = decoder.decodeShortUint();
       const result = decodeMethodPayload(classId, methodId, decoder.bytes());
-      return { 
-        channel, 
+      return {
+        channel,
         type: "method",
         ...result
-       }
+      };
     }
 
     if (type === FRAME_HEARTBEAT) {

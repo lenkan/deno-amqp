@@ -215,78 +215,534 @@ export type MethodArgs = {
 };
 
 export type MethodPayload =
-  | { name: "connection.start"; args: MethodArgs["connection.start"] }
-  | { name: "connection.start-ok"; args: MethodArgs["connection.start-ok"] }
-  | { name: "connection.secure"; args: MethodArgs["connection.secure"] }
-  | { name: "connection.secure-ok"; args: MethodArgs["connection.secure-ok"] }
-  | { name: "connection.tune"; args: MethodArgs["connection.tune"] }
-  | { name: "connection.tune-ok"; args: MethodArgs["connection.tune-ok"] }
-  | { name: "connection.open"; args: MethodArgs["connection.open"] }
-  | { name: "connection.open-ok"; args: MethodArgs["connection.open-ok"] }
-  | { name: "connection.close"; args: MethodArgs["connection.close"] }
-  | { name: "connection.close-ok"; args: MethodArgs["connection.close-ok"] }
-  | { name: "connection.blocked"; args: MethodArgs["connection.blocked"] }
-  | { name: "connection.unblocked"; args: MethodArgs["connection.unblocked"] }
   | {
+      className: "connection";
+      methodName: "start";
+      classId: 10;
+      methodId: 10;
+      name: "connection.start";
+      args: MethodArgs["connection.start"];
+    }
+  | {
+      className: "connection";
+      methodName: "start-ok";
+      classId: 10;
+      methodId: 11;
+      name: "connection.start-ok";
+      args: MethodArgs["connection.start-ok"];
+    }
+  | {
+      className: "connection";
+      methodName: "secure";
+      classId: 10;
+      methodId: 20;
+      name: "connection.secure";
+      args: MethodArgs["connection.secure"];
+    }
+  | {
+      className: "connection";
+      methodName: "secure-ok";
+      classId: 10;
+      methodId: 21;
+      name: "connection.secure-ok";
+      args: MethodArgs["connection.secure-ok"];
+    }
+  | {
+      className: "connection";
+      methodName: "tune";
+      classId: 10;
+      methodId: 30;
+      name: "connection.tune";
+      args: MethodArgs["connection.tune"];
+    }
+  | {
+      className: "connection";
+      methodName: "tune-ok";
+      classId: 10;
+      methodId: 31;
+      name: "connection.tune-ok";
+      args: MethodArgs["connection.tune-ok"];
+    }
+  | {
+      className: "connection";
+      methodName: "open";
+      classId: 10;
+      methodId: 40;
+      name: "connection.open";
+      args: MethodArgs["connection.open"];
+    }
+  | {
+      className: "connection";
+      methodName: "open-ok";
+      classId: 10;
+      methodId: 41;
+      name: "connection.open-ok";
+      args: MethodArgs["connection.open-ok"];
+    }
+  | {
+      className: "connection";
+      methodName: "close";
+      classId: 10;
+      methodId: 50;
+      name: "connection.close";
+      args: MethodArgs["connection.close"];
+    }
+  | {
+      className: "connection";
+      methodName: "close-ok";
+      classId: 10;
+      methodId: 51;
+      name: "connection.close-ok";
+      args: MethodArgs["connection.close-ok"];
+    }
+  | {
+      className: "connection";
+      methodName: "blocked";
+      classId: 10;
+      methodId: 60;
+      name: "connection.blocked";
+      args: MethodArgs["connection.blocked"];
+    }
+  | {
+      className: "connection";
+      methodName: "unblocked";
+      classId: 10;
+      methodId: 61;
+      name: "connection.unblocked";
+      args: MethodArgs["connection.unblocked"];
+    }
+  | {
+      className: "connection";
+      methodName: "update-secret";
+      classId: 10;
+      methodId: 70;
       name: "connection.update-secret";
       args: MethodArgs["connection.update-secret"];
     }
   | {
+      className: "connection";
+      methodName: "update-secret-ok";
+      classId: 10;
+      methodId: 71;
       name: "connection.update-secret-ok";
       args: MethodArgs["connection.update-secret-ok"];
     }
-  | { name: "channel.open"; args: MethodArgs["channel.open"] }
-  | { name: "channel.open-ok"; args: MethodArgs["channel.open-ok"] }
-  | { name: "channel.flow"; args: MethodArgs["channel.flow"] }
-  | { name: "channel.flow-ok"; args: MethodArgs["channel.flow-ok"] }
-  | { name: "channel.close"; args: MethodArgs["channel.close"] }
-  | { name: "channel.close-ok"; args: MethodArgs["channel.close-ok"] }
-  | { name: "access.request"; args: MethodArgs["access.request"] }
-  | { name: "access.request-ok"; args: MethodArgs["access.request-ok"] }
-  | { name: "exchange.declare"; args: MethodArgs["exchange.declare"] }
-  | { name: "exchange.declare-ok"; args: MethodArgs["exchange.declare-ok"] }
-  | { name: "exchange.delete"; args: MethodArgs["exchange.delete"] }
-  | { name: "exchange.delete-ok"; args: MethodArgs["exchange.delete-ok"] }
-  | { name: "exchange.bind"; args: MethodArgs["exchange.bind"] }
-  | { name: "exchange.bind-ok"; args: MethodArgs["exchange.bind-ok"] }
-  | { name: "exchange.unbind"; args: MethodArgs["exchange.unbind"] }
-  | { name: "exchange.unbind-ok"; args: MethodArgs["exchange.unbind-ok"] }
-  | { name: "queue.declare"; args: MethodArgs["queue.declare"] }
-  | { name: "queue.declare-ok"; args: MethodArgs["queue.declare-ok"] }
-  | { name: "queue.bind"; args: MethodArgs["queue.bind"] }
-  | { name: "queue.bind-ok"; args: MethodArgs["queue.bind-ok"] }
-  | { name: "queue.purge"; args: MethodArgs["queue.purge"] }
-  | { name: "queue.purge-ok"; args: MethodArgs["queue.purge-ok"] }
-  | { name: "queue.delete"; args: MethodArgs["queue.delete"] }
-  | { name: "queue.delete-ok"; args: MethodArgs["queue.delete-ok"] }
-  | { name: "queue.unbind"; args: MethodArgs["queue.unbind"] }
-  | { name: "queue.unbind-ok"; args: MethodArgs["queue.unbind-ok"] }
-  | { name: "basic.qos"; args: MethodArgs["basic.qos"] }
-  | { name: "basic.qos-ok"; args: MethodArgs["basic.qos-ok"] }
-  | { name: "basic.consume"; args: MethodArgs["basic.consume"] }
-  | { name: "basic.consume-ok"; args: MethodArgs["basic.consume-ok"] }
-  | { name: "basic.cancel"; args: MethodArgs["basic.cancel"] }
-  | { name: "basic.cancel-ok"; args: MethodArgs["basic.cancel-ok"] }
-  | { name: "basic.publish"; args: MethodArgs["basic.publish"] }
-  | { name: "basic.return"; args: MethodArgs["basic.return"] }
-  | { name: "basic.deliver"; args: MethodArgs["basic.deliver"] }
-  | { name: "basic.get"; args: MethodArgs["basic.get"] }
-  | { name: "basic.get-ok"; args: MethodArgs["basic.get-ok"] }
-  | { name: "basic.get-empty"; args: MethodArgs["basic.get-empty"] }
-  | { name: "basic.ack"; args: MethodArgs["basic.ack"] }
-  | { name: "basic.reject"; args: MethodArgs["basic.reject"] }
-  | { name: "basic.recover-async"; args: MethodArgs["basic.recover-async"] }
-  | { name: "basic.recover"; args: MethodArgs["basic.recover"] }
-  | { name: "basic.recover-ok"; args: MethodArgs["basic.recover-ok"] }
-  | { name: "basic.nack"; args: MethodArgs["basic.nack"] }
-  | { name: "tx.select"; args: MethodArgs["tx.select"] }
-  | { name: "tx.select-ok"; args: MethodArgs["tx.select-ok"] }
-  | { name: "tx.commit"; args: MethodArgs["tx.commit"] }
-  | { name: "tx.commit-ok"; args: MethodArgs["tx.commit-ok"] }
-  | { name: "tx.rollback"; args: MethodArgs["tx.rollback"] }
-  | { name: "tx.rollback-ok"; args: MethodArgs["tx.rollback-ok"] }
-  | { name: "confirm.select"; args: MethodArgs["confirm.select"] }
-  | { name: "confirm.select-ok"; args: MethodArgs["confirm.select-ok"] };
+  | {
+      className: "channel";
+      methodName: "open";
+      classId: 20;
+      methodId: 10;
+      name: "channel.open";
+      args: MethodArgs["channel.open"];
+    }
+  | {
+      className: "channel";
+      methodName: "open-ok";
+      classId: 20;
+      methodId: 11;
+      name: "channel.open-ok";
+      args: MethodArgs["channel.open-ok"];
+    }
+  | {
+      className: "channel";
+      methodName: "flow";
+      classId: 20;
+      methodId: 20;
+      name: "channel.flow";
+      args: MethodArgs["channel.flow"];
+    }
+  | {
+      className: "channel";
+      methodName: "flow-ok";
+      classId: 20;
+      methodId: 21;
+      name: "channel.flow-ok";
+      args: MethodArgs["channel.flow-ok"];
+    }
+  | {
+      className: "channel";
+      methodName: "close";
+      classId: 20;
+      methodId: 40;
+      name: "channel.close";
+      args: MethodArgs["channel.close"];
+    }
+  | {
+      className: "channel";
+      methodName: "close-ok";
+      classId: 20;
+      methodId: 41;
+      name: "channel.close-ok";
+      args: MethodArgs["channel.close-ok"];
+    }
+  | {
+      className: "access";
+      methodName: "request";
+      classId: 30;
+      methodId: 10;
+      name: "access.request";
+      args: MethodArgs["access.request"];
+    }
+  | {
+      className: "access";
+      methodName: "request-ok";
+      classId: 30;
+      methodId: 11;
+      name: "access.request-ok";
+      args: MethodArgs["access.request-ok"];
+    }
+  | {
+      className: "exchange";
+      methodName: "declare";
+      classId: 40;
+      methodId: 10;
+      name: "exchange.declare";
+      args: MethodArgs["exchange.declare"];
+    }
+  | {
+      className: "exchange";
+      methodName: "declare-ok";
+      classId: 40;
+      methodId: 11;
+      name: "exchange.declare-ok";
+      args: MethodArgs["exchange.declare-ok"];
+    }
+  | {
+      className: "exchange";
+      methodName: "delete";
+      classId: 40;
+      methodId: 20;
+      name: "exchange.delete";
+      args: MethodArgs["exchange.delete"];
+    }
+  | {
+      className: "exchange";
+      methodName: "delete-ok";
+      classId: 40;
+      methodId: 21;
+      name: "exchange.delete-ok";
+      args: MethodArgs["exchange.delete-ok"];
+    }
+  | {
+      className: "exchange";
+      methodName: "bind";
+      classId: 40;
+      methodId: 30;
+      name: "exchange.bind";
+      args: MethodArgs["exchange.bind"];
+    }
+  | {
+      className: "exchange";
+      methodName: "bind-ok";
+      classId: 40;
+      methodId: 31;
+      name: "exchange.bind-ok";
+      args: MethodArgs["exchange.bind-ok"];
+    }
+  | {
+      className: "exchange";
+      methodName: "unbind";
+      classId: 40;
+      methodId: 40;
+      name: "exchange.unbind";
+      args: MethodArgs["exchange.unbind"];
+    }
+  | {
+      className: "exchange";
+      methodName: "unbind-ok";
+      classId: 40;
+      methodId: 51;
+      name: "exchange.unbind-ok";
+      args: MethodArgs["exchange.unbind-ok"];
+    }
+  | {
+      className: "queue";
+      methodName: "declare";
+      classId: 50;
+      methodId: 10;
+      name: "queue.declare";
+      args: MethodArgs["queue.declare"];
+    }
+  | {
+      className: "queue";
+      methodName: "declare-ok";
+      classId: 50;
+      methodId: 11;
+      name: "queue.declare-ok";
+      args: MethodArgs["queue.declare-ok"];
+    }
+  | {
+      className: "queue";
+      methodName: "bind";
+      classId: 50;
+      methodId: 20;
+      name: "queue.bind";
+      args: MethodArgs["queue.bind"];
+    }
+  | {
+      className: "queue";
+      methodName: "bind-ok";
+      classId: 50;
+      methodId: 21;
+      name: "queue.bind-ok";
+      args: MethodArgs["queue.bind-ok"];
+    }
+  | {
+      className: "queue";
+      methodName: "purge";
+      classId: 50;
+      methodId: 30;
+      name: "queue.purge";
+      args: MethodArgs["queue.purge"];
+    }
+  | {
+      className: "queue";
+      methodName: "purge-ok";
+      classId: 50;
+      methodId: 31;
+      name: "queue.purge-ok";
+      args: MethodArgs["queue.purge-ok"];
+    }
+  | {
+      className: "queue";
+      methodName: "delete";
+      classId: 50;
+      methodId: 40;
+      name: "queue.delete";
+      args: MethodArgs["queue.delete"];
+    }
+  | {
+      className: "queue";
+      methodName: "delete-ok";
+      classId: 50;
+      methodId: 41;
+      name: "queue.delete-ok";
+      args: MethodArgs["queue.delete-ok"];
+    }
+  | {
+      className: "queue";
+      methodName: "unbind";
+      classId: 50;
+      methodId: 50;
+      name: "queue.unbind";
+      args: MethodArgs["queue.unbind"];
+    }
+  | {
+      className: "queue";
+      methodName: "unbind-ok";
+      classId: 50;
+      methodId: 51;
+      name: "queue.unbind-ok";
+      args: MethodArgs["queue.unbind-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "qos";
+      classId: 60;
+      methodId: 10;
+      name: "basic.qos";
+      args: MethodArgs["basic.qos"];
+    }
+  | {
+      className: "basic";
+      methodName: "qos-ok";
+      classId: 60;
+      methodId: 11;
+      name: "basic.qos-ok";
+      args: MethodArgs["basic.qos-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "consume";
+      classId: 60;
+      methodId: 20;
+      name: "basic.consume";
+      args: MethodArgs["basic.consume"];
+    }
+  | {
+      className: "basic";
+      methodName: "consume-ok";
+      classId: 60;
+      methodId: 21;
+      name: "basic.consume-ok";
+      args: MethodArgs["basic.consume-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "cancel";
+      classId: 60;
+      methodId: 30;
+      name: "basic.cancel";
+      args: MethodArgs["basic.cancel"];
+    }
+  | {
+      className: "basic";
+      methodName: "cancel-ok";
+      classId: 60;
+      methodId: 31;
+      name: "basic.cancel-ok";
+      args: MethodArgs["basic.cancel-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "publish";
+      classId: 60;
+      methodId: 40;
+      name: "basic.publish";
+      args: MethodArgs["basic.publish"];
+    }
+  | {
+      className: "basic";
+      methodName: "return";
+      classId: 60;
+      methodId: 50;
+      name: "basic.return";
+      args: MethodArgs["basic.return"];
+    }
+  | {
+      className: "basic";
+      methodName: "deliver";
+      classId: 60;
+      methodId: 60;
+      name: "basic.deliver";
+      args: MethodArgs["basic.deliver"];
+    }
+  | {
+      className: "basic";
+      methodName: "get";
+      classId: 60;
+      methodId: 70;
+      name: "basic.get";
+      args: MethodArgs["basic.get"];
+    }
+  | {
+      className: "basic";
+      methodName: "get-ok";
+      classId: 60;
+      methodId: 71;
+      name: "basic.get-ok";
+      args: MethodArgs["basic.get-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "get-empty";
+      classId: 60;
+      methodId: 72;
+      name: "basic.get-empty";
+      args: MethodArgs["basic.get-empty"];
+    }
+  | {
+      className: "basic";
+      methodName: "ack";
+      classId: 60;
+      methodId: 80;
+      name: "basic.ack";
+      args: MethodArgs["basic.ack"];
+    }
+  | {
+      className: "basic";
+      methodName: "reject";
+      classId: 60;
+      methodId: 90;
+      name: "basic.reject";
+      args: MethodArgs["basic.reject"];
+    }
+  | {
+      className: "basic";
+      methodName: "recover-async";
+      classId: 60;
+      methodId: 100;
+      name: "basic.recover-async";
+      args: MethodArgs["basic.recover-async"];
+    }
+  | {
+      className: "basic";
+      methodName: "recover";
+      classId: 60;
+      methodId: 110;
+      name: "basic.recover";
+      args: MethodArgs["basic.recover"];
+    }
+  | {
+      className: "basic";
+      methodName: "recover-ok";
+      classId: 60;
+      methodId: 111;
+      name: "basic.recover-ok";
+      args: MethodArgs["basic.recover-ok"];
+    }
+  | {
+      className: "basic";
+      methodName: "nack";
+      classId: 60;
+      methodId: 120;
+      name: "basic.nack";
+      args: MethodArgs["basic.nack"];
+    }
+  | {
+      className: "tx";
+      methodName: "select";
+      classId: 90;
+      methodId: 10;
+      name: "tx.select";
+      args: MethodArgs["tx.select"];
+    }
+  | {
+      className: "tx";
+      methodName: "select-ok";
+      classId: 90;
+      methodId: 11;
+      name: "tx.select-ok";
+      args: MethodArgs["tx.select-ok"];
+    }
+  | {
+      className: "tx";
+      methodName: "commit";
+      classId: 90;
+      methodId: 20;
+      name: "tx.commit";
+      args: MethodArgs["tx.commit"];
+    }
+  | {
+      className: "tx";
+      methodName: "commit-ok";
+      classId: 90;
+      methodId: 21;
+      name: "tx.commit-ok";
+      args: MethodArgs["tx.commit-ok"];
+    }
+  | {
+      className: "tx";
+      methodName: "rollback";
+      classId: 90;
+      methodId: 30;
+      name: "tx.rollback";
+      args: MethodArgs["tx.rollback"];
+    }
+  | {
+      className: "tx";
+      methodName: "rollback-ok";
+      classId: 90;
+      methodId: 31;
+      name: "tx.rollback-ok";
+      args: MethodArgs["tx.rollback-ok"];
+    }
+  | {
+      className: "confirm";
+      methodName: "select";
+      classId: 85;
+      methodId: 10;
+      name: "confirm.select";
+      args: MethodArgs["confirm.select"];
+    }
+  | {
+      className: "confirm";
+      methodName: "select-ok";
+      classId: 85;
+      methodId: 11;
+      name: "confirm.select-ok";
+      args: MethodArgs["confirm.select-ok"];
+    };
 
 export function decodeMethodPayload(
   classId: number,
@@ -296,6 +752,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "start",
+      methodId: 10,
+      classId: 10,
       name: "connection.start",
       args: {
         ["version-major"]: decoder.decodeOctet(),
@@ -310,6 +770,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "start-ok",
+      methodId: 11,
+      classId: 10,
       name: "connection.start-ok",
       args: {
         ["client-properties"]: decoder.decodeTable(),
@@ -323,6 +787,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "secure",
+      methodId: 20,
+      classId: 10,
       name: "connection.secure",
       args: {
         ["challenge"]: decoder.decodeLongString()
@@ -333,6 +801,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "secure-ok",
+      methodId: 21,
+      classId: 10,
       name: "connection.secure-ok",
       args: {
         ["response"]: decoder.decodeLongString()
@@ -343,6 +815,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "tune",
+      methodId: 30,
+      classId: 10,
       name: "connection.tune",
       args: {
         ["channel-max"]: decoder.decodeShortUint(),
@@ -355,6 +831,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "tune-ok",
+      methodId: 31,
+      classId: 10,
       name: "connection.tune-ok",
       args: {
         ["channel-max"]: decoder.decodeShortUint(),
@@ -367,6 +847,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "open",
+      methodId: 40,
+      classId: 10,
       name: "connection.open",
       args: {
         ["virtual-host"]: decoder.decodeShortString(),
@@ -379,6 +863,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "open-ok",
+      methodId: 41,
+      classId: 10,
       name: "connection.open-ok",
       args: {
         ["known-hosts"]: decoder.decodeShortString()
@@ -389,6 +877,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "close",
+      methodId: 50,
+      classId: 10,
       name: "connection.close",
       args: {
         ["reply-code"]: decoder.decodeShortUint(),
@@ -402,6 +894,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "close-ok",
+      methodId: 51,
+      classId: 10,
       name: "connection.close-ok",
       args: {}
     };
@@ -410,6 +906,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 60) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "blocked",
+      methodId: 60,
+      classId: 10,
       name: "connection.blocked",
       args: {
         ["reason"]: decoder.decodeShortString()
@@ -420,6 +920,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 61) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "unblocked",
+      methodId: 61,
+      classId: 10,
       name: "connection.unblocked",
       args: {}
     };
@@ -428,6 +932,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 70) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "update-secret",
+      methodId: 70,
+      classId: 10,
       name: "connection.update-secret",
       args: {
         ["new-secret"]: decoder.decodeLongString(),
@@ -439,6 +947,10 @@ export function decodeMethodPayload(
   if (classId === 10 && methodId === 71) {
     const decoder = createDecoder(data);
     return {
+      className: "connection",
+      methodName: "update-secret-ok",
+      methodId: 71,
+      classId: 10,
       name: "connection.update-secret-ok",
       args: {}
     };
@@ -447,6 +959,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "open",
+      methodId: 10,
+      classId: 20,
       name: "channel.open",
       args: {
         ["out-of-band"]: decoder.decodeShortString()
@@ -457,6 +973,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "open-ok",
+      methodId: 11,
+      classId: 20,
       name: "channel.open-ok",
       args: {
         ["channel-id"]: decoder.decodeLongString()
@@ -467,6 +987,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "flow",
+      methodId: 20,
+      classId: 20,
       name: "channel.flow",
       args: {
         ["active"]: decoder.decodeBit()
@@ -477,6 +1001,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "flow-ok",
+      methodId: 21,
+      classId: 20,
       name: "channel.flow-ok",
       args: {
         ["active"]: decoder.decodeBit()
@@ -487,6 +1015,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "close",
+      methodId: 40,
+      classId: 20,
       name: "channel.close",
       args: {
         ["reply-code"]: decoder.decodeShortUint(),
@@ -500,6 +1032,10 @@ export function decodeMethodPayload(
   if (classId === 20 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
+      className: "channel",
+      methodName: "close-ok",
+      methodId: 41,
+      classId: 20,
       name: "channel.close-ok",
       args: {}
     };
@@ -508,6 +1044,10 @@ export function decodeMethodPayload(
   if (classId === 30 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "access",
+      methodName: "request",
+      methodId: 10,
+      classId: 30,
       name: "access.request",
       args: {
         ["realm"]: decoder.decodeShortString(),
@@ -523,6 +1063,10 @@ export function decodeMethodPayload(
   if (classId === 30 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "access",
+      methodName: "request-ok",
+      methodId: 11,
+      classId: 30,
       name: "access.request-ok",
       args: {
         ["ticket"]: decoder.decodeShortUint()
@@ -533,6 +1077,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "declare",
+      methodId: 10,
+      classId: 40,
       name: "exchange.declare",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -551,6 +1099,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "declare-ok",
+      methodId: 11,
+      classId: 40,
       name: "exchange.declare-ok",
       args: {}
     };
@@ -559,6 +1111,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "delete",
+      methodId: 20,
+      classId: 40,
       name: "exchange.delete",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -572,6 +1128,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "delete-ok",
+      methodId: 21,
+      classId: 40,
       name: "exchange.delete-ok",
       args: {}
     };
@@ -580,6 +1140,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "bind",
+      methodId: 30,
+      classId: 40,
       name: "exchange.bind",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -595,6 +1159,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "bind-ok",
+      methodId: 31,
+      classId: 40,
       name: "exchange.bind-ok",
       args: {}
     };
@@ -603,6 +1171,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "unbind",
+      methodId: 40,
+      classId: 40,
       name: "exchange.unbind",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -618,6 +1190,10 @@ export function decodeMethodPayload(
   if (classId === 40 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
+      className: "exchange",
+      methodName: "unbind-ok",
+      methodId: 51,
+      classId: 40,
       name: "exchange.unbind-ok",
       args: {}
     };
@@ -626,6 +1202,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "declare",
+      methodId: 10,
+      classId: 50,
       name: "queue.declare",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -643,6 +1223,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "declare-ok",
+      methodId: 11,
+      classId: 50,
       name: "queue.declare-ok",
       args: {
         ["queue"]: decoder.decodeShortString(),
@@ -655,6 +1239,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "bind",
+      methodId: 20,
+      classId: 50,
       name: "queue.bind",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -670,6 +1258,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "bind-ok",
+      methodId: 21,
+      classId: 50,
       name: "queue.bind-ok",
       args: {}
     };
@@ -678,6 +1270,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "purge",
+      methodId: 30,
+      classId: 50,
       name: "queue.purge",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -690,6 +1286,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "purge-ok",
+      methodId: 31,
+      classId: 50,
       name: "queue.purge-ok",
       args: {
         ["message-count"]: decoder.decodeLongUint()
@@ -700,6 +1300,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "delete",
+      methodId: 40,
+      classId: 50,
       name: "queue.delete",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -714,6 +1318,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 41) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "delete-ok",
+      methodId: 41,
+      classId: 50,
       name: "queue.delete-ok",
       args: {
         ["message-count"]: decoder.decodeLongUint()
@@ -724,6 +1332,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "unbind",
+      methodId: 50,
+      classId: 50,
       name: "queue.unbind",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -738,6 +1350,10 @@ export function decodeMethodPayload(
   if (classId === 50 && methodId === 51) {
     const decoder = createDecoder(data);
     return {
+      className: "queue",
+      methodName: "unbind-ok",
+      methodId: 51,
+      classId: 50,
       name: "queue.unbind-ok",
       args: {}
     };
@@ -746,6 +1362,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "qos",
+      methodId: 10,
+      classId: 60,
       name: "basic.qos",
       args: {
         ["prefetch-size"]: decoder.decodeLongUint(),
@@ -758,6 +1378,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "qos-ok",
+      methodId: 11,
+      classId: 60,
       name: "basic.qos-ok",
       args: {}
     };
@@ -766,6 +1390,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "consume",
+      methodId: 20,
+      classId: 60,
       name: "basic.consume",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -783,6 +1411,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "consume-ok",
+      methodId: 21,
+      classId: 60,
       name: "basic.consume-ok",
       args: {
         ["consumer-tag"]: decoder.decodeShortString()
@@ -793,6 +1425,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "cancel",
+      methodId: 30,
+      classId: 60,
       name: "basic.cancel",
       args: {
         ["consumer-tag"]: decoder.decodeShortString(),
@@ -804,6 +1440,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "cancel-ok",
+      methodId: 31,
+      classId: 60,
       name: "basic.cancel-ok",
       args: {
         ["consumer-tag"]: decoder.decodeShortString()
@@ -814,6 +1454,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 40) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "publish",
+      methodId: 40,
+      classId: 60,
       name: "basic.publish",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -828,6 +1472,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 50) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "return",
+      methodId: 50,
+      classId: 60,
       name: "basic.return",
       args: {
         ["reply-code"]: decoder.decodeShortUint(),
@@ -841,6 +1489,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 60) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "deliver",
+      methodId: 60,
+      classId: 60,
       name: "basic.deliver",
       args: {
         ["consumer-tag"]: decoder.decodeShortString(),
@@ -855,6 +1507,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 70) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "get",
+      methodId: 70,
+      classId: 60,
       name: "basic.get",
       args: {
         ["ticket"]: decoder.decodeShortUint(),
@@ -867,6 +1523,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 71) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "get-ok",
+      methodId: 71,
+      classId: 60,
       name: "basic.get-ok",
       args: {
         ["delivery-tag"]: decoder.decodeLongLongUint(),
@@ -881,6 +1541,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 72) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "get-empty",
+      methodId: 72,
+      classId: 60,
       name: "basic.get-empty",
       args: {
         ["cluster-id"]: decoder.decodeShortString()
@@ -891,6 +1555,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 80) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "ack",
+      methodId: 80,
+      classId: 60,
       name: "basic.ack",
       args: {
         ["delivery-tag"]: decoder.decodeLongLongUint(),
@@ -902,6 +1570,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 90) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "reject",
+      methodId: 90,
+      classId: 60,
       name: "basic.reject",
       args: {
         ["delivery-tag"]: decoder.decodeLongLongUint(),
@@ -913,6 +1585,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 100) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "recover-async",
+      methodId: 100,
+      classId: 60,
       name: "basic.recover-async",
       args: {
         ["requeue"]: decoder.decodeBit()
@@ -923,6 +1599,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 110) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "recover",
+      methodId: 110,
+      classId: 60,
       name: "basic.recover",
       args: {
         ["requeue"]: decoder.decodeBit()
@@ -933,6 +1613,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 111) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "recover-ok",
+      methodId: 111,
+      classId: 60,
       name: "basic.recover-ok",
       args: {}
     };
@@ -941,6 +1625,10 @@ export function decodeMethodPayload(
   if (classId === 60 && methodId === 120) {
     const decoder = createDecoder(data);
     return {
+      className: "basic",
+      methodName: "nack",
+      methodId: 120,
+      classId: 60,
       name: "basic.nack",
       args: {
         ["delivery-tag"]: decoder.decodeLongLongUint(),
@@ -953,6 +1641,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "select",
+      methodId: 10,
+      classId: 90,
       name: "tx.select",
       args: {}
     };
@@ -961,6 +1653,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "select-ok",
+      methodId: 11,
+      classId: 90,
       name: "tx.select-ok",
       args: {}
     };
@@ -969,6 +1665,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 20) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "commit",
+      methodId: 20,
+      classId: 90,
       name: "tx.commit",
       args: {}
     };
@@ -977,6 +1677,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 21) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "commit-ok",
+      methodId: 21,
+      classId: 90,
       name: "tx.commit-ok",
       args: {}
     };
@@ -985,6 +1689,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 30) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "rollback",
+      methodId: 30,
+      classId: 90,
       name: "tx.rollback",
       args: {}
     };
@@ -993,6 +1701,10 @@ export function decodeMethodPayload(
   if (classId === 90 && methodId === 31) {
     const decoder = createDecoder(data);
     return {
+      className: "tx",
+      methodName: "rollback-ok",
+      methodId: 31,
+      classId: 90,
       name: "tx.rollback-ok",
       args: {}
     };
@@ -1001,6 +1713,10 @@ export function decodeMethodPayload(
   if (classId === 85 && methodId === 10) {
     const decoder = createDecoder(data);
     return {
+      className: "confirm",
+      methodName: "select",
+      methodId: 10,
+      classId: 85,
       name: "confirm.select",
       args: {
         ["nowait"]: decoder.decodeBit()
@@ -1011,8 +1727,16 @@ export function decodeMethodPayload(
   if (classId === 85 && methodId === 11) {
     const decoder = createDecoder(data);
     return {
+      className: "confirm",
+      methodName: "select-ok",
+      methodId: 11,
+      classId: 85,
       name: "confirm.select-ok",
       args: {}
     };
   }
+
+  throw new Error(
+    "No match for class: " + classId + " and method: " + methodId
+  );
 }

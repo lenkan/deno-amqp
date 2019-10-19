@@ -1051,4 +1051,4 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
 
     return encoder.bytes();
   }
-} 
+}
