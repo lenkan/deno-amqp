@@ -40,7 +40,8 @@ export function flattenMethods(spec: Spec) {
         classId: clazz.id,
         className: clazz.name,
         methodName: m.name,
-        fullName: `${clazz.name}.${m.name}`
+        fullName: `${clazz.name}.${m.name}`,
+        arguments: m.arguments.map(a => ({ ...a, name: camelCase(a.name) }))
       }))
     ];
   }, []);
@@ -76,4 +77,22 @@ export function resolveType(spec: Spec, arg: ArgumentDefinition) {
     return domain[1];
   }
   throw new Error(`Cannot determine type ${arg}`);
+}
+
+function capitalize(word: string) {
+  const first = word.charAt(0).toUpperCase();
+  const rest = word.slice(1, word.length);
+  return first + rest;
+}
+
+export function camelCase(name: string) {
+  const [first, ...rest] = name.split(/[-\.]/g);
+  return first + rest.map(capitalize).join("");
+}
+
+export function pascalCase(name: string) {
+  return name
+    .split(/[-\.]/g)
+    .map(capitalize)
+    .join("");
 }

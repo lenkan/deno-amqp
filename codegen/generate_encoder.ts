@@ -3,7 +3,8 @@ import {
   ArgumentDefinition,
   resolveArgumentType,
   flattenMethods,
-  resolveType
+  resolveType,
+  pascalCase
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
@@ -23,7 +24,7 @@ function resolveArgShape(
           ? `default: ${JSON.stringify(arg["default-value"])}`
           : "";
       const optional = !readOnly && arg["default-value"] !== undefined;
-      return `/** ${comment} */ ["${arg.name}"]${
+      return `/** ${comment} */ ${arg.name}${
         optional ? "?" : ""
       }: ${resolveArgumentType(spec, arg)}`;
     })
@@ -32,37 +33,38 @@ function resolveArgShape(
 
 function resolveValue(arg: ArgumentDefinition) {
   if (arg["default-value"] !== undefined) {
-    return `args["${arg.name}"] !== undefined ? args["${
+    return `payload.args.${arg.name} !== undefined ? payload.args.${
       arg.name
-    }"] : ${JSON.stringify(arg["default-value"])}`;
+    } : ${JSON.stringify(arg["default-value"])}`;
   }
-  return `args["${arg.name}"]`;
+  return `payload.args.${arg.name}`;
 }
 
 function generateEncodeMethod() {
   return `
 import { createEncoder } from "./encoder.ts"
 
-export type MethodArgs = {
-  ${methods
-    .map(method => {
-      return `["${method.fullName}"]: ${resolveArgShape(method.arguments)}`;
-    })
-    .join(";")}
-}
+${methods
+  .map(method => {
+    return `export interface ${pascalCase(
+      method.fullName
+    )}Args ${resolveArgShape(method.arguments)}`;
+  })
+  .join("\n")}
 
 export type MethodPayload = ${methods
     .map(method => {
-      return `{ name: "${method.fullName}", args: MethodArgs["${method.fullName}"] }`;
+      return `{ name: "${method.fullName}", args: ${pascalCase(
+        method.fullName
+      )}Args }`;
     })
     .join(" | ")}
 
 export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
-  const { name, args } = payload;
   ${methods
     .map(method => {
       return `
-        if(name === "${method.fullName}") {
+        if(payload.name === "${method.fullName}") {
           const encoder = createEncoder();
           encoder.encodeShortUint(${method.classId});
           encoder.encodeShortUint(${method.id});

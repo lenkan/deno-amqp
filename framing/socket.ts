@@ -42,7 +42,7 @@ export interface AmqpSocket {
   write(frame: OutgoingFrame): Promise<void>;
 }
 
-export type FrameHandler = (frame: IncomingFrame) => void;
+export type FrameHandler = (frame: IncomingFrame, next?: () => void) => void;
 
 export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   const listeners: FrameHandler[] = [];
@@ -205,6 +205,7 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   async function startReceiving() {
     for await (const frame of read()) {
       if (frame === null) {
+        clear();
         return;
       }
 
@@ -212,8 +213,12 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     }
   }
 
-  function close() {
+  function clear() {
     listeners.splice(0, listeners.length);
+  }
+
+  function close() {
+    clear();
     conn.close();
     open = false;
   }

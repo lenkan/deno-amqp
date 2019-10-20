@@ -1,218 +1,266 @@
 import { createDecoder } from "./decoder.ts";
 
-export type MethodArgs = {
-  ["connection.start"]: {
-    ["version-major"]: number;
-    ["version-minor"]: number;
-    ["server-properties"]: Record<string, any>;
-    ["mechanisms"]: string;
-    ["locales"]: string;
-  };
-  ["connection.start-ok"]: {
-    ["client-properties"]: Record<string, any>;
-    ["mechanism"]: string;
-    ["response"]: string;
-    ["locale"]: string;
-  };
-  ["connection.secure"]: { ["challenge"]: string };
-  ["connection.secure-ok"]: { ["response"]: string };
-  ["connection.tune"]: {
-    ["channel-max"]: number;
-    ["frame-max"]: number;
-    ["heartbeat"]: number;
-  };
-  ["connection.tune-ok"]: {
-    ["channel-max"]: number;
-    ["frame-max"]: number;
-    ["heartbeat"]: number;
-  };
-  ["connection.open"]: {
-    ["virtual-host"]: string;
-    ["capabilities"]: string;
-    ["insist"]: boolean;
-  };
-  ["connection.open-ok"]: { ["known-hosts"]: string };
-  ["connection.close"]: {
-    ["reply-code"]: number;
-    ["reply-text"]: string;
-    ["class-id"]: number;
-    ["method-id"]: number;
-  };
-  ["connection.close-ok"]: {};
-  ["connection.blocked"]: { ["reason"]: string };
-  ["connection.unblocked"]: {};
-  ["connection.update-secret"]: { ["new-secret"]: string; ["reason"]: string };
-  ["connection.update-secret-ok"]: {};
-  ["channel.open"]: { ["out-of-band"]: string };
-  ["channel.open-ok"]: { ["channel-id"]: string };
-  ["channel.flow"]: { ["active"]: boolean };
-  ["channel.flow-ok"]: { ["active"]: boolean };
-  ["channel.close"]: {
-    ["reply-code"]: number;
-    ["reply-text"]: string;
-    ["class-id"]: number;
-    ["method-id"]: number;
-  };
-  ["channel.close-ok"]: {};
-  ["access.request"]: {
-    ["realm"]: string;
-    ["exclusive"]: boolean;
-    ["passive"]: boolean;
-    ["active"]: boolean;
-    ["write"]: boolean;
-    ["read"]: boolean;
-  };
-  ["access.request-ok"]: { ["ticket"]: number };
-  ["exchange.declare"]: {
-    ["ticket"]: number;
-    ["exchange"]: string;
-    ["type"]: string;
-    ["passive"]: boolean;
-    ["durable"]: boolean;
-    ["auto-delete"]: boolean;
-    ["internal"]: boolean;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["exchange.declare-ok"]: {};
-  ["exchange.delete"]: {
-    ["ticket"]: number;
-    ["exchange"]: string;
-    ["if-unused"]: boolean;
-    ["nowait"]: boolean;
-  };
-  ["exchange.delete-ok"]: {};
-  ["exchange.bind"]: {
-    ["ticket"]: number;
-    ["destination"]: string;
-    ["source"]: string;
-    ["routing-key"]: string;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["exchange.bind-ok"]: {};
-  ["exchange.unbind"]: {
-    ["ticket"]: number;
-    ["destination"]: string;
-    ["source"]: string;
-    ["routing-key"]: string;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["exchange.unbind-ok"]: {};
-  ["queue.declare"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["passive"]: boolean;
-    ["durable"]: boolean;
-    ["exclusive"]: boolean;
-    ["auto-delete"]: boolean;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["queue.declare-ok"]: {
-    ["queue"]: string;
-    ["message-count"]: number;
-    ["consumer-count"]: number;
-  };
-  ["queue.bind"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["queue.bind-ok"]: {};
-  ["queue.purge"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["nowait"]: boolean;
-  };
-  ["queue.purge-ok"]: { ["message-count"]: number };
-  ["queue.delete"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["if-unused"]: boolean;
-    ["if-empty"]: boolean;
-    ["nowait"]: boolean;
-  };
-  ["queue.delete-ok"]: { ["message-count"]: number };
-  ["queue.unbind"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-    ["arguments"]: Record<string, any>;
-  };
-  ["queue.unbind-ok"]: {};
-  ["basic.qos"]: {
-    ["prefetch-size"]: number;
-    ["prefetch-count"]: number;
-    ["global"]: boolean;
-  };
-  ["basic.qos-ok"]: {};
-  ["basic.consume"]: {
-    ["ticket"]: number;
-    ["queue"]: string;
-    ["consumer-tag"]: string;
-    ["no-local"]: boolean;
-    ["no-ack"]: boolean;
-    ["exclusive"]: boolean;
-    ["nowait"]: boolean;
-    ["arguments"]: Record<string, any>;
-  };
-  ["basic.consume-ok"]: { ["consumer-tag"]: string };
-  ["basic.cancel"]: { ["consumer-tag"]: string; ["nowait"]: boolean };
-  ["basic.cancel-ok"]: { ["consumer-tag"]: string };
-  ["basic.publish"]: {
-    ["ticket"]: number;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-    ["mandatory"]: boolean;
-    ["immediate"]: boolean;
-  };
-  ["basic.return"]: {
-    ["reply-code"]: number;
-    ["reply-text"]: string;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-  };
-  ["basic.deliver"]: {
-    ["consumer-tag"]: string;
-    ["delivery-tag"]: Uint8Array;
-    ["redelivered"]: boolean;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-  };
-  ["basic.get"]: { ["ticket"]: number; ["queue"]: string; ["no-ack"]: boolean };
-  ["basic.get-ok"]: {
-    ["delivery-tag"]: Uint8Array;
-    ["redelivered"]: boolean;
-    ["exchange"]: string;
-    ["routing-key"]: string;
-    ["message-count"]: number;
-  };
-  ["basic.get-empty"]: { ["cluster-id"]: string };
-  ["basic.ack"]: { ["delivery-tag"]: Uint8Array; ["multiple"]: boolean };
-  ["basic.reject"]: { ["delivery-tag"]: Uint8Array; ["requeue"]: boolean };
-  ["basic.recover-async"]: { ["requeue"]: boolean };
-  ["basic.recover"]: { ["requeue"]: boolean };
-  ["basic.recover-ok"]: {};
-  ["basic.nack"]: {
-    ["delivery-tag"]: Uint8Array;
-    ["multiple"]: boolean;
-    ["requeue"]: boolean;
-  };
-  ["tx.select"]: {};
-  ["tx.select-ok"]: {};
-  ["tx.commit"]: {};
-  ["tx.commit-ok"]: {};
-  ["tx.rollback"]: {};
-  ["tx.rollback-ok"]: {};
-  ["confirm.select"]: { ["nowait"]: boolean };
-  ["confirm.select-ok"]: {};
-};
+export interface ConnectionStartArgs {
+  versionMajor: number;
+  versionMinor: number;
+  serverProperties: Record<string, any>;
+  mechanisms: string;
+  locales: string;
+}
+export interface ConnectionStartOkArgs {
+  clientProperties: Record<string, any>;
+  mechanism: string;
+  response: string;
+  locale: string;
+}
+export interface ConnectionSecureArgs {
+  challenge: string;
+}
+export interface ConnectionSecureOkArgs {
+  response: string;
+}
+export interface ConnectionTuneArgs {
+  channelMax: number;
+  frameMax: number;
+  heartbeat: number;
+}
+export interface ConnectionTuneOkArgs {
+  channelMax: number;
+  frameMax: number;
+  heartbeat: number;
+}
+export interface ConnectionOpenArgs {
+  virtualHost: string;
+  capabilities: string;
+  insist: boolean;
+}
+export interface ConnectionOpenOkArgs {
+  knownHosts: string;
+}
+export interface ConnectionCloseArgs {
+  replyCode: number;
+  replyText: string;
+  classId: number;
+  methodId: number;
+}
+export interface ConnectionCloseOkArgs {}
+export interface ConnectionBlockedArgs {
+  reason: string;
+}
+export interface ConnectionUnblockedArgs {}
+export interface ConnectionUpdateSecretArgs {
+  newSecret: string;
+  reason: string;
+}
+export interface ConnectionUpdateSecretOkArgs {}
+export interface ChannelOpenArgs {
+  outOfBand: string;
+}
+export interface ChannelOpenOkArgs {
+  channelId: string;
+}
+export interface ChannelFlowArgs {
+  active: boolean;
+}
+export interface ChannelFlowOkArgs {
+  active: boolean;
+}
+export interface ChannelCloseArgs {
+  replyCode: number;
+  replyText: string;
+  classId: number;
+  methodId: number;
+}
+export interface ChannelCloseOkArgs {}
+export interface AccessRequestArgs {
+  realm: string;
+  exclusive: boolean;
+  passive: boolean;
+  active: boolean;
+  write: boolean;
+  read: boolean;
+}
+export interface AccessRequestOkArgs {
+  ticket: number;
+}
+export interface ExchangeDeclareArgs {
+  ticket: number;
+  exchange: string;
+  type: string;
+  passive: boolean;
+  durable: boolean;
+  autoDelete: boolean;
+  internal: boolean;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface ExchangeDeclareOkArgs {}
+export interface ExchangeDeleteArgs {
+  ticket: number;
+  exchange: string;
+  ifUnused: boolean;
+  nowait: boolean;
+}
+export interface ExchangeDeleteOkArgs {}
+export interface ExchangeBindArgs {
+  ticket: number;
+  destination: string;
+  source: string;
+  routingKey: string;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface ExchangeBindOkArgs {}
+export interface ExchangeUnbindArgs {
+  ticket: number;
+  destination: string;
+  source: string;
+  routingKey: string;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface ExchangeUnbindOkArgs {}
+export interface QueueDeclareArgs {
+  ticket: number;
+  queue: string;
+  passive: boolean;
+  durable: boolean;
+  exclusive: boolean;
+  autoDelete: boolean;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface QueueDeclareOkArgs {
+  queue: string;
+  messageCount: number;
+  consumerCount: number;
+}
+export interface QueueBindArgs {
+  ticket: number;
+  queue: string;
+  exchange: string;
+  routingKey: string;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface QueueBindOkArgs {}
+export interface QueuePurgeArgs {
+  ticket: number;
+  queue: string;
+  nowait: boolean;
+}
+export interface QueuePurgeOkArgs {
+  messageCount: number;
+}
+export interface QueueDeleteArgs {
+  ticket: number;
+  queue: string;
+  ifUnused: boolean;
+  ifEmpty: boolean;
+  nowait: boolean;
+}
+export interface QueueDeleteOkArgs {
+  messageCount: number;
+}
+export interface QueueUnbindArgs {
+  ticket: number;
+  queue: string;
+  exchange: string;
+  routingKey: string;
+  arguments: Record<string, any>;
+}
+export interface QueueUnbindOkArgs {}
+export interface BasicQosArgs {
+  prefetchSize: number;
+  prefetchCount: number;
+  global: boolean;
+}
+export interface BasicQosOkArgs {}
+export interface BasicConsumeArgs {
+  ticket: number;
+  queue: string;
+  consumerTag: string;
+  noLocal: boolean;
+  noAck: boolean;
+  exclusive: boolean;
+  nowait: boolean;
+  arguments: Record<string, any>;
+}
+export interface BasicConsumeOkArgs {
+  consumerTag: string;
+}
+export interface BasicCancelArgs {
+  consumerTag: string;
+  nowait: boolean;
+}
+export interface BasicCancelOkArgs {
+  consumerTag: string;
+}
+export interface BasicPublishArgs {
+  ticket: number;
+  exchange: string;
+  routingKey: string;
+  mandatory: boolean;
+  immediate: boolean;
+}
+export interface BasicReturnArgs {
+  replyCode: number;
+  replyText: string;
+  exchange: string;
+  routingKey: string;
+}
+export interface BasicDeliverArgs {
+  consumerTag: string;
+  deliveryTag: Uint8Array;
+  redelivered: boolean;
+  exchange: string;
+  routingKey: string;
+}
+export interface BasicGetArgs {
+  ticket: number;
+  queue: string;
+  noAck: boolean;
+}
+export interface BasicGetOkArgs {
+  deliveryTag: Uint8Array;
+  redelivered: boolean;
+  exchange: string;
+  routingKey: string;
+  messageCount: number;
+}
+export interface BasicGetEmptyArgs {
+  clusterId: string;
+}
+export interface BasicAckArgs {
+  deliveryTag: Uint8Array;
+  multiple: boolean;
+}
+export interface BasicRejectArgs {
+  deliveryTag: Uint8Array;
+  requeue: boolean;
+}
+export interface BasicRecoverAsyncArgs {
+  requeue: boolean;
+}
+export interface BasicRecoverArgs {
+  requeue: boolean;
+}
+export interface BasicRecoverOkArgs {}
+export interface BasicNackArgs {
+  deliveryTag: Uint8Array;
+  multiple: boolean;
+  requeue: boolean;
+}
+export interface TxSelectArgs {}
+export interface TxSelectOkArgs {}
+export interface TxCommitArgs {}
+export interface TxCommitOkArgs {}
+export interface TxRollbackArgs {}
+export interface TxRollbackOkArgs {}
+export interface ConfirmSelectArgs {
+  nowait: boolean;
+}
+export interface ConfirmSelectOkArgs {}
 
 export type MethodPayload =
   | {
@@ -221,7 +269,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 10;
       name: "connection.start";
-      args: MethodArgs["connection.start"];
+      args: ConnectionStartArgs;
     }
   | {
       className: "connection";
@@ -229,7 +277,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 11;
       name: "connection.start-ok";
-      args: MethodArgs["connection.start-ok"];
+      args: ConnectionStartOkArgs;
     }
   | {
       className: "connection";
@@ -237,7 +285,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 20;
       name: "connection.secure";
-      args: MethodArgs["connection.secure"];
+      args: ConnectionSecureArgs;
     }
   | {
       className: "connection";
@@ -245,7 +293,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 21;
       name: "connection.secure-ok";
-      args: MethodArgs["connection.secure-ok"];
+      args: ConnectionSecureOkArgs;
     }
   | {
       className: "connection";
@@ -253,7 +301,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 30;
       name: "connection.tune";
-      args: MethodArgs["connection.tune"];
+      args: ConnectionTuneArgs;
     }
   | {
       className: "connection";
@@ -261,7 +309,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 31;
       name: "connection.tune-ok";
-      args: MethodArgs["connection.tune-ok"];
+      args: ConnectionTuneOkArgs;
     }
   | {
       className: "connection";
@@ -269,7 +317,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 40;
       name: "connection.open";
-      args: MethodArgs["connection.open"];
+      args: ConnectionOpenArgs;
     }
   | {
       className: "connection";
@@ -277,7 +325,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 41;
       name: "connection.open-ok";
-      args: MethodArgs["connection.open-ok"];
+      args: ConnectionOpenOkArgs;
     }
   | {
       className: "connection";
@@ -285,7 +333,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 50;
       name: "connection.close";
-      args: MethodArgs["connection.close"];
+      args: ConnectionCloseArgs;
     }
   | {
       className: "connection";
@@ -293,7 +341,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 51;
       name: "connection.close-ok";
-      args: MethodArgs["connection.close-ok"];
+      args: ConnectionCloseOkArgs;
     }
   | {
       className: "connection";
@@ -301,7 +349,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 60;
       name: "connection.blocked";
-      args: MethodArgs["connection.blocked"];
+      args: ConnectionBlockedArgs;
     }
   | {
       className: "connection";
@@ -309,7 +357,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 61;
       name: "connection.unblocked";
-      args: MethodArgs["connection.unblocked"];
+      args: ConnectionUnblockedArgs;
     }
   | {
       className: "connection";
@@ -317,7 +365,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 70;
       name: "connection.update-secret";
-      args: MethodArgs["connection.update-secret"];
+      args: ConnectionUpdateSecretArgs;
     }
   | {
       className: "connection";
@@ -325,7 +373,7 @@ export type MethodPayload =
       classId: 10;
       methodId: 71;
       name: "connection.update-secret-ok";
-      args: MethodArgs["connection.update-secret-ok"];
+      args: ConnectionUpdateSecretOkArgs;
     }
   | {
       className: "channel";
@@ -333,7 +381,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 10;
       name: "channel.open";
-      args: MethodArgs["channel.open"];
+      args: ChannelOpenArgs;
     }
   | {
       className: "channel";
@@ -341,7 +389,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 11;
       name: "channel.open-ok";
-      args: MethodArgs["channel.open-ok"];
+      args: ChannelOpenOkArgs;
     }
   | {
       className: "channel";
@@ -349,7 +397,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 20;
       name: "channel.flow";
-      args: MethodArgs["channel.flow"];
+      args: ChannelFlowArgs;
     }
   | {
       className: "channel";
@@ -357,7 +405,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 21;
       name: "channel.flow-ok";
-      args: MethodArgs["channel.flow-ok"];
+      args: ChannelFlowOkArgs;
     }
   | {
       className: "channel";
@@ -365,7 +413,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 40;
       name: "channel.close";
-      args: MethodArgs["channel.close"];
+      args: ChannelCloseArgs;
     }
   | {
       className: "channel";
@@ -373,7 +421,7 @@ export type MethodPayload =
       classId: 20;
       methodId: 41;
       name: "channel.close-ok";
-      args: MethodArgs["channel.close-ok"];
+      args: ChannelCloseOkArgs;
     }
   | {
       className: "access";
@@ -381,7 +429,7 @@ export type MethodPayload =
       classId: 30;
       methodId: 10;
       name: "access.request";
-      args: MethodArgs["access.request"];
+      args: AccessRequestArgs;
     }
   | {
       className: "access";
@@ -389,7 +437,7 @@ export type MethodPayload =
       classId: 30;
       methodId: 11;
       name: "access.request-ok";
-      args: MethodArgs["access.request-ok"];
+      args: AccessRequestOkArgs;
     }
   | {
       className: "exchange";
@@ -397,7 +445,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 10;
       name: "exchange.declare";
-      args: MethodArgs["exchange.declare"];
+      args: ExchangeDeclareArgs;
     }
   | {
       className: "exchange";
@@ -405,7 +453,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 11;
       name: "exchange.declare-ok";
-      args: MethodArgs["exchange.declare-ok"];
+      args: ExchangeDeclareOkArgs;
     }
   | {
       className: "exchange";
@@ -413,7 +461,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 20;
       name: "exchange.delete";
-      args: MethodArgs["exchange.delete"];
+      args: ExchangeDeleteArgs;
     }
   | {
       className: "exchange";
@@ -421,7 +469,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 21;
       name: "exchange.delete-ok";
-      args: MethodArgs["exchange.delete-ok"];
+      args: ExchangeDeleteOkArgs;
     }
   | {
       className: "exchange";
@@ -429,7 +477,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 30;
       name: "exchange.bind";
-      args: MethodArgs["exchange.bind"];
+      args: ExchangeBindArgs;
     }
   | {
       className: "exchange";
@@ -437,7 +485,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 31;
       name: "exchange.bind-ok";
-      args: MethodArgs["exchange.bind-ok"];
+      args: ExchangeBindOkArgs;
     }
   | {
       className: "exchange";
@@ -445,7 +493,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 40;
       name: "exchange.unbind";
-      args: MethodArgs["exchange.unbind"];
+      args: ExchangeUnbindArgs;
     }
   | {
       className: "exchange";
@@ -453,7 +501,7 @@ export type MethodPayload =
       classId: 40;
       methodId: 51;
       name: "exchange.unbind-ok";
-      args: MethodArgs["exchange.unbind-ok"];
+      args: ExchangeUnbindOkArgs;
     }
   | {
       className: "queue";
@@ -461,7 +509,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 10;
       name: "queue.declare";
-      args: MethodArgs["queue.declare"];
+      args: QueueDeclareArgs;
     }
   | {
       className: "queue";
@@ -469,7 +517,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 11;
       name: "queue.declare-ok";
-      args: MethodArgs["queue.declare-ok"];
+      args: QueueDeclareOkArgs;
     }
   | {
       className: "queue";
@@ -477,7 +525,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 20;
       name: "queue.bind";
-      args: MethodArgs["queue.bind"];
+      args: QueueBindArgs;
     }
   | {
       className: "queue";
@@ -485,7 +533,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 21;
       name: "queue.bind-ok";
-      args: MethodArgs["queue.bind-ok"];
+      args: QueueBindOkArgs;
     }
   | {
       className: "queue";
@@ -493,7 +541,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 30;
       name: "queue.purge";
-      args: MethodArgs["queue.purge"];
+      args: QueuePurgeArgs;
     }
   | {
       className: "queue";
@@ -501,7 +549,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 31;
       name: "queue.purge-ok";
-      args: MethodArgs["queue.purge-ok"];
+      args: QueuePurgeOkArgs;
     }
   | {
       className: "queue";
@@ -509,7 +557,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 40;
       name: "queue.delete";
-      args: MethodArgs["queue.delete"];
+      args: QueueDeleteArgs;
     }
   | {
       className: "queue";
@@ -517,7 +565,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 41;
       name: "queue.delete-ok";
-      args: MethodArgs["queue.delete-ok"];
+      args: QueueDeleteOkArgs;
     }
   | {
       className: "queue";
@@ -525,7 +573,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 50;
       name: "queue.unbind";
-      args: MethodArgs["queue.unbind"];
+      args: QueueUnbindArgs;
     }
   | {
       className: "queue";
@@ -533,7 +581,7 @@ export type MethodPayload =
       classId: 50;
       methodId: 51;
       name: "queue.unbind-ok";
-      args: MethodArgs["queue.unbind-ok"];
+      args: QueueUnbindOkArgs;
     }
   | {
       className: "basic";
@@ -541,7 +589,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 10;
       name: "basic.qos";
-      args: MethodArgs["basic.qos"];
+      args: BasicQosArgs;
     }
   | {
       className: "basic";
@@ -549,7 +597,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 11;
       name: "basic.qos-ok";
-      args: MethodArgs["basic.qos-ok"];
+      args: BasicQosOkArgs;
     }
   | {
       className: "basic";
@@ -557,7 +605,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 20;
       name: "basic.consume";
-      args: MethodArgs["basic.consume"];
+      args: BasicConsumeArgs;
     }
   | {
       className: "basic";
@@ -565,7 +613,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 21;
       name: "basic.consume-ok";
-      args: MethodArgs["basic.consume-ok"];
+      args: BasicConsumeOkArgs;
     }
   | {
       className: "basic";
@@ -573,7 +621,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 30;
       name: "basic.cancel";
-      args: MethodArgs["basic.cancel"];
+      args: BasicCancelArgs;
     }
   | {
       className: "basic";
@@ -581,7 +629,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 31;
       name: "basic.cancel-ok";
-      args: MethodArgs["basic.cancel-ok"];
+      args: BasicCancelOkArgs;
     }
   | {
       className: "basic";
@@ -589,7 +637,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 40;
       name: "basic.publish";
-      args: MethodArgs["basic.publish"];
+      args: BasicPublishArgs;
     }
   | {
       className: "basic";
@@ -597,7 +645,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 50;
       name: "basic.return";
-      args: MethodArgs["basic.return"];
+      args: BasicReturnArgs;
     }
   | {
       className: "basic";
@@ -605,7 +653,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 60;
       name: "basic.deliver";
-      args: MethodArgs["basic.deliver"];
+      args: BasicDeliverArgs;
     }
   | {
       className: "basic";
@@ -613,7 +661,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 70;
       name: "basic.get";
-      args: MethodArgs["basic.get"];
+      args: BasicGetArgs;
     }
   | {
       className: "basic";
@@ -621,7 +669,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 71;
       name: "basic.get-ok";
-      args: MethodArgs["basic.get-ok"];
+      args: BasicGetOkArgs;
     }
   | {
       className: "basic";
@@ -629,7 +677,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 72;
       name: "basic.get-empty";
-      args: MethodArgs["basic.get-empty"];
+      args: BasicGetEmptyArgs;
     }
   | {
       className: "basic";
@@ -637,7 +685,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 80;
       name: "basic.ack";
-      args: MethodArgs["basic.ack"];
+      args: BasicAckArgs;
     }
   | {
       className: "basic";
@@ -645,7 +693,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 90;
       name: "basic.reject";
-      args: MethodArgs["basic.reject"];
+      args: BasicRejectArgs;
     }
   | {
       className: "basic";
@@ -653,7 +701,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 100;
       name: "basic.recover-async";
-      args: MethodArgs["basic.recover-async"];
+      args: BasicRecoverAsyncArgs;
     }
   | {
       className: "basic";
@@ -661,7 +709,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 110;
       name: "basic.recover";
-      args: MethodArgs["basic.recover"];
+      args: BasicRecoverArgs;
     }
   | {
       className: "basic";
@@ -669,7 +717,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 111;
       name: "basic.recover-ok";
-      args: MethodArgs["basic.recover-ok"];
+      args: BasicRecoverOkArgs;
     }
   | {
       className: "basic";
@@ -677,7 +725,7 @@ export type MethodPayload =
       classId: 60;
       methodId: 120;
       name: "basic.nack";
-      args: MethodArgs["basic.nack"];
+      args: BasicNackArgs;
     }
   | {
       className: "tx";
@@ -685,7 +733,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 10;
       name: "tx.select";
-      args: MethodArgs["tx.select"];
+      args: TxSelectArgs;
     }
   | {
       className: "tx";
@@ -693,7 +741,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 11;
       name: "tx.select-ok";
-      args: MethodArgs["tx.select-ok"];
+      args: TxSelectOkArgs;
     }
   | {
       className: "tx";
@@ -701,7 +749,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 20;
       name: "tx.commit";
-      args: MethodArgs["tx.commit"];
+      args: TxCommitArgs;
     }
   | {
       className: "tx";
@@ -709,7 +757,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 21;
       name: "tx.commit-ok";
-      args: MethodArgs["tx.commit-ok"];
+      args: TxCommitOkArgs;
     }
   | {
       className: "tx";
@@ -717,7 +765,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 30;
       name: "tx.rollback";
-      args: MethodArgs["tx.rollback"];
+      args: TxRollbackArgs;
     }
   | {
       className: "tx";
@@ -725,7 +773,7 @@ export type MethodPayload =
       classId: 90;
       methodId: 31;
       name: "tx.rollback-ok";
-      args: MethodArgs["tx.rollback-ok"];
+      args: TxRollbackOkArgs;
     }
   | {
       className: "confirm";
@@ -733,7 +781,7 @@ export type MethodPayload =
       classId: 85;
       methodId: 10;
       name: "confirm.select";
-      args: MethodArgs["confirm.select"];
+      args: ConfirmSelectArgs;
     }
   | {
       className: "confirm";
@@ -741,7 +789,7 @@ export type MethodPayload =
       classId: 85;
       methodId: 11;
       name: "confirm.select-ok";
-      args: MethodArgs["confirm.select-ok"];
+      args: ConfirmSelectOkArgs;
     };
 
 export function decodeMethodPayload(
@@ -758,9 +806,9 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.start",
       args: {
-        ["version-major"]: decoder.decodeOctet(),
-        ["version-minor"]: decoder.decodeOctet(),
-        ["server-properties"]: decoder.decodeTable(),
+        ["versionMajor"]: decoder.decodeOctet(),
+        ["versionMinor"]: decoder.decodeOctet(),
+        ["serverProperties"]: decoder.decodeTable(),
         ["mechanisms"]: decoder.decodeLongString(),
         ["locales"]: decoder.decodeLongString()
       }
@@ -776,7 +824,7 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.start-ok",
       args: {
-        ["client-properties"]: decoder.decodeTable(),
+        ["clientProperties"]: decoder.decodeTable(),
         ["mechanism"]: decoder.decodeShortString(),
         ["response"]: decoder.decodeLongString(),
         ["locale"]: decoder.decodeShortString()
@@ -821,8 +869,8 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.tune",
       args: {
-        ["channel-max"]: decoder.decodeShortUint(),
-        ["frame-max"]: decoder.decodeLongUint(),
+        ["channelMax"]: decoder.decodeShortUint(),
+        ["frameMax"]: decoder.decodeLongUint(),
         ["heartbeat"]: decoder.decodeShortUint()
       }
     };
@@ -837,8 +885,8 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.tune-ok",
       args: {
-        ["channel-max"]: decoder.decodeShortUint(),
-        ["frame-max"]: decoder.decodeLongUint(),
+        ["channelMax"]: decoder.decodeShortUint(),
+        ["frameMax"]: decoder.decodeLongUint(),
         ["heartbeat"]: decoder.decodeShortUint()
       }
     };
@@ -853,7 +901,7 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.open",
       args: {
-        ["virtual-host"]: decoder.decodeShortString(),
+        ["virtualHost"]: decoder.decodeShortString(),
         ["capabilities"]: decoder.decodeShortString(),
         ["insist"]: decoder.decodeBit()
       }
@@ -869,7 +917,7 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.open-ok",
       args: {
-        ["known-hosts"]: decoder.decodeShortString()
+        ["knownHosts"]: decoder.decodeShortString()
       }
     };
   }
@@ -883,10 +931,10 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.close",
       args: {
-        ["reply-code"]: decoder.decodeShortUint(),
-        ["reply-text"]: decoder.decodeShortString(),
-        ["class-id"]: decoder.decodeShortUint(),
-        ["method-id"]: decoder.decodeShortUint()
+        ["replyCode"]: decoder.decodeShortUint(),
+        ["replyText"]: decoder.decodeShortString(),
+        ["classId"]: decoder.decodeShortUint(),
+        ["methodId"]: decoder.decodeShortUint()
       }
     };
   }
@@ -938,7 +986,7 @@ export function decodeMethodPayload(
       classId: 10,
       name: "connection.update-secret",
       args: {
-        ["new-secret"]: decoder.decodeLongString(),
+        ["newSecret"]: decoder.decodeLongString(),
         ["reason"]: decoder.decodeShortString()
       }
     };
@@ -965,7 +1013,7 @@ export function decodeMethodPayload(
       classId: 20,
       name: "channel.open",
       args: {
-        ["out-of-band"]: decoder.decodeShortString()
+        ["outOfBand"]: decoder.decodeShortString()
       }
     };
   }
@@ -979,7 +1027,7 @@ export function decodeMethodPayload(
       classId: 20,
       name: "channel.open-ok",
       args: {
-        ["channel-id"]: decoder.decodeLongString()
+        ["channelId"]: decoder.decodeLongString()
       }
     };
   }
@@ -1021,10 +1069,10 @@ export function decodeMethodPayload(
       classId: 20,
       name: "channel.close",
       args: {
-        ["reply-code"]: decoder.decodeShortUint(),
-        ["reply-text"]: decoder.decodeShortString(),
-        ["class-id"]: decoder.decodeShortUint(),
-        ["method-id"]: decoder.decodeShortUint()
+        ["replyCode"]: decoder.decodeShortUint(),
+        ["replyText"]: decoder.decodeShortString(),
+        ["classId"]: decoder.decodeShortUint(),
+        ["methodId"]: decoder.decodeShortUint()
       }
     };
   }
@@ -1088,7 +1136,7 @@ export function decodeMethodPayload(
         ["type"]: decoder.decodeShortString(),
         ["passive"]: decoder.decodeBit(),
         ["durable"]: decoder.decodeBit(),
-        ["auto-delete"]: decoder.decodeBit(),
+        ["autoDelete"]: decoder.decodeBit(),
         ["internal"]: decoder.decodeBit(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
@@ -1119,7 +1167,7 @@ export function decodeMethodPayload(
       args: {
         ["ticket"]: decoder.decodeShortUint(),
         ["exchange"]: decoder.decodeShortString(),
-        ["if-unused"]: decoder.decodeBit(),
+        ["ifUnused"]: decoder.decodeBit(),
         ["nowait"]: decoder.decodeBit()
       }
     };
@@ -1149,7 +1197,7 @@ export function decodeMethodPayload(
         ["ticket"]: decoder.decodeShortUint(),
         ["destination"]: decoder.decodeShortString(),
         ["source"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
+        ["routingKey"]: decoder.decodeShortString(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
       }
@@ -1180,7 +1228,7 @@ export function decodeMethodPayload(
         ["ticket"]: decoder.decodeShortUint(),
         ["destination"]: decoder.decodeShortString(),
         ["source"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
+        ["routingKey"]: decoder.decodeShortString(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
       }
@@ -1213,7 +1261,7 @@ export function decodeMethodPayload(
         ["passive"]: decoder.decodeBit(),
         ["durable"]: decoder.decodeBit(),
         ["exclusive"]: decoder.decodeBit(),
-        ["auto-delete"]: decoder.decodeBit(),
+        ["autoDelete"]: decoder.decodeBit(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
       }
@@ -1230,8 +1278,8 @@ export function decodeMethodPayload(
       name: "queue.declare-ok",
       args: {
         ["queue"]: decoder.decodeShortString(),
-        ["message-count"]: decoder.decodeLongUint(),
-        ["consumer-count"]: decoder.decodeLongUint()
+        ["messageCount"]: decoder.decodeLongUint(),
+        ["consumerCount"]: decoder.decodeLongUint()
       }
     };
   }
@@ -1248,7 +1296,7 @@ export function decodeMethodPayload(
         ["ticket"]: decoder.decodeShortUint(),
         ["queue"]: decoder.decodeShortString(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
+        ["routingKey"]: decoder.decodeShortString(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
       }
@@ -1292,7 +1340,7 @@ export function decodeMethodPayload(
       classId: 50,
       name: "queue.purge-ok",
       args: {
-        ["message-count"]: decoder.decodeLongUint()
+        ["messageCount"]: decoder.decodeLongUint()
       }
     };
   }
@@ -1308,8 +1356,8 @@ export function decodeMethodPayload(
       args: {
         ["ticket"]: decoder.decodeShortUint(),
         ["queue"]: decoder.decodeShortString(),
-        ["if-unused"]: decoder.decodeBit(),
-        ["if-empty"]: decoder.decodeBit(),
+        ["ifUnused"]: decoder.decodeBit(),
+        ["ifEmpty"]: decoder.decodeBit(),
         ["nowait"]: decoder.decodeBit()
       }
     };
@@ -1324,7 +1372,7 @@ export function decodeMethodPayload(
       classId: 50,
       name: "queue.delete-ok",
       args: {
-        ["message-count"]: decoder.decodeLongUint()
+        ["messageCount"]: decoder.decodeLongUint()
       }
     };
   }
@@ -1341,7 +1389,7 @@ export function decodeMethodPayload(
         ["ticket"]: decoder.decodeShortUint(),
         ["queue"]: decoder.decodeShortString(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
+        ["routingKey"]: decoder.decodeShortString(),
         ["arguments"]: decoder.decodeTable()
       }
     };
@@ -1368,8 +1416,8 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.qos",
       args: {
-        ["prefetch-size"]: decoder.decodeLongUint(),
-        ["prefetch-count"]: decoder.decodeShortUint(),
+        ["prefetchSize"]: decoder.decodeLongUint(),
+        ["prefetchCount"]: decoder.decodeShortUint(),
         ["global"]: decoder.decodeBit()
       }
     };
@@ -1398,9 +1446,9 @@ export function decodeMethodPayload(
       args: {
         ["ticket"]: decoder.decodeShortUint(),
         ["queue"]: decoder.decodeShortString(),
-        ["consumer-tag"]: decoder.decodeShortString(),
-        ["no-local"]: decoder.decodeBit(),
-        ["no-ack"]: decoder.decodeBit(),
+        ["consumerTag"]: decoder.decodeShortString(),
+        ["noLocal"]: decoder.decodeBit(),
+        ["noAck"]: decoder.decodeBit(),
         ["exclusive"]: decoder.decodeBit(),
         ["nowait"]: decoder.decodeBit(),
         ["arguments"]: decoder.decodeTable()
@@ -1417,7 +1465,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.consume-ok",
       args: {
-        ["consumer-tag"]: decoder.decodeShortString()
+        ["consumerTag"]: decoder.decodeShortString()
       }
     };
   }
@@ -1431,7 +1479,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.cancel",
       args: {
-        ["consumer-tag"]: decoder.decodeShortString(),
+        ["consumerTag"]: decoder.decodeShortString(),
         ["nowait"]: decoder.decodeBit()
       }
     };
@@ -1446,7 +1494,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.cancel-ok",
       args: {
-        ["consumer-tag"]: decoder.decodeShortString()
+        ["consumerTag"]: decoder.decodeShortString()
       }
     };
   }
@@ -1462,7 +1510,7 @@ export function decodeMethodPayload(
       args: {
         ["ticket"]: decoder.decodeShortUint(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
+        ["routingKey"]: decoder.decodeShortString(),
         ["mandatory"]: decoder.decodeBit(),
         ["immediate"]: decoder.decodeBit()
       }
@@ -1478,10 +1526,10 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.return",
       args: {
-        ["reply-code"]: decoder.decodeShortUint(),
-        ["reply-text"]: decoder.decodeShortString(),
+        ["replyCode"]: decoder.decodeShortUint(),
+        ["replyText"]: decoder.decodeShortString(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString()
+        ["routingKey"]: decoder.decodeShortString()
       }
     };
   }
@@ -1495,11 +1543,11 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.deliver",
       args: {
-        ["consumer-tag"]: decoder.decodeShortString(),
-        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["consumerTag"]: decoder.decodeShortString(),
+        ["deliveryTag"]: decoder.decodeLongLongUint(),
         ["redelivered"]: decoder.decodeBit(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString()
+        ["routingKey"]: decoder.decodeShortString()
       }
     };
   }
@@ -1515,7 +1563,7 @@ export function decodeMethodPayload(
       args: {
         ["ticket"]: decoder.decodeShortUint(),
         ["queue"]: decoder.decodeShortString(),
-        ["no-ack"]: decoder.decodeBit()
+        ["noAck"]: decoder.decodeBit()
       }
     };
   }
@@ -1529,11 +1577,11 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.get-ok",
       args: {
-        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["deliveryTag"]: decoder.decodeLongLongUint(),
         ["redelivered"]: decoder.decodeBit(),
         ["exchange"]: decoder.decodeShortString(),
-        ["routing-key"]: decoder.decodeShortString(),
-        ["message-count"]: decoder.decodeLongUint()
+        ["routingKey"]: decoder.decodeShortString(),
+        ["messageCount"]: decoder.decodeLongUint()
       }
     };
   }
@@ -1547,7 +1595,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.get-empty",
       args: {
-        ["cluster-id"]: decoder.decodeShortString()
+        ["clusterId"]: decoder.decodeShortString()
       }
     };
   }
@@ -1561,7 +1609,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.ack",
       args: {
-        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["deliveryTag"]: decoder.decodeLongLongUint(),
         ["multiple"]: decoder.decodeBit()
       }
     };
@@ -1576,7 +1624,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.reject",
       args: {
-        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["deliveryTag"]: decoder.decodeLongLongUint(),
         ["requeue"]: decoder.decodeBit()
       }
     };
@@ -1631,7 +1679,7 @@ export function decodeMethodPayload(
       classId: 60,
       name: "basic.nack",
       args: {
-        ["delivery-tag"]: decoder.decodeLongLongUint(),
+        ["deliveryTag"]: decoder.decodeLongLongUint(),
         ["multiple"]: decoder.decodeBit(),
         ["requeue"]: decoder.decodeBit()
       }

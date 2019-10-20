@@ -3,7 +3,8 @@ import {
   ArgumentDefinition,
   flattenMethods,
   resolveArgumentType,
-  resolveType
+  resolveType,
+  pascalCase
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
@@ -15,7 +16,7 @@ const methods = flattenMethods(spec);
 function resolveArgShape(args: ArgumentDefinition[]) {
   return `{ ${args
     .map(arg => {
-      return `["${arg.name}"]: ${resolveArgumentType(spec, arg)}`;
+      return `${arg.name}: ${resolveArgumentType(spec, arg)}`;
     })
     .join(";")} }`;
 }
@@ -24,13 +25,13 @@ function generateDecodeMethod() {
   return `
 import { createDecoder } from "./decoder.ts"
 
-export type MethodArgs = {
-  ${methods
-    .map(
-      method => `["${method.fullName}"]: ${resolveArgShape(method.arguments)}`
-    )
-    .join(";")}
-}
+${methods
+  .map(method => {
+    return `export interface ${pascalCase(
+      method.fullName
+    )}Args ${resolveArgShape(method.arguments)}`;
+  })
+  .join("\n")}
 
 export type MethodPayload = ${methods
     .map(method => {
@@ -40,7 +41,7 @@ export type MethodPayload = ${methods
         classId: ${method.classId},
         methodId: ${method.id},
         name: "${method.fullName}", 
-        args: MethodArgs["${method.fullName}"] 
+        args: ${pascalCase(method.fullName)}Args
       }`;
     })
     .join(" | ")}
