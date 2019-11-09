@@ -1,33 +1,14 @@
-import { createEncoder } from "./encoder.ts";
-import { createDecoder } from "./decoder.ts";
+import { encodeFrame, Frame as OutgoingFrame, Method as OutgoingMethod } from "./frame_encoder.ts";
 import {
-  encodeMethodPayload,
-  MethodPayload as OutgoingMethodPayload
-} from "./method_encoder.ts";
-import {
-  decodeMethodPayload,
-  MethodPayload as IncomingMethodPayload
-} from "./method_decoder.ts";
+  decodeFrame,
+  Frame as IncomingFrame,
+  Method as IncomingMethod,
+  decodeHeader
+} from "./frame_decoder.ts";
 
-const FRAME_METHOD = 1;
-const FRAME_HEADER = 2;
-const FRAME_BODY = 3;
-const FRAME_HEARTBEAT = 8;
-const FRAME_END = 0xce;
 const { dial } = Deno;
 
-export type Heartbeat = { type: "heartbeat"; channel: number };
-export type IncomingMethod = {
-  type: "method";
-  channel: number;
-} & IncomingMethodPayload;
-export type OutgoingMethod = {
-  type: "method";
-  channel: number;
-} & OutgoingMethodPayload;
-
-export type IncomingFrame = IncomingMethod | Heartbeat;
-export type OutgoingFrame = OutgoingMethod | Heartbeat;
+export { OutgoingFrame, IncomingFrame, IncomingMethod, OutgoingMethod };
 
 export interface ConnectOptions {
   hostname: string;
@@ -37,15 +18,36 @@ export interface ConnectOptions {
 export interface AmqpSocket {
   start(): Promise<void>;
   close(): void;
-  listen(handler: FrameHandler): () => void;
-  listenOnce(handler: FrameHandler): () => void;
+  write(frame: OutgoingFrame): Promise<void>;
+  use(middleware: FrameMiddleware): () => void;
+}
+
+export interface FrameContext {
+  frame: IncomingFrame;
   write(frame: OutgoingFrame): Promise<void>;
 }
 
-export type FrameHandler = (frame: IncomingFrame, next?: () => void) => void;
+export interface Next {
+  (): Promise<void> | void;
+}
+
+export type FrameMiddleware = (
+  context: FrameContext,
+  next?: Next
+) => Promise<void> | void;
+
+async function invokeMiddlewares(
+  context: FrameContext,
+  middlewares: FrameMiddleware[]
+) {
+  for (const middleware of middlewares) {
+    await new Promise(resolve => middleware(context, resolve));
+  }
+}
 
 export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
-  const listeners: FrameHandler[] = [];
+  const middlewares: FrameMiddleware[] = [];
+
   let open = true;
 
   const conn = await dial({
@@ -87,102 +89,16 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     );
   }
 
-  async function readHeader(): Promise<{
-    type: number;
-    channel: number;
-    size: number;
-  } | null> {
-    const prefix = await readBytes(7);
-    if (prefix === null) {
-      return null;
-    }
-
-    const prefixDecoder = createDecoder(prefix);
-    const type = prefixDecoder.decodeOctet();
-    const channel = prefixDecoder.decodeShortUint();
-    const size = prefixDecoder.decodeLongUint();
-    return { type, channel, size };
-  }
-
   async function* read(): AsyncIterableIterator<IncomingFrame> {
     while (true) {
-      const header = await readHeader();
-      if (header === null) {
+      const prefix = await readBytes(7);
+      if (prefix === null) {
         return null;
       }
-
-      const { type, channel, size } = header;
-
-      const payload = await readBytes(size + 1); // size + frame end
-      const decoder = createDecoder(payload.slice(0, size));
-
-      switch (type) {
-        case FRAME_METHOD:
-          const classId = decoder.decodeShortUint();
-          const methodId = decoder.decodeShortUint();
-          const result = decodeMethodPayload(
-            classId,
-            methodId,
-            decoder.bytes()
-          );
-          yield {
-            channel,
-            type: "method",
-            ...result
-          };
-          break;
-        case FRAME_HEARTBEAT:
-          yield {
-            type: "heartbeat",
-            channel
-          };
-          break;
-        default:
-          throw new Error(`Unknown frame type ${type}`);
-      }
+      const header = decodeHeader(prefix);
+      const payload = await readBytes(header.size + 1); // size + frame end
+      yield decodeFrame(header, payload.slice(0, header.size));
     }
-  }
-
-  function encodeFrame(frame: OutgoingFrame) {
-    if (frame.type === "method") {
-      const encoder = createEncoder();
-      const payload = encodeMethodPayload(frame);
-      encoder.encodeOctet(FRAME_METHOD);
-      encoder.encodeShortUint(frame.channel);
-      encoder.encodeLongUint(payload.length);
-      encoder.write(payload);
-      encoder.encodeOctet(FRAME_END);
-      return encoder.bytes();
-    }
-
-    if (frame.type === "heartbeat") {
-      const encoder = createEncoder();
-      encoder.encodeOctet(FRAME_HEARTBEAT);
-      encoder.encodeShortUint(frame.channel);
-      encoder.encodeLongUint(0);
-      encoder.encodeOctet(FRAME_END);
-      return encoder.bytes();
-    }
-
-    throw new Error(`Cannot encode frame type ${frame}`);
-  }
-
-  function listen(listener: FrameHandler): () => void {
-    listeners.push(listener);
-    return () => {
-      const index = listeners.indexOf(listener);
-      if (index !== -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  }
-
-  function listenOnce(listener: FrameHandler): () => void {
-    const unsubscribe = listen(frame => {
-      unsubscribe();
-      listener(frame);
-    });
-    return unsubscribe;
   }
 
   async function write(frame: OutgoingFrame) {
@@ -195,6 +111,16 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     await conn.write(data);
   }
 
+  function use(middleware: FrameMiddleware): () => void {
+    middlewares.push(middleware);
+    return () => {
+      const index = middlewares.indexOf(middleware);
+      if (index !== -1) {
+        middlewares.splice(index, 1);
+      }
+    };
+  }
+
   async function start() {
     await conn.write(new Uint8Array([65, 77, 81, 80, 0, 0, 9, 1]));
     startReceiving().catch(error => {
@@ -205,23 +131,17 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   async function startReceiving() {
     for await (const frame of read()) {
       if (frame === null) {
-        clear();
         return;
       }
-
-      listeners.forEach(listener => listener(frame));
+      const context: FrameContext = { frame, write };
+      invokeMiddlewares(context, [...middlewares]);
     }
   }
 
-  function clear() {
-    listeners.splice(0, listeners.length);
-  }
-
   function close() {
-    clear();
     conn.close();
     open = false;
   }
 
-  return { start, close, listen, listenOnce, write };
+  return { start, close, use, write };
 }
