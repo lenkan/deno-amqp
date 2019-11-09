@@ -13,7 +13,8 @@ export interface ClassDefinition {
 export interface MethodDefinition {
   id: number;
   arguments: ArgumentDefinition[];
-  synchronous?: boolean;
+  synchronous: boolean;
+  response?: string;
   name: string;
 }
 
@@ -35,14 +36,19 @@ export function flattenMethods(spec: Spec) {
   >((methods, clazz) => {
     return [
       ...methods,
-      ...clazz.methods.map(m => ({
-        ...m,
-        classId: clazz.id,
-        className: clazz.name,
-        methodName: m.name,
-        fullName: `${clazz.name}.${m.name}`,
-        arguments: m.arguments.map(a => ({ ...a, name: camelCase(a.name) }))
-      }))
+      ...clazz.methods.map((m, index, all) => {
+        const next = all[index + 1];
+        return {
+          ...m,
+          classId: clazz.id,
+          className: clazz.name,
+          methodName: m.name,
+          fullName: `${clazz.name}.${m.name}`,
+          arguments: m.arguments.map(a => ({ ...a, name: camelCase(a.name) })),
+          synchronous: !!m.synchronous,
+          response: !!m.synchronous ? `${clazz.name}.${next.name}` : undefined
+        };
+      })
     ];
   }, []);
   return methods;

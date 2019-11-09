@@ -122,3 +122,151 @@ export const NOT_IMPLEMENTED = 540;
  * INTERNAL-ERROR (hard-error)
  */
 export const INTERNAL_ERROR = 541;
+
+export const CONNECTION = 10;
+
+export const CONNECTION_START = 10;
+
+export const CONNECTION_START_OK = 11;
+
+export const CONNECTION_SECURE = 20;
+
+export const CONNECTION_SECURE_OK = 21;
+
+export const CONNECTION_TUNE = 30;
+
+export const CONNECTION_TUNE_OK = 31;
+
+export const CONNECTION_OPEN = 40;
+
+export const CONNECTION_OPEN_OK = 41;
+
+export const CONNECTION_CLOSE = 50;
+
+export const CONNECTION_CLOSE_OK = 51;
+
+export const CONNECTION_BLOCKED = 60;
+
+export const CONNECTION_UNBLOCKED = 61;
+
+export const CONNECTION_UPDATE_SECRET = 70;
+
+export const CONNECTION_UPDATE_SECRET_OK = 71;
+
+export const CHANNEL = 20;
+
+export const CHANNEL_OPEN = 10;
+
+export const CHANNEL_OPEN_OK = 11;
+
+export const CHANNEL_FLOW = 20;
+
+export const CHANNEL_FLOW_OK = 21;
+
+export const CHANNEL_CLOSE = 40;
+
+export const CHANNEL_CLOSE_OK = 41;
+
+export const ACCESS = 30;
+
+export const ACCESS_REQUEST = 10;
+
+export const ACCESS_REQUEST_OK = 11;
+
+export const EXCHANGE = 40;
+
+export const EXCHANGE_DECLARE = 10;
+
+export const EXCHANGE_DECLARE_OK = 11;
+
+export const EXCHANGE_DELETE = 20;
+
+export const EXCHANGE_DELETE_OK = 21;
+
+export const EXCHANGE_BIND = 30;
+
+export const EXCHANGE_BIND_OK = 31;
+
+export const EXCHANGE_UNBIND = 40;
+
+export const EXCHANGE_UNBIND_OK = 51;
+
+export const QUEUE = 50;
+
+export const QUEUE_DECLARE = 10;
+
+export const QUEUE_DECLARE_OK = 11;
+
+export const QUEUE_BIND = 20;
+
+export const QUEUE_BIND_OK = 21;
+
+export const QUEUE_PURGE = 30;
+
+export const QUEUE_PURGE_OK = 31;
+
+export const QUEUE_DELETE = 40;
+
+export const QUEUE_DELETE_OK = 41;
+
+export const QUEUE_UNBIND = 50;
+
+export const QUEUE_UNBIND_OK = 51;
+
+export const BASIC = 60;
+
+export const BASIC_QOS = 10;
+
+export const BASIC_QOS_OK = 11;
+
+export const BASIC_CONSUME = 20;
+
+export const BASIC_CONSUME_OK = 21;
+
+export const BASIC_CANCEL = 30;
+
+export const BASIC_CANCEL_OK = 31;
+
+export const BASIC_PUBLISH = 40;
+
+export const BASIC_RETURN = 50;
+
+export const BASIC_DELIVER = 60;
+
+export const BASIC_GET = 70;
+
+export const BASIC_GET_OK = 71;
+
+export const BASIC_GET_EMPTY = 72;
+
+export const BASIC_ACK = 80;
+
+export const BASIC_REJECT = 90;
+
+export const BASIC_RECOVER_ASYNC = 100;
+
+export const BASIC_RECOVER = 110;
+
+export const BASIC_RECOVER_OK = 111;
+
+export const BASIC_NACK = 120;
+
+export const TX = 90;
+
+export const TX_SELECT = 10;
+
+export const TX_SELECT_OK = 11;
+
+export const TX_COMMIT = 20;
+
+export const TX_COMMIT_OK = 21;
+
+export const TX_ROLLBACK = 30;
+
+export const TX_ROLLBACK_OK = 31;
+
+export const CONFIRM = 85;
+
+export const CONFIRM_SELECT = 10;
+
+export const CONFIRM_SELECT_OK = 11;

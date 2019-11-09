@@ -263,75 +263,339 @@ export interface ConfirmSelectArgs {
 export interface ConfirmSelectOkArgs {}
 
 export type MethodPayload =
-  | { name: "connection.start"; args: ConnectionStartArgs }
-  | { name: "connection.start-ok"; args: ConnectionStartOkArgs }
-  | { name: "connection.secure"; args: ConnectionSecureArgs }
-  | { name: "connection.secure-ok"; args: ConnectionSecureOkArgs }
-  | { name: "connection.tune"; args: ConnectionTuneArgs }
-  | { name: "connection.tune-ok"; args: ConnectionTuneOkArgs }
-  | { name: "connection.open"; args: ConnectionOpenArgs }
-  | { name: "connection.open-ok"; args: ConnectionOpenOkArgs }
-  | { name: "connection.close"; args: ConnectionCloseArgs }
-  | { name: "connection.close-ok"; args: ConnectionCloseOkArgs }
-  | { name: "connection.blocked"; args: ConnectionBlockedArgs }
-  | { name: "connection.unblocked"; args: ConnectionUnblockedArgs }
-  | { name: "connection.update-secret"; args: ConnectionUpdateSecretArgs }
-  | { name: "connection.update-secret-ok"; args: ConnectionUpdateSecretOkArgs }
-  | { name: "channel.open"; args: ChannelOpenArgs }
-  | { name: "channel.open-ok"; args: ChannelOpenOkArgs }
-  | { name: "channel.flow"; args: ChannelFlowArgs }
-  | { name: "channel.flow-ok"; args: ChannelFlowOkArgs }
-  | { name: "channel.close"; args: ChannelCloseArgs }
-  | { name: "channel.close-ok"; args: ChannelCloseOkArgs }
-  | { name: "access.request"; args: AccessRequestArgs }
-  | { name: "access.request-ok"; args: AccessRequestOkArgs }
-  | { name: "exchange.declare"; args: ExchangeDeclareArgs }
-  | { name: "exchange.declare-ok"; args: ExchangeDeclareOkArgs }
-  | { name: "exchange.delete"; args: ExchangeDeleteArgs }
-  | { name: "exchange.delete-ok"; args: ExchangeDeleteOkArgs }
-  | { name: "exchange.bind"; args: ExchangeBindArgs }
-  | { name: "exchange.bind-ok"; args: ExchangeBindOkArgs }
-  | { name: "exchange.unbind"; args: ExchangeUnbindArgs }
-  | { name: "exchange.unbind-ok"; args: ExchangeUnbindOkArgs }
-  | { name: "queue.declare"; args: QueueDeclareArgs }
-  | { name: "queue.declare-ok"; args: QueueDeclareOkArgs }
-  | { name: "queue.bind"; args: QueueBindArgs }
-  | { name: "queue.bind-ok"; args: QueueBindOkArgs }
-  | { name: "queue.purge"; args: QueuePurgeArgs }
-  | { name: "queue.purge-ok"; args: QueuePurgeOkArgs }
-  | { name: "queue.delete"; args: QueueDeleteArgs }
-  | { name: "queue.delete-ok"; args: QueueDeleteOkArgs }
-  | { name: "queue.unbind"; args: QueueUnbindArgs }
-  | { name: "queue.unbind-ok"; args: QueueUnbindOkArgs }
-  | { name: "basic.qos"; args: BasicQosArgs }
-  | { name: "basic.qos-ok"; args: BasicQosOkArgs }
-  | { name: "basic.consume"; args: BasicConsumeArgs }
-  | { name: "basic.consume-ok"; args: BasicConsumeOkArgs }
-  | { name: "basic.cancel"; args: BasicCancelArgs }
-  | { name: "basic.cancel-ok"; args: BasicCancelOkArgs }
-  | { name: "basic.publish"; args: BasicPublishArgs }
-  | { name: "basic.return"; args: BasicReturnArgs }
-  | { name: "basic.deliver"; args: BasicDeliverArgs }
-  | { name: "basic.get"; args: BasicGetArgs }
-  | { name: "basic.get-ok"; args: BasicGetOkArgs }
-  | { name: "basic.get-empty"; args: BasicGetEmptyArgs }
-  | { name: "basic.ack"; args: BasicAckArgs }
-  | { name: "basic.reject"; args: BasicRejectArgs }
-  | { name: "basic.recover-async"; args: BasicRecoverAsyncArgs }
-  | { name: "basic.recover"; args: BasicRecoverArgs }
-  | { name: "basic.recover-ok"; args: BasicRecoverOkArgs }
-  | { name: "basic.nack"; args: BasicNackArgs }
-  | { name: "tx.select"; args: TxSelectArgs }
-  | { name: "tx.select-ok"; args: TxSelectOkArgs }
-  | { name: "tx.commit"; args: TxCommitArgs }
-  | { name: "tx.commit-ok"; args: TxCommitOkArgs }
-  | { name: "tx.rollback"; args: TxRollbackArgs }
-  | { name: "tx.rollback-ok"; args: TxRollbackOkArgs }
-  | { name: "confirm.select"; args: ConfirmSelectArgs }
-  | { name: "confirm.select-ok"; args: ConfirmSelectOkArgs };
+  | {
+      classId: 10;
+      methodId: 10;
+      args: ConnectionStartArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 11;
+      args: ConnectionStartOkArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 20;
+      args: ConnectionSecureArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 21;
+      args: ConnectionSecureOkArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 30;
+      args: ConnectionTuneArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 31;
+      args: ConnectionTuneOkArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 40;
+      args: ConnectionOpenArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 41;
+      args: ConnectionOpenOkArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 50;
+      args: ConnectionCloseArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 51;
+      args: ConnectionCloseOkArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 60;
+      args: ConnectionBlockedArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 61;
+      args: ConnectionUnblockedArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 70;
+      args: ConnectionUpdateSecretArgs;
+    }
+  | {
+      classId: 10;
+      methodId: 71;
+      args: ConnectionUpdateSecretOkArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 10;
+      args: ChannelOpenArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 11;
+      args: ChannelOpenOkArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 20;
+      args: ChannelFlowArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 21;
+      args: ChannelFlowOkArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 40;
+      args: ChannelCloseArgs;
+    }
+  | {
+      classId: 20;
+      methodId: 41;
+      args: ChannelCloseOkArgs;
+    }
+  | {
+      classId: 30;
+      methodId: 10;
+      args: AccessRequestArgs;
+    }
+  | {
+      classId: 30;
+      methodId: 11;
+      args: AccessRequestOkArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 10;
+      args: ExchangeDeclareArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 11;
+      args: ExchangeDeclareOkArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 20;
+      args: ExchangeDeleteArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 21;
+      args: ExchangeDeleteOkArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 30;
+      args: ExchangeBindArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 31;
+      args: ExchangeBindOkArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 40;
+      args: ExchangeUnbindArgs;
+    }
+  | {
+      classId: 40;
+      methodId: 51;
+      args: ExchangeUnbindOkArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 10;
+      args: QueueDeclareArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 11;
+      args: QueueDeclareOkArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 20;
+      args: QueueBindArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 21;
+      args: QueueBindOkArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 30;
+      args: QueuePurgeArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 31;
+      args: QueuePurgeOkArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 40;
+      args: QueueDeleteArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 41;
+      args: QueueDeleteOkArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 50;
+      args: QueueUnbindArgs;
+    }
+  | {
+      classId: 50;
+      methodId: 51;
+      args: QueueUnbindOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 10;
+      args: BasicQosArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 11;
+      args: BasicQosOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 20;
+      args: BasicConsumeArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 21;
+      args: BasicConsumeOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 30;
+      args: BasicCancelArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 31;
+      args: BasicCancelOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 40;
+      args: BasicPublishArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 50;
+      args: BasicReturnArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 60;
+      args: BasicDeliverArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 70;
+      args: BasicGetArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 71;
+      args: BasicGetOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 72;
+      args: BasicGetEmptyArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 80;
+      args: BasicAckArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 90;
+      args: BasicRejectArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 100;
+      args: BasicRecoverAsyncArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 110;
+      args: BasicRecoverArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 111;
+      args: BasicRecoverOkArgs;
+    }
+  | {
+      classId: 60;
+      methodId: 120;
+      args: BasicNackArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 10;
+      args: TxSelectArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 11;
+      args: TxSelectOkArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 20;
+      args: TxCommitArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 21;
+      args: TxCommitOkArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 30;
+      args: TxRollbackArgs;
+    }
+  | {
+      classId: 90;
+      methodId: 31;
+      args: TxRollbackOkArgs;
+    }
+  | {
+      classId: 85;
+      methodId: 10;
+      args: ConfirmSelectArgs;
+    }
+  | {
+      classId: 85;
+      methodId: 11;
+      args: ConfirmSelectOkArgs;
+    };
 
 export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
-  if (payload.name === "connection.start") {
+  if (payload.classId === 10 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(10);
@@ -351,7 +615,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.start-ok") {
+  if (payload.classId === 10 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(11);
@@ -366,7 +630,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.secure") {
+  if (payload.classId === 10 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(20);
@@ -374,7 +638,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.secure-ok") {
+  if (payload.classId === 10 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(21);
@@ -382,7 +646,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.tune") {
+  if (payload.classId === 10 && payload.methodId === 30) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(30);
@@ -398,7 +662,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.tune-ok") {
+  if (payload.classId === 10 && payload.methodId === 31) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(31);
@@ -414,7 +678,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.open") {
+  if (payload.classId === 10 && payload.methodId === 40) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(40);
@@ -430,7 +694,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.open-ok") {
+  if (payload.classId === 10 && payload.methodId === 41) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(41);
@@ -440,7 +704,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.close") {
+  if (payload.classId === 10 && payload.methodId === 50) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(50);
@@ -453,7 +717,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.close-ok") {
+  if (payload.classId === 10 && payload.methodId === 51) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(51);
@@ -461,7 +725,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.blocked") {
+  if (payload.classId === 10 && payload.methodId === 60) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(60);
@@ -471,7 +735,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.unblocked") {
+  if (payload.classId === 10 && payload.methodId === 61) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(61);
@@ -479,7 +743,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.update-secret") {
+  if (payload.classId === 10 && payload.methodId === 70) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(70);
@@ -488,7 +752,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "connection.update-secret-ok") {
+  if (payload.classId === 10 && payload.methodId === 71) {
     const encoder = createEncoder();
     encoder.encodeShortUint(10);
     encoder.encodeShortUint(71);
@@ -496,7 +760,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.open") {
+  if (payload.classId === 20 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(10);
@@ -506,7 +770,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.open-ok") {
+  if (payload.classId === 20 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(11);
@@ -516,7 +780,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.flow") {
+  if (payload.classId === 20 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(20);
@@ -524,7 +788,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.flow-ok") {
+  if (payload.classId === 20 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(21);
@@ -532,7 +796,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.close") {
+  if (payload.classId === 20 && payload.methodId === 40) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(40);
@@ -545,7 +809,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "channel.close-ok") {
+  if (payload.classId === 20 && payload.methodId === 41) {
     const encoder = createEncoder();
     encoder.encodeShortUint(20);
     encoder.encodeShortUint(41);
@@ -553,7 +817,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "access.request") {
+  if (payload.classId === 30 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(30);
     encoder.encodeShortUint(10);
@@ -578,7 +842,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "access.request-ok") {
+  if (payload.classId === 30 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(30);
     encoder.encodeShortUint(11);
@@ -588,7 +852,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.declare") {
+  if (payload.classId === 40 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(10);
@@ -620,7 +884,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.declare-ok") {
+  if (payload.classId === 40 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(11);
@@ -628,7 +892,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.delete") {
+  if (payload.classId === 40 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(20);
@@ -645,7 +909,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.delete-ok") {
+  if (payload.classId === 40 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(21);
@@ -653,7 +917,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.bind") {
+  if (payload.classId === 40 && payload.methodId === 30) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(30);
@@ -674,7 +938,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.bind-ok") {
+  if (payload.classId === 40 && payload.methodId === 31) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(31);
@@ -682,7 +946,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.unbind") {
+  if (payload.classId === 40 && payload.methodId === 40) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(40);
@@ -703,7 +967,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "exchange.unbind-ok") {
+  if (payload.classId === 40 && payload.methodId === 51) {
     const encoder = createEncoder();
     encoder.encodeShortUint(40);
     encoder.encodeShortUint(51);
@@ -711,7 +975,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.declare") {
+  if (payload.classId === 50 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(10);
@@ -742,7 +1006,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.declare-ok") {
+  if (payload.classId === 50 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(11);
@@ -752,7 +1016,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.bind") {
+  if (payload.classId === 50 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(20);
@@ -775,7 +1039,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.bind-ok") {
+  if (payload.classId === 50 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(21);
@@ -783,7 +1047,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.purge") {
+  if (payload.classId === 50 && payload.methodId === 30) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(30);
@@ -799,7 +1063,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.purge-ok") {
+  if (payload.classId === 50 && payload.methodId === 31) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(31);
@@ -807,7 +1071,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.delete") {
+  if (payload.classId === 50 && payload.methodId === 40) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(40);
@@ -829,7 +1093,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.delete-ok") {
+  if (payload.classId === 50 && payload.methodId === 41) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(41);
@@ -837,7 +1101,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.unbind") {
+  if (payload.classId === 50 && payload.methodId === 50) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(50);
@@ -857,7 +1121,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "queue.unbind-ok") {
+  if (payload.classId === 50 && payload.methodId === 51) {
     const encoder = createEncoder();
     encoder.encodeShortUint(50);
     encoder.encodeShortUint(51);
@@ -865,7 +1129,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.qos") {
+  if (payload.classId === 60 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(10);
@@ -881,7 +1145,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.qos-ok") {
+  if (payload.classId === 60 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(11);
@@ -889,7 +1153,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.consume") {
+  if (payload.classId === 60 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(20);
@@ -920,7 +1184,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.consume-ok") {
+  if (payload.classId === 60 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(21);
@@ -928,7 +1192,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.cancel") {
+  if (payload.classId === 60 && payload.methodId === 30) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(30);
@@ -939,7 +1203,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.cancel-ok") {
+  if (payload.classId === 60 && payload.methodId === 31) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(31);
@@ -947,7 +1211,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.publish") {
+  if (payload.classId === 60 && payload.methodId === 40) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(40);
@@ -969,7 +1233,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.return") {
+  if (payload.classId === 60 && payload.methodId === 50) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(50);
@@ -982,7 +1246,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.deliver") {
+  if (payload.classId === 60 && payload.methodId === 60) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(60);
@@ -996,7 +1260,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.get") {
+  if (payload.classId === 60 && payload.methodId === 70) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(70);
@@ -1012,7 +1276,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.get-ok") {
+  if (payload.classId === 60 && payload.methodId === 71) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(71);
@@ -1026,7 +1290,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.get-empty") {
+  if (payload.classId === 60 && payload.methodId === 72) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(72);
@@ -1036,7 +1300,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.ack") {
+  if (payload.classId === 60 && payload.methodId === 80) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(80);
@@ -1049,7 +1313,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.reject") {
+  if (payload.classId === 60 && payload.methodId === 90) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(90);
@@ -1060,7 +1324,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.recover-async") {
+  if (payload.classId === 60 && payload.methodId === 100) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(100);
@@ -1070,7 +1334,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.recover") {
+  if (payload.classId === 60 && payload.methodId === 110) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(110);
@@ -1080,7 +1344,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.recover-ok") {
+  if (payload.classId === 60 && payload.methodId === 111) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(111);
@@ -1088,7 +1352,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "basic.nack") {
+  if (payload.classId === 60 && payload.methodId === 120) {
     const encoder = createEncoder();
     encoder.encodeShortUint(60);
     encoder.encodeShortUint(120);
@@ -1104,7 +1368,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.select") {
+  if (payload.classId === 90 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(10);
@@ -1112,7 +1376,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.select-ok") {
+  if (payload.classId === 90 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(11);
@@ -1120,7 +1384,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.commit") {
+  if (payload.classId === 90 && payload.methodId === 20) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(20);
@@ -1128,7 +1392,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.commit-ok") {
+  if (payload.classId === 90 && payload.methodId === 21) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(21);
@@ -1136,7 +1400,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.rollback") {
+  if (payload.classId === 90 && payload.methodId === 30) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(30);
@@ -1144,7 +1408,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "tx.rollback-ok") {
+  if (payload.classId === 90 && payload.methodId === 31) {
     const encoder = createEncoder();
     encoder.encodeShortUint(90);
     encoder.encodeShortUint(31);
@@ -1152,7 +1416,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "confirm.select") {
+  if (payload.classId === 85 && payload.methodId === 10) {
     const encoder = createEncoder();
     encoder.encodeShortUint(85);
     encoder.encodeShortUint(10);
@@ -1162,11 +1426,11 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
     return encoder.bytes();
   }
 
-  if (payload.name === "confirm.select-ok") {
+  if (payload.classId === 85 && payload.methodId === 11) {
     const encoder = createEncoder();
     encoder.encodeShortUint(85);
     encoder.encodeShortUint(11);
 
     return encoder.bytes();
   }
-}
+} 

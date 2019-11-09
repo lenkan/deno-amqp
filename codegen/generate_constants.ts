@@ -27,6 +27,20 @@ ${spec.constants
  `;
   })
   .join("\n")}
+${spec.classes
+  .map(clazz => {
+    return `
+  export const ${clazz.name.toUpperCase()} = ${clazz.id}
+  ${clazz.methods.map(method => {
+    return `
+    export const ${clazz.name.toUpperCase()}_${method.name
+      .replace(/-/g, "_")
+      .toUpperCase()} = ${method.id}
+    `;
+  }).join("\n")}
+`;
+  })
+  .join("\n")}
 `;
 }
 

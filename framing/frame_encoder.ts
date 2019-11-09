@@ -7,6 +7,8 @@ export type Method = {
   channel: number;
 } & MethodPayload;
 
+export { MethodPayload }
+
 export type Heartbeat = { type: "heartbeat"; channel: number };
 
 export type Frame = Method | Heartbeat;

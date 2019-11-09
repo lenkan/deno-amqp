@@ -54,9 +54,11 @@ ${methods
 
 export type MethodPayload = ${methods
     .map(method => {
-      return `{ name: "${method.fullName}", args: ${pascalCase(
-        method.fullName
-      )}Args }`;
+      return `{ 
+        classId: ${method.classId},
+        methodId: ${method.id},
+        args: ${pascalCase(method.fullName)}Args
+      }`;
     })
     .join(" | ")}
 
@@ -64,7 +66,7 @@ export function encodeMethodPayload(payload: MethodPayload): Uint8Array {
   ${methods
     .map(method => {
       return `
-        if(payload.name === "${method.fullName}") {
+        if(payload.classId === ${method.classId} && payload.methodId === ${method.id}) {
           const encoder = createEncoder();
           encoder.encodeShortUint(${method.classId});
           encoder.encodeShortUint(${method.id});

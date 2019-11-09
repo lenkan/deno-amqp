@@ -36,12 +36,9 @@ ${methods
 export type MethodPayload = ${methods
     .map(method => {
       return `{ 
-        className: "${method.className}", 
-        methodName: "${method.methodName}", 
         classId: ${method.classId},
         methodId: ${method.id},
-        name: "${method.fullName}", 
-        args: ${pascalCase(method.fullName)}Args
+        args: ${pascalCase(method.fullName)}Args,
       }`;
     })
     .join(" | ")}
@@ -53,11 +50,8 @@ export function decodeMethodPayload(classId: number, methodId: number, data: Uin
         if(classId === ${method.classId} && methodId === ${method.id}) {
           const decoder = createDecoder(data);
           return {
-            className: "${method.className}",
-            methodName: "${method.methodName}",
             methodId: ${method.id},
             classId: ${method.classId},
-            name: "${method.fullName}",
             args: {
               ${method.arguments.map(argument => {
                 const name = `["${argument.name}"]`;

@@ -1,4 +1,9 @@
-import { encodeFrame, Frame as OutgoingFrame, Method as OutgoingMethod } from "./frame_encoder.ts";
+import {
+  encodeFrame,
+  Frame as OutgoingFrame,
+  Method as OutgoingMethod,
+  MethodPayload as OutgoingMethodPayload
+} from "./frame_encoder.ts";
 import {
   decodeFrame,
   Frame as IncomingFrame,
@@ -20,6 +25,11 @@ export interface AmqpSocket {
   close(): void;
   write(frame: OutgoingFrame): Promise<void>;
   use(middleware: FrameMiddleware): () => void;
+  receive<T extends Pick<IncomingMethod, "classId" | "methodId">>(
+    channel: number,
+    method: T
+  ): Promise<Extract<IncomingMethod, T>["args"]>;
+  send(channel: number, method: OutgoingMethodPayload): Promise<void>;
 }
 
 export interface FrameContext {
@@ -36,6 +46,12 @@ export type FrameMiddleware = (
   next?: Next
 ) => Promise<void> | void;
 
+interface Receiver {
+  channel: number;
+  methodId: number;
+  classId: number;
+}
+
 async function invokeMiddlewares(
   context: FrameContext,
   middlewares: FrameMiddleware[]
@@ -47,6 +63,7 @@ async function invokeMiddlewares(
 
 export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   const middlewares: FrameMiddleware[] = [];
+  const receivers: Receiver[] = [];
 
   let open = true;
 
@@ -128,6 +145,39 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     });
   }
 
+  async function receive<T extends Pick<IncomingMethod, "classId" | "methodId">>(
+    channel: number,
+    args: T
+  ): Promise<Extract<IncomingMethod, T>["args"]> {
+    return new Promise<any>(resolve => {
+      const unregister = use((context, next) => {
+        const { frame } = context;
+        if (
+          channel === frame.channel &&
+          frame.type === "method" &&
+          frame.classId === args.classId &&
+          frame.methodId === args.methodId
+        ) {
+          unregister();
+          resolve(frame.args as any);
+        }
+
+        return next();
+      });
+    });
+  }
+
+  async function send<
+    T extends OutgoingMethod["classId"],
+    U extends OutgoingMethod["methodId"]
+  >(channel: number, method: OutgoingMethod): Promise<void> {
+    await write({
+      type: "method",
+      channel,
+      ...method
+    });
+  }
+
   async function startReceiving() {
     for await (const frame of read()) {
       if (frame === null) {
@@ -143,5 +193,12 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     open = false;
   }
 
-  return { start, close, use, write };
+  return {
+    start,
+    close,
+    use,
+    write,
+    receive,
+    send
+  };
 }
