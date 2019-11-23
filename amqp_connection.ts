@@ -11,7 +11,6 @@ import {
   CONNECTION_FORCED
 } from "./framing/constants.ts";
 import {
-  MethodPayload as IncomingMethodPayload,
   ConnectionStartArgs,
   ConnectionTuneArgs,
   ConnectionOpenOkArgs,
@@ -20,12 +19,11 @@ import {
 } from "./framing/method_decoder.ts";
 import { MethodPayload as OutgoingMethodPayload } from "./framing/method_encoder.ts";
 import {
-  IncomingFrame,
   Next,
   FrameContext,
-  OutgoingFrame,
   AmqpSocket
 } from "./framing/socket.ts";
+import { AmqpChannel } from "./amqp_channel.ts";
 
 const NULL_CHAR = String.fromCharCode(0);
 
@@ -39,34 +37,33 @@ export interface ConnectionState {
   closing: boolean;
 }
 
-export function createConnection(
-  options: ConnectionOptions,
-  socket: AmqpSocket
-) {
-  const state: ConnectionState = {
-    open: false,
-    closing: false
-  };
+export class AmqpConnection {
+  private closing : boolean = false;
+  private open : boolean = false;
 
-  function emit(m: OutgoingMethodPayload) {
-    return socket.write({ channel: 0, type: "method", ...m });
+  public constructor(private options: ConnectionOptions, private socket: AmqpSocket) {
+    this.socket.use(this.middleware.bind(this));
   }
 
-  function handleStart(args: ConnectionStartArgs) {
-    return emit({
+  private async emit(m: OutgoingMethodPayload) {
+    return this.socket.write({ channel: 0, type: "method", ...m });
+  }
+
+  private async handleStart(args: ConnectionStartArgs) {
+    return this.emit({
       methodId: CONNECTION_START_OK,
       classId: CONNECTION,
       args: {
         clientProperties: {},
         locale: args.locales.split(" ")[0],
         mechanism: args.mechanisms.split(" ")[0],
-        response: `${NULL_CHAR}${options.user}${NULL_CHAR}${options.password}`
+        response: `${NULL_CHAR}${this.options.user}${NULL_CHAR}${this.options.password}`
       }
     });
   }
 
-  async function handleTune(args: ConnectionTuneArgs) {
-    await emit({
+  private async handleTune(args: ConnectionTuneArgs) {
+    await this.emit({
       classId: CONNECTION,
       methodId: CONNECTION_TUNE_OK,
       args: {
@@ -76,44 +73,44 @@ export function createConnection(
       }
     });
 
-    await emit({
+    await this.emit({
       classId: CONNECTION,
       methodId: CONNECTION_OPEN,
       args: {}
     });
   }
 
-  async function handleOpenOk(args: ConnectionOpenOkArgs) {
+  async handleOpenOk(args: ConnectionOpenOkArgs) {
     console.log("Connection opened");
-    state.open = true;
+    this.open = true;
   }
 
-  async function handleClose(args: ConnectionCloseArgs) {
+  async handleClose(args: ConnectionCloseArgs) {
     console.log("Received close", args);
-    state.open = false;
-    await emit({
+    this.open = false;
+    await this.emit({
       classId: CONNECTION,
       methodId: CONNECTION_CLOSE_OK,
       args: {}
     });
   }
 
-  async function handleCloseOk(args: ConnectionCloseOkArgs) {
+  async handleCloseOk(args: ConnectionCloseOkArgs) {
     console.log("Received close", args);
-    state.open = false;
-    state.closing = false;
+    this.open = false;
+    this.closing = false;
   }
 
-  async function init() {
-    await socket.start();
-    await socket.receive(0, {
+  async init() {
+    await this.socket.start();
+    await this.socket.receive(0, {
       classId: CONNECTION,
       methodId: CONNECTION_OPEN_OK
     });
   }
 
-  async function close() {
-    await socket.send(0, {
+  async close() {
+    await this.socket.send(0, {
       methodId: CONNECTION_CLOSE,
       classId: CONNECTION,
       args: {
@@ -124,16 +121,16 @@ export function createConnection(
       }
     });
 
-    await socket.receive(0, {
+    await this.socket.receive(0, {
       classId: CONNECTION,
       methodId: CONNECTION_CLOSE_OK
     });
   }
 
-  async function middleware(context: FrameContext, next: Next) {
+  private async middleware(context: FrameContext, next: Next) {
     const { frame: method } = context;
     if (
-      state.closing &&
+      this.closing &&
       !(
         method.type === "method" &&
         method.classId === CONNECTION &&
@@ -149,25 +146,22 @@ export function createConnection(
 
     switch (method.methodId) {
       case CONNECTION_START:
-        await handleStart(method.args);
+        await this.handleStart(method.args);
         break;
       case CONNECTION_TUNE:
-        await handleTune(method.args);
+        await this.handleTune(method.args);
         break;
       case CONNECTION_OPEN_OK:
-        await handleOpenOk(method.args);
+        await this.handleOpenOk(method.args);
         break;
       case CONNECTION_CLOSE:
-        await handleClose(method.args);
+        await this.handleClose(method.args);
         break;
       case CONNECTION_CLOSE_OK:
-        await handleCloseOk(method.args);
+        await this.handleCloseOk(method.args);
         break;
     }
 
     return next();
   }
-
-  socket.use(middleware);
-  return { init, close }
 }

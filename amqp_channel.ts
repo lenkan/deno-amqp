@@ -9,12 +9,28 @@ import {
   CHANNEL_OPEN,
   CHANNEL_CLOSE,
   CONNECTION_FORCED,
-  CHANNEL_CLOSE_OK
+  CHANNEL_CLOSE_OK,
+  QUEUE_DECLARE,
+  QUEUE,
+  QUEUE_DECLARE_OK,
+  QUEUE_DELETE,
+  QUEUE_DELETE_OK,
+  QUEUE_BIND,
+  QUEUE_BIND_OK,
+  EXCHANGE,
+  EXCHANGE_DECLARE,
+  EXCHANGE_DECLARE_OK,
+  EXCHANGE_DELETE
 } from "./framing/constants.ts";
 import {
   ChannelOpenOkArgs,
-  ChannelCloseArgs
+  ChannelCloseArgs,
+  ExchangeDeleteOkArgs,
+  ExchangeDeclareOkArgs,
+  QueueBindOkArgs
 } from "./framing/method_decoder.ts";
+import { QueueDeclareArgs, QueueDeleteArgs, QueueBindArgs, ExchangeDeclareArgs, ExchangeDeleteArgs } from "./framing/method_encoder.ts";
+import { initQueue, QueueMethods, TxMethods, initExchange, ExchangeMethods, initChannel, ChannelMethods, initTx, initBasic, BasicMethods } from "./amqp_methods.ts";
 
 export interface ChannelOptions {
   channelNumber: number;
@@ -25,52 +41,38 @@ export interface ChannelState {
 }
 
 export class AmqpChannel {
-  private unregister: () => void;
-  constructor(private options: ChannelOptions, private socket: AmqpSocket) {
-    this.unregister = this.socket.use(this.middleware.bind(this));
+  private channelNumber: any;
+  public readonly queue: QueueMethods;
+  public readonly exchange: ExchangeMethods;
+  public readonly tx: TxMethods;
+  public readonly channel: ChannelMethods;
+  public readonly basic: BasicMethods;
+
+  constructor(options: ChannelOptions, private socket: AmqpSocket) {
+    this.socket.use(this.middleware.bind(this));
+    this.channelNumber = options.channelNumber
+    this.queue = initQueue(this.channelNumber, this.socket);
+    this.exchange = initExchange(this.channelNumber, this.socket);
+    this.channel = initChannel(this.channelNumber, this.socket);
+    this.tx = initTx(this.channelNumber, this.socket);
+    this.basic = initBasic(this.channelNumber, this.socket);
   }
 
   handleClose(args: ChannelCloseArgs) {
-    console.log("Channel closed by server", this.options, args);
-  }
-
-  handleOpenOk(args: ChannelOpenOkArgs) {
-    console.log("Channel open", this.options, args);
+    console.log(`Channel ${this.channelNumber} closed by server`, args);
   }
 
   async close() {
-    await this.socket.send(this.options.channelNumber, {
-      classId: CHANNEL,
-      methodId: CHANNEL_CLOSE,
-      args: {
+    await this.channel.close({
         classId: 0,
         methodId: 0,
         replyCode: CONNECTION_FORCED,
         replyText: `Channel closed by client`
-      }
     });
-
-    const response = await this.socket.receive(this.options.channelNumber, {
-      classId: CHANNEL,
-      methodId: CHANNEL_CLOSE_OK
-    });
-
-    console.log("Channel closed by client", this.options, response);
   }
 
   async open(): Promise<ChannelOpenOkArgs> {
-    await this.socket.send(this.options.channelNumber, {
-      classId: CHANNEL,
-      methodId: CHANNEL_OPEN,
-      args: {}
-    });
-
-    const result = await this.socket.receive(this.options.channelNumber, {
-      classId: CHANNEL,
-      methodId: CHANNEL_OPEN_OK
-    });
-
-    return result;
+    return this.channel.open({})
   }
 
   private async middleware(context: FrameContext, next: Next) {
@@ -79,15 +81,12 @@ export class AmqpChannel {
     if (
       method.type !== "method" ||
       method.classId !== CHANNEL ||
-      method.channel !== this.options.channelNumber
+      method.channel !== this.channelNumber
     ) {
       return next();
     }
 
     switch (method.methodId) {
-      case CHANNEL_OPEN_OK:
-        this.handleOpenOk(method.args);
-        break;
       case CHANNEL_CLOSE:
         this.handleClose(method.args);
         break;

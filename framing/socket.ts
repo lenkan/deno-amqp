@@ -10,6 +10,7 @@ import {
   Method as IncomingMethod,
   decodeHeader
 } from "./frame_decoder.ts";
+import { CHANNEL, CHANNEL_CLOSE, BASIC_REJECT, CONNECTION, CONNECTION_CLOSE } from "./constants.ts";
 
 const { dial } = Deno;
 
@@ -63,7 +64,6 @@ async function invokeMiddlewares(
 
 export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
   const middlewares: FrameMiddleware[] = [];
-  const receivers: Receiver[] = [];
 
   let open = true;
 
@@ -149,7 +149,7 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
     channel: number,
     args: T
   ): Promise<Extract<IncomingMethod, T>["args"]> {
-    return new Promise<any>(resolve => {
+    return new Promise<any>((resolve, reject) => {
       const unregister = use((context, next) => {
         const { frame } = context;
         if (
@@ -160,6 +160,21 @@ export async function connect(options: ConnectOptions): Promise<AmqpSocket> {
         ) {
           unregister();
           resolve(frame.args as any);
+        }
+
+        if(
+          channel === frame.channel &&
+          frame.type === "method" &&
+          frame.classId === CHANNEL &&
+          frame.methodId === CHANNEL_CLOSE
+        ) {
+          unregister();
+          reject(new Error(frame.args.replyText))
+        }
+
+        if(frame.type === "method" && frame.classId === CONNECTION && frame.methodId === CONNECTION_CLOSE) {
+          unregister();
+          reject(new Error(frame.args.replyText))
         }
 
         return next();
