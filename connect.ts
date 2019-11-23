@@ -2,6 +2,7 @@ import { connect as dial } from "./framing/socket.ts";
 import { AmqpChannel } from "./amqp_channel.ts";
 import { AmqpConnection } from "./amqp_connection.ts";
 import { createLogger } from "./logging.ts";
+import { BASIC, BASIC_DELIVER } from "./framing/constants.ts";
 
 interface Options {
   hostname: string;
@@ -25,7 +26,24 @@ async function connect(options: Options) {
     if (context.frame.type === "method") {
       logger.debug(`Received ${context.frame.channel} ${context.frame.classId}-${context.frame.methodId}`);
     }
+
+    if(context.frame.type ==="header") {
+      logger.debug(`Received header`)
+      logger.debug(JSON.stringify(context.frame, null, 2));
+      logger.debug(new TextDecoder().decode(context.frame.payload))
+    }
+
+    if(context.frame.type ==="content") {
+      logger.debug(`Received content`)
+      logger.debug(JSON.stringify(context.frame, null, 2));
+      logger.debug(new TextDecoder().decode(context.frame.payload))
+    }
+
+    if(context.frame.type === "method" && context.frame.classId === BASIC && context.frame.methodId === BASIC_DELIVER) {
+      logger.debug(JSON.stringify(context.frame.args))
+    }
   });
+
 
   async function createChannel() {
     // TODO(lenkan): Reuse closed channel numbers
@@ -61,6 +79,13 @@ connect({
     await channel1.exchange.delete({ exchange: "foo.exchange" });
     await channel1.exchange.declare({ exchange: "foo.exchange" });
     await channel1.queue.bind({ queue: "foo.queue", exchange: "foo.exchange" })
+
+    const consumer = await channel1.basic.consume({
+      queue: "foo.queue",
+      noAck: true
+    });
+
+    console.dir(consumer)
 
     // await connection.declareQueue(1, { name: "foo.queue" });
   })

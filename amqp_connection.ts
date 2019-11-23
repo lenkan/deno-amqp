@@ -23,7 +23,6 @@ import {
   FrameContext,
   AmqpSocket
 } from "./framing/socket.ts";
-import { AmqpChannel } from "./amqp_channel.ts";
 
 const NULL_CHAR = String.fromCharCode(0);
 

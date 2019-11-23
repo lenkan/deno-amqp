@@ -7,10 +7,10 @@ import {
 import {
   decodeFrame,
   Frame as IncomingFrame,
-  Method as IncomingMethod,
+  MethodFrame as IncomingMethod,
   decodeHeader
 } from "./frame_decoder.ts";
-import { CHANNEL, CHANNEL_CLOSE, BASIC_REJECT, CONNECTION, CONNECTION_CLOSE } from "./constants.ts";
+import { CHANNEL, CHANNEL_CLOSE, CONNECTION, CONNECTION_CLOSE } from "./constants.ts";
 
 const { dial } = Deno;
 
@@ -46,12 +46,6 @@ export type FrameMiddleware = (
   context: FrameContext,
   next?: Next
 ) => Promise<void> | void;
-
-interface Receiver {
-  channel: number;
-  methodId: number;
-  classId: number;
-}
 
 async function invokeMiddlewares(
   context: FrameContext,
