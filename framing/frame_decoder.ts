@@ -17,9 +17,9 @@ export type HeaderFrame = {
   channel: number;
   class: number;
   weight: number;
-  size: Uint8Array;
+  size: number;
   flags: number;
-  payload: Uint8Array;
+  properties: Record<string, any>;
 };
 
 export type ContentFrame = {
@@ -33,7 +33,7 @@ export type MethodFrame = {
   channel: number;
 } & MethodPayload;
 
-export type Frame = MethodFrame | HeartbeatFrame  | HeaderFrame | ContentFrame;
+export type Frame = MethodFrame | HeartbeatFrame | HeaderFrame | ContentFrame;
 export type FramePrefix = { type: number; channel: number; size: number };
 
 export function decodeHeader(data: Uint8Array): FramePrefix {
@@ -63,16 +63,27 @@ export function decodeFrame(header: FramePrefix, payload: Uint8Array): Frame {
         type: "heartbeat",
         channel
       };
-    case FRAME_HEADER:
+    case FRAME_HEADER: {
+      const clazz = decoder.decodeShortUint();
+      const weight = decoder.decodeShortUint();
+      // TODO(lenkan): Handle longlong size
+      if(decoder.decodeLongUint()) {
+        throw new Error(`Too big content size`)
+      }
+      const size = decoder.decodeLongUint();
+      const flags = decoder.decodeShortUint();
+      const properties = decoder.decodeTable();
+
       return {
         type: "header",
         channel,
-        class: decoder.decodeShortUint(),
-        weight: decoder.decodeShortUint(),
-        size: decoder.decodeLongLongUint(),
-        flags: decoder.decodeShortUint(),
-        payload: decoder.bytes()
+        class: clazz,
+        weight,
+        size,
+        flags,
+        properties
       };
+    }
     case FRAME_BODY:
       return {
         type: "content",

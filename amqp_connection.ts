@@ -1,166 +1,119 @@
+import { createLogger } from "./logging.ts";
 import {
+  BASIC,
+  BASIC_DELIVER,
   CONNECTION,
   CONNECTION_START,
-  CONNECTION_START_OK,
   CONNECTION_TUNE,
-  CONNECTION_TUNE_OK,
-  CONNECTION_OPEN,
-  CONNECTION_OPEN_OK,
-  CONNECTION_CLOSE,
-  CONNECTION_CLOSE_OK,
-  CONNECTION_FORCED
+  CONNECTION_OPEN_OK
 } from "./framing/constants.ts";
-import {
-  ConnectionStartArgs,
-  ConnectionTuneArgs,
-  ConnectionOpenOkArgs,
-  ConnectionCloseArgs,
-  ConnectionCloseOkArgs
-} from "./framing/method_decoder.ts";
-import { MethodPayload as OutgoingMethodPayload } from "./framing/method_encoder.ts";
-import {
-  Next,
-  FrameContext,
-  AmqpSocket
-} from "./framing/socket.ts";
+import { createProtocol, IncomingFrame } from "./framing/mod.ts";
+import { AmqpChannel, createChannel } from "./amqp_channel.ts";
 
-const NULL_CHAR = String.fromCharCode(0);
-
-export interface ConnectionOptions {
-  user: string;
+export interface AmqpConnectionOptions {
+  username: string;
   password: string;
 }
 
-export interface ConnectionState {
-  open: boolean;
-  closing: boolean;
+export interface AmqpConnection {
+  createChannel(): AmqpChannel;
+  open(): Promise<void>;
+  close(): Promise<void>;
 }
 
-export class AmqpConnection {
-  private closing : boolean = false;
-  private open : boolean = false;
-
-  public constructor(private options: ConnectionOptions, private socket: AmqpSocket) {
-    this.socket.use(this.middleware.bind(this));
+function log(frame: IncomingFrame) {
+  const logger = createLogger({});
+  if (frame.type === "method") {
+    logger.debug(
+      `Received ${frame.channel} ${frame.classId}-${frame.methodId}`
+    );
   }
 
-  private async emit(m: OutgoingMethodPayload) {
-    return this.socket.write({ channel: 0, type: "method", ...m });
-  }
+  // if (frame.type === "header") {
+  //   logger.debug(`Received header`);
+  //   logger.debug(JSON.stringify(frame, null, 2));
+  //   logger.debug(new TextDecoder().decode(frame.payload));
+  // }
 
-  private async handleStart(args: ConnectionStartArgs) {
-    return this.emit({
-      methodId: CONNECTION_START_OK,
-      classId: CONNECTION,
-      args: {
-        clientProperties: {},
-        locale: args.locales.split(" ")[0],
-        mechanism: args.mechanisms.split(" ")[0],
-        response: `${NULL_CHAR}${this.options.user}${NULL_CHAR}${this.options.password}`
+  // if (frame.type === "content") {
+  //   logger.debug(`Received content`);
+  //   logger.debug(JSON.stringify(frame, null, 2));
+  //   logger.debug(new TextDecoder().decode(frame.payload));
+  // }
+
+  if (
+    frame.type === "method" &&
+    frame.classId === BASIC &&
+    frame.methodId === BASIC_DELIVER
+  ) {
+    logger.debug(JSON.stringify(frame.args));
+  }
+}
+
+const NULL_CHAR = String.fromCharCode(0);
+
+export function createConnection(
+  conn: Deno.Conn,
+  options: AmqpConnectionOptions
+) {
+  const { username: user, password } = options;
+
+  const amqp = createProtocol(conn);
+
+  const channels: AmqpChannel[] = [];
+  const channelNumbers : number[] = [];
+
+  function generateChannelNumber() {
+    // TODO(lenkan): Use max channels
+    for(let i = 1; i < 10000; ++i) {
+      if(!channelNumbers.includes(i)) {
+        channelNumbers.push(i);
+        return i;
       }
-    });
-  }
-
-  private async handleTune(args: ConnectionTuneArgs) {
-    await this.emit({
-      classId: CONNECTION,
-      methodId: CONNECTION_TUNE_OK,
-      args: {
-        channelMax: args.channelMax,
-        frameMax: args.frameMax,
-        heartbeat: 0 //method.args.heartbeat
-      }
-    });
-
-    await this.emit({
-      classId: CONNECTION,
-      methodId: CONNECTION_OPEN,
-      args: {}
-    });
-  }
-
-  async handleOpenOk(args: ConnectionOpenOkArgs) {
-    console.log("Connection opened");
-    this.open = true;
-  }
-
-  async handleClose(args: ConnectionCloseArgs) {
-    console.log("Received close", args);
-    this.open = false;
-    await this.emit({
-      classId: CONNECTION,
-      methodId: CONNECTION_CLOSE_OK,
-      args: {}
-    });
-  }
-
-  async handleCloseOk(args: ConnectionCloseOkArgs) {
-    console.log("Received close", args);
-    this.open = false;
-    this.closing = false;
-  }
-
-  async init() {
-    await this.socket.start();
-    await this.socket.receive(0, {
-      classId: CONNECTION,
-      methodId: CONNECTION_OPEN_OK
-    });
-  }
-
-  async close() {
-    await this.socket.send(0, {
-      methodId: CONNECTION_CLOSE,
-      classId: CONNECTION,
-      args: {
-        classId: CONNECTION,
-        methodId: CONNECTION_CLOSE,
-        replyCode: CONNECTION_FORCED,
-        replyText: `Connection closed by client`
-      }
-    });
-
-    await this.socket.receive(0, {
-      classId: CONNECTION,
-      methodId: CONNECTION_CLOSE_OK
-    });
-  }
-
-  private async middleware(context: FrameContext, next: Next) {
-    const { frame: method } = context;
-    if (
-      this.closing &&
-      !(
-        method.type === "method" &&
-        method.classId === CONNECTION &&
-        method.methodId === CONNECTION_CLOSE_OK
-      )
-    ) {
-      return;
     }
-
-    if (method.type !== "method" || method.classId !== CONNECTION) {
-      return next();
-    }
-
-    switch (method.methodId) {
-      case CONNECTION_START:
-        await this.handleStart(method.args);
-        break;
-      case CONNECTION_TUNE:
-        await this.handleTune(method.args);
-        break;
-      case CONNECTION_OPEN_OK:
-        await this.handleOpenOk(method.args);
-        break;
-      case CONNECTION_CLOSE:
-        await this.handleClose(method.args);
-        break;
-      case CONNECTION_CLOSE_OK:
-        await this.handleCloseOk(method.args);
-        break;
-    }
-
-    return next();
+    throw new Error(`Could not find a free channel number`)
   }
+
+  async function openChannel() {
+    const num = generateChannelNumber();
+    await amqp.channel.open(num, {})
+
+    const channel = createChannel(num, amqp)
+    channels.push(channel);
+    return channel;
+  }
+
+  async function open() {
+    amqp.listen(frame => log(frame));
+
+    await amqp.initialize();
+    await amqp
+      .receive(0, { classId: CONNECTION, methodId: CONNECTION_START })
+      .then(async args => {
+        await amqp.connection.startOk(0, {
+          clientProperties: {},
+          locale: args.locales.split(" ")[0],
+          mechanism: args.mechanisms.split(" ")[0],
+          response: `${NULL_CHAR}${user}${NULL_CHAR}${password}`
+        });
+      });
+
+    await amqp
+      .receive(0, { classId: CONNECTION, methodId: CONNECTION_TUNE })
+      .then(async args => {
+        await amqp.connection.tuneOk(0, {
+          channelMax: args.channelMax,
+          frameMax: args.frameMax,
+          heartbeat: 0 //method.args.heartbeat
+        });
+
+        await amqp.connection.open(0, {});
+      });
+  }
+
+  return {
+    createChannel: openChannel,
+    open: open,
+    close: conn.close
+  };
 }

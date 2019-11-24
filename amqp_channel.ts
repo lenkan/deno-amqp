@@ -1,97 +1,143 @@
+import { AmqpProtocol } from "./framing/mod.ts";
 import {
-  FrameContext,
-  Next,
-  AmqpSocket
-} from "./framing/socket.ts";
+  QueueDeclareArgs,
+  ExchangeDeclareArgs
+} from "./framing/method_encoder.ts";
 import {
-  CHANNEL,
-  CHANNEL_OPEN_OK,
-  CHANNEL_OPEN,
-  CHANNEL_CLOSE,
-  CONNECTION_FORCED,
-  CHANNEL_CLOSE_OK,
-  QUEUE_DECLARE,
-  QUEUE,
-  QUEUE_DECLARE_OK,
-  QUEUE_DELETE,
-  QUEUE_DELETE_OK,
-  QUEUE_BIND,
-  QUEUE_BIND_OK,
-  EXCHANGE,
-  EXCHANGE_DECLARE,
-  EXCHANGE_DECLARE_OK,
-  EXCHANGE_DELETE
-} from "./framing/constants.ts";
-import {
-  ChannelOpenOkArgs,
-  ChannelCloseArgs,
-  ExchangeDeleteOkArgs,
+  QueueDeclareOkArgs,
   ExchangeDeclareOkArgs,
-  QueueBindOkArgs
+  BasicDeliverArgs
 } from "./framing/method_decoder.ts";
-import { QueueDeclareArgs, QueueDeleteArgs, QueueBindArgs, ExchangeDeclareArgs, ExchangeDeleteArgs } from "./framing/method_encoder.ts";
-import { initQueue, QueueMethods, TxMethods, initExchange, ExchangeMethods, initChannel, ChannelMethods, initTx, initBasic, BasicMethods } from "./amqp_methods.ts";
+import { BASIC, BASIC_DELIVER } from "./framing/constants.ts";
+import { HeaderFrame, ContentFrame } from "./framing/frame_decoder.ts";
 
-export interface ChannelOptions {
+export interface AmqpChannelOptions {
   channelNumber: number;
 }
 
-export interface ChannelState {
-  open: boolean;
+export interface AmqpChannel {
+  declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOkArgs>;
+  declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOkArgs>;
+  consume(queue: string, handler: (message: Message) => void): Promise<void>;
 }
 
-export class AmqpChannel {
-  private channelNumber: any;
-  public readonly queue: QueueMethods;
-  public readonly exchange: ExchangeMethods;
-  public readonly tx: TxMethods;
-  public readonly channel: ChannelMethods;
-  public readonly basic: BasicMethods;
+export interface Message {
+  exchange: string;
+  redelivered: boolean;
+  routingKey: string;
+  payload: Uint8Array;
+}
 
-  constructor(options: ChannelOptions, private socket: AmqpSocket) {
-    this.socket.use(this.middleware.bind(this));
-    this.channelNumber = options.channelNumber
-    this.queue = initQueue(this.channelNumber, this.socket);
-    this.exchange = initExchange(this.channelNumber, this.socket);
-    this.channel = initChannel(this.channelNumber, this.socket);
-    this.tx = initTx(this.channelNumber, this.socket);
-    this.basic = initBasic(this.channelNumber, this.socket);
-  }
+function toHexString(byteArray: Uint8Array) {
+  return Array.from(byteArray, byte => {
+    return ("0" + (byte & 0xff).toString(16)).slice(-2);
+  }).join("");
+}
 
-  handleClose(args: ChannelCloseArgs) {
-    console.log(`Channel ${this.channelNumber} closed by server`, args);
-  }
+interface Consumer {
+  tag: string;
+  handler(message: Message): void;
+  header(frame: HeaderFrame): void;
+  content(frame: ContentFrame): void;
+}
 
-  async close() {
-    await this.channel.close({
-        classId: 0,
-        methodId: 0,
-        replyCode: CONNECTION_FORCED,
-        replyText: `Channel closed by client`
-    });
-  }
+function createConsumer(
+  tag: string,
+  handler: (message: Message) => void
+): Consumer {
+  function onDeliver(args: BasicDeliverArgs) {}
+  function onHeader(frame: HeaderFrame) {}
 
-  async open(): Promise<ChannelOpenOkArgs> {
-    return this.channel.open({})
-  }
+  function onContent(frame: ContentFrame) {}
 
-  private async middleware(context: FrameContext, next: Next) {
-    const { frame: method } = context;
+  return {
+    tag,
+    handler,
+    content: onContent,
+    header: onHeader
+  };
+}
+
+export function createChannel(
+  channel: number,
+  amqp: AmqpProtocol
+): AmqpChannel {
+  const consumers: Consumer[] = [];
+
+  amqp.listen(frame => {
+    if (frame.channel !== channel) {
+      return;
+    }
 
     if (
-      method.type !== "method" ||
-      method.classId !== CHANNEL ||
-      method.channel !== this.channelNumber
+      frame.type === "method" &&
+      frame.classId === BASIC &&
+      frame.methodId === BASIC_DELIVER
     ) {
-      return next();
+      frame.args.
+      // consumers.filter(consumer => consumer.tag === frame.args.consumerTag).forEach(consumer => {
+      //   consumer.he
+      //  });
     }
+  });
 
-    switch (method.methodId) {
-      case CHANNEL_CLOSE:
-        this.handleClose(method.args);
-        break;
+  return {
+    declareQueue: args => amqp.queue.declare(channel, args),
+    declareExchange: args => amqp.exchange.declare(channel, args),
+    consume: async (queue, handler) => {
+      const { consumerTag } = await amqp.basic.consume(channel, {
+        queue
+      });
+
+      let buffer: Deno.Buffer = null;
+      let args: BasicDeliverArgs;
+      let header: HeaderFrame;
+
+      const unsubscribe = amqp.listen(frame => {
+        if (frame.channel !== channel) {
+          return;
+        }
+
+        if (
+          frame.type === "method" &&
+          frame.classId === BASIC &&
+          frame.methodId === BASIC_DELIVER &&
+          frame.args.consumerTag === consumerTag
+        ) {
+          const deliveryTag = toHexString(frame.args.deliveryTag);
+          args = frame.args;
+          console.log("Received deliver", deliveryTag);
+        }
+
+        if (frame.type === "header") {
+          console.log("Received header");
+          console.log(
+            JSON.stringify({
+              ...frame
+            })
+          );
+          buffer = new Deno.Buffer();
+          header = frame;
+        }
+
+        if (frame.type === "content") {
+          console.log("Received content");
+          console.log(JSON.stringify({ ...frame }));
+          buffer.writeSync(frame.payload);
+
+          handler({
+            exchange: args.exchange,
+            routingKey: args.routingKey,
+            redelivered: args.redelivered,
+            // properties: header.payload,
+            payload: buffer.bytes()
+          });
+
+          args = null;
+          header = null;
+          buffer = null;
+        }
+      });
     }
-
-    return next();
-  }
+  };
 }
