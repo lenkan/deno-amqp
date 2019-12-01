@@ -8,6 +8,7 @@ export interface ClassDefinition {
   id: number;
   methods: MethodDefinition[];
   name: string;
+  properties?: PropertyDefinition[];
 }
 
 export interface MethodDefinition {
@@ -15,6 +16,12 @@ export interface MethodDefinition {
   arguments: ArgumentDefinition[];
   synchronous: boolean;
   response?: string;
+  name: string;
+  content: boolean;
+}
+
+export interface PropertyDefinition {
+  type: string;
   name: string;
 }
 
@@ -56,6 +63,10 @@ export function flattenMethods(spec: Spec) {
 
 export function resolveArgumentType(spec: Spec, arg: ArgumentDefinition) {
   let type = resolveType(spec, arg);
+  return resolveAmqpType(type)
+}
+
+export function resolveAmqpType(type: string) {
   switch (type) {
     case "table":
       return `Record<string, any>`;
@@ -65,13 +76,14 @@ export function resolveArgumentType(spec: Spec, arg: ArgumentDefinition) {
     case "octet":
     case "short":
     case "long":
+    case "timestamp":
       return `number`;
     case "bit":
       return `boolean`;
     case "longlong":
       return `Uint8Array`;
   }
-  throw new Error(`Cannot determine type ${arg}`);
+  throw new Error(`Cannot determine type ${type}`);
 }
 
 export function resolveType(spec: Spec, arg: ArgumentDefinition) {

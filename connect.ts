@@ -1,40 +1,55 @@
-import { createConnection } from "./amqp_connection.ts";
+import { createConnection, AmqpConnection } from "./amqp_connection.ts";
 
 const { dial } = Deno;
 
-interface Options {
-  hostname: string;
-  port: number;
-  username: string;
-  password: string;
+export { AmqpConnection } from "./amqp_connection.ts";
+export { AmqpChannel } from "./amqp_channel.ts";
+
+export interface AmqpOptions {
+  /**
+   * AMQP connection hostname.
+   *
+   * @default "localhost"
+   */
+  hostname?: string;
+
+  /**
+   * AMQP connection port.
+   *
+   * @default 5672
+   */
+  port?: number;
+
+  /**
+   * AMQP connection username.
+   *
+   * @default "guest"
+   */
+  username?: string;
+
+  /**
+   * AMQP connection password.
+   *
+   * @default "guest"
+   */
+  password?: string;
 }
 
-async function connect(options: Options) {
-  const conn = await dial({ hostname: options.hostname, port: options.port });
-  return createConnection(conn, {
-    username: options.username,
-    password: options.password
-  });
-}
+export async function connect(
+  options: AmqpOptions = {}
+): Promise<AmqpConnection> {
+  const {
+    hostname = "localhost",
+    port = 5672,
+    username = "guest",
+    password = "guest"
+  } = options;
 
-connect({
-  hostname: "localhost",
-  port: 5672,
-  username: "guest",
-  password: "guest"
-})
-  .then(async connection => {
-    await connection.open();
-    const [channel1, channel2] = await Promise.all([
-      connection.createChannel(),
-      connection.createChannel()
-    ]);
-    channel1.declareQueue({ queue: "foo.queue" });
-    channel1.consume("foo.queue", msg => {
-      console.log("Received message", new TextDecoder().decode(msg.payload));
-    });
-  })
-  .catch(e => {
-    console.error(e);
-    Deno.exit(1);
+  const socket = await dial({ hostname: hostname, port: port });
+  const connection = createConnection(socket, {
+    username: username,
+    password: password
   });
+  
+  return connection;
+}

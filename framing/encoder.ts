@@ -37,7 +37,12 @@ export function createEncoder() {
   }
 
   function encodeLongLongUint(value: Uint8Array | number) {
-    throw new Error("Not implemented");
+    if (typeof value === "number") {
+      encodeLongUint(0);
+      encodeLongUint(value);
+    } else {
+      write(value);
+    }
   }
 
   function encodeShortString(value: string) {

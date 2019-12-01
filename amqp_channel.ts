@@ -1,4 +1,4 @@
-import { AmqpProtocol } from "./framing/mod.ts";
+import { AmqpProtocol, IncomingFrame } from "./framing/mod.ts";
 import {
   QueueDeclareArgs,
   ExchangeDeclareArgs
@@ -8,7 +8,7 @@ import {
   ExchangeDeclareOkArgs,
   BasicDeliverArgs
 } from "./framing/method_decoder.ts";
-import { BASIC, BASIC_DELIVER } from "./framing/constants.ts";
+import { BASIC, BASIC_DELIVER, BASIC_PUBLISH, FRAME_METHOD, FRAME_HEADER, FRAME_BODY } from "./framing/constants.ts";
 import { HeaderFrame, ContentFrame } from "./framing/frame_decoder.ts";
 
 export interface AmqpChannelOptions {
@@ -19,6 +19,7 @@ export interface AmqpChannel {
   declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOkArgs>;
   declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOkArgs>;
   consume(queue: string, handler: (message: Message) => void): Promise<void>;
+  publish(exchange: string, routingKey: string): Promise<void>;
 }
 
 export interface Message {
@@ -34,27 +35,72 @@ function toHexString(byteArray: Uint8Array) {
   }).join("");
 }
 
-interface Consumer {
-  tag: string;
-  handler(message: Message): void;
-  header(frame: HeaderFrame): void;
-  content(frame: ContentFrame): void;
+class Consumer {
+  constructor(
+    public tag: string,
+    private handler: (message: Message) => void
+  ) {}
+
+  handleHeader(frame: HeaderFrame) {}
+  handleContent(frame: ContentFrame) {}
+  handleDeliver(args: BasicDeliverArgs) {}
 }
 
 function createConsumer(
+  channel: number,
   tag: string,
-  handler: (message: Message) => void
-): Consumer {
-  function onDeliver(args: BasicDeliverArgs) {}
-  function onHeader(frame: HeaderFrame) {}
+  handler: (msg: Message) => void
+) {
+  let args: BasicDeliverArgs | null = null;
+  let header: HeaderFrame | null = null;
 
-  function onContent(frame: ContentFrame) {}
+  return (frame: IncomingFrame) => {
+    if (frame.channel !== channel) {
+      return;
+    }
 
-  return {
-    tag,
-    handler,
-    content: onContent,
-    header: onHeader
+    if (
+      frame.type === FRAME_METHOD &&
+      frame.classId === BASIC &&
+      frame.methodId === BASIC_DELIVER &&
+      frame.args.consumerTag === tag
+    ) {
+      args = frame.args;
+      header = null;
+    }
+
+    if (frame.type === FRAME_HEADER && args !== null) {
+      console.log("Receiving shizzle header");
+      console.log(JSON.stringify(frame, null, 2));
+      header = frame;
+      if (header.size === 0) {
+        handler({
+          exchange: args.exchange,
+          payload: new Uint8Array([]),
+          redelivered: args.redelivered,
+          routingKey: args.routingKey
+        });
+
+        header = null;
+        args = null;
+      }
+    }
+
+    if (frame.type === FRAME_BODY && args !== null && header !== null) {
+      if (header.size === frame.payload.length) {
+        handler({
+          exchange: args.exchange,
+          payload: frame.payload,
+          redelivered: args.redelivered,
+          routingKey: args.routingKey
+        });
+
+        header = null;
+        args = null;
+      } else {
+        throw new Error(`Cannot handle split frames yet`);
+      }
+    }
   };
 }
 
@@ -62,82 +108,48 @@ export function createChannel(
   channel: number,
   amqp: AmqpProtocol
 ): AmqpChannel {
-  const consumers: Consumer[] = [];
+  const consumers: ((frame: IncomingFrame) => void)[] = [];
 
   amqp.listen(frame => {
     if (frame.channel !== channel) {
       return;
     }
 
-    if (
-      frame.type === "method" &&
-      frame.classId === BASIC &&
-      frame.methodId === BASIC_DELIVER
-    ) {
-      frame.args.
-      // consumers.filter(consumer => consumer.tag === frame.args.consumerTag).forEach(consumer => {
-      //   consumer.he
-      //  });
-    }
+    consumers.forEach(consumer => consumer(frame));
   });
+
+  async function consume(queue: string, handler: (message: Message) => void) {
+    const { consumerTag } = await amqp.basic.consume(channel, {
+      queue
+    });
+
+    const consumer = createConsumer(channel, consumerTag, handler);
+    consumers.push(consumer);
+  }
+
+  async function publish(exchange: string, routingKey: string) {
+    await amqp.basic.publish(
+      channel,
+      {
+        exchange,
+        routingKey
+      },
+      { "content-type": "application/json" },
+      new Uint8Array([67])
+    );
+    // await amqp.send({
+    //   type: "content",
+    //   channel,
+    //   payload
+    // })
+    // amqp.send({ channel, })
+    // await amqp.basic.deliver(channel, {  })
+  }
 
   return {
     declareQueue: args => amqp.queue.declare(channel, args),
     declareExchange: args => amqp.exchange.declare(channel, args),
-    consume: async (queue, handler) => {
-      const { consumerTag } = await amqp.basic.consume(channel, {
-        queue
-      });
-
-      let buffer: Deno.Buffer = null;
-      let args: BasicDeliverArgs;
-      let header: HeaderFrame;
-
-      const unsubscribe = amqp.listen(frame => {
-        if (frame.channel !== channel) {
-          return;
-        }
-
-        if (
-          frame.type === "method" &&
-          frame.classId === BASIC &&
-          frame.methodId === BASIC_DELIVER &&
-          frame.args.consumerTag === consumerTag
-        ) {
-          const deliveryTag = toHexString(frame.args.deliveryTag);
-          args = frame.args;
-          console.log("Received deliver", deliveryTag);
-        }
-
-        if (frame.type === "header") {
-          console.log("Received header");
-          console.log(
-            JSON.stringify({
-              ...frame
-            })
-          );
-          buffer = new Deno.Buffer();
-          header = frame;
-        }
-
-        if (frame.type === "content") {
-          console.log("Received content");
-          console.log(JSON.stringify({ ...frame }));
-          buffer.writeSync(frame.payload);
-
-          handler({
-            exchange: args.exchange,
-            routingKey: args.routingKey,
-            redelivered: args.redelivered,
-            // properties: header.payload,
-            payload: buffer.bytes()
-          });
-
-          args = null;
-          header = null;
-          buffer = null;
-        }
-      });
-    }
+    consume,
+    publish
   };
 }

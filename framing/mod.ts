@@ -8,7 +8,8 @@ import {
   CHANNEL,
   CHANNEL_CLOSE,
   CONNECTION,
-  CONNECTION_CLOSE
+  CONNECTION_CLOSE,
+  FRAME_METHOD
 } from "../framing/constants.ts";
 import { MethodPayload as IncomingMethod } from "./method_decoder.ts";
 import { MethodPayload as OutgoingMethod } from "./method_encoder.ts";
@@ -37,11 +38,39 @@ export interface Listener {
   (frame: IncomingFrame): void;
 }
 
+interface FramingLogger {
+  logIncoming(frame: IncomingFrame): void;
+  logOutgoing(frame: OutgoingFrame): void;
+}
+
+class ConsoleFramingLogger implements FramingLogger {
+  constructor(private conn: Deno.Conn) {}
+
+  logIncoming(frame: IncomingFrame): void {
+    if (frame.type === FRAME_METHOD) {
+      console.log(
+        `${this.conn.localAddr}: RECV ${frame.channel} ${frame.classId}-${frame.methodId}`
+      );
+    }
+  }
+
+  logOutgoing(frame: OutgoingFrame): void {
+    if (frame.type === FRAME_METHOD) {
+      console.log(
+        `${this.conn.localAddr}: SEND ${frame.channel} ${frame.classId}-${frame.methodId}`
+      );
+    }
+  }
+}
+
 /**
  * Creates the AMQP framing layer on top of a Deno.Conn socket
  * @param conn
  */
-export function initializeFraming(conn: Deno.Conn): AmqpFraming {
+export function initializeFraming(
+  conn: Deno.Conn,
+  logger: FramingLogger = new ConsoleFramingLogger(conn)
+): AmqpFraming {
   let open = true;
 
   const listeners: Listener[] = [];
@@ -93,13 +122,17 @@ export function initializeFraming(conn: Deno.Conn): AmqpFraming {
     }
     const header = decodeHeader(prefix);
     const payload = await readBytes(header.size + 1); // size + frame end
-    return decodeFrame(header, payload.slice(0, header.size));
+    const frame = decodeFrame(header, payload.slice(0, header.size));
+    logger.logIncoming(frame);
+    return frame;
   }
 
   async function write(frame: OutgoingFrame) {
     if (!conn) {
       throw new Error(`Connection closed. Cannot write frame ${frame.type}`);
     }
+
+    logger.logOutgoing(frame);
 
     const data = encodeFrame(frame);
     await conn.write(data);
@@ -135,7 +168,6 @@ export function initializeFraming(conn: Deno.Conn): AmqpFraming {
   };
 }
 
-
 interface MethodPromise {
   channel: number;
   classId: number;
@@ -146,12 +178,15 @@ interface MethodPromise {
 
 export interface AmqpProtocol extends AmqpMethods {
   listen(listener: Listener): () => void;
-  send(frame: OutgoingFrame): Promise<void>
-  initialize(): Promise<void>
-  receive<T extends Pick<IncomingMethod, "classId" | "methodId">>(channel: number, args: T): Promise<Extract<IncomingMethod, T>["args"]>
+  send(frame: OutgoingFrame): Promise<void>;
+  initialize(): Promise<void>;
+  receive<T extends Pick<IncomingMethod, "classId" | "methodId">>(
+    channel: number,
+    args: T
+  ): Promise<Extract<IncomingMethod, T>["args"]>;
 }
 
-export function createProtocol(conn: Deno.Conn) : AmqpProtocol {
+export function createProtocol(conn: Deno.Conn): AmqpProtocol {
   const framing = initializeFraming(conn);
   const promises: MethodPromise[] = [];
 
@@ -188,14 +223,17 @@ export function createProtocol(conn: Deno.Conn) : AmqpProtocol {
     return promise;
   }
 
-  async function sendMethod(channel: number, method: OutgoingMethod) {
-    await framing.write({ type: "method", channel, ...method });
-  }
-
-  const methods = initializeMethods(sendMethod, receiveMethod);
+  const methods = initializeMethods(framing.write, args => {
+    if (args.classId && args.methodId) {
+      return receiveMethod(args.channel, {
+        classId: args.classId,
+        methodId: args.methodId
+      } as any);
+    }
+  });
 
   framing.listen(frame => {
-    if (frame.type === "method") {
+    if (frame.type === FRAME_METHOD) {
       if (frame.classId === CONNECTION && frame.methodId === CONNECTION_CLOSE) {
         const error = new Error(
           `${frame.args.replyCode}: ${frame.args.replyText}`

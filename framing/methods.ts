@@ -2,17 +2,19 @@ import * as incoming from "./method_encoder.ts";
 import * as outgoing from "./method_decoder.ts";
 
 interface Send {
-  (
-    channel: number,
-    method: { classId: number; methodId: number; args: any }
-  ): Promise<void>;
+  (frame: any): Promise<void>;
 }
 
 interface Receive {
-  (channel: number, method: { classId: number; methodId: number }): Promise<
-    any
-  >;
+  (frame: {
+    type: number;
+    channel: number;
+    classId: number;
+    methodId: number;
+  }): Promise<any>;
 }
+
+export interface ConnectionProperties {}
 
 export interface ConnectionMethods {
   start(
@@ -39,6 +41,7 @@ export interface ConnectionMethods {
     channel: number,
     args: incoming.ConnectionUpdateSecretArgs
   ): Promise<outgoing.ConnectionUpdateSecretOkArgs>;
+
   startOk(channel: number, args: incoming.ConnectionStartOkArgs): Promise<void>;
   secureOk(
     channel: number,
@@ -64,61 +67,81 @@ export function initConnection(
 ): ConnectionMethods {
   return {
     async start(channel: number, args: incoming.ConnectionStartArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 11
       });
     },
     async secure(channel: number, args: incoming.ConnectionSecureArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 21
       });
     },
     async tune(channel: number, args: incoming.ConnectionTuneArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 30,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 31
       });
     },
     async open(channel: number, args: incoming.ConnectionOpenArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 40,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 41
       });
     },
     async close(channel: number, args: incoming.ConnectionCloseArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 50,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 51
       });
@@ -127,62 +150,80 @@ export function initConnection(
       channel: number,
       args: incoming.ConnectionUpdateSecretArgs
     ) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 10,
         methodId: 70,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 71
       });
     },
 
     async startOk(channel: number, args: incoming.ConnectionStartOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 11,
         args
       });
     },
     async secureOk(channel: number, args: incoming.ConnectionSecureOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 21,
         args
       });
     },
     async tuneOk(channel: number, args: incoming.ConnectionTuneOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 31,
         args
       });
     },
     async openOk(channel: number, args: incoming.ConnectionOpenOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 41,
         args
       });
     },
     async closeOk(channel: number, args: incoming.ConnectionCloseOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 51,
         args
       });
     },
     async blocked(channel: number, args: incoming.ConnectionBlockedArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 60,
         args
       });
     },
     async unblocked(channel: number, args: incoming.ConnectionUnblockedArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 61,
         args
@@ -192,7 +233,9 @@ export function initConnection(
       channel: number,
       args: incoming.ConnectionUpdateSecretOkArgs
     ) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 10,
         methodId: 71,
         args
@@ -200,6 +243,8 @@ export function initConnection(
     }
   };
 }
+export interface ChannelProperties {}
+
 export interface ChannelMethods {
   open(
     channel: number,
@@ -213,6 +258,7 @@ export interface ChannelMethods {
     channel: number,
     args: incoming.ChannelCloseArgs
   ): Promise<outgoing.ChannelCloseOkArgs>;
+
   openOk(channel: number, args: incoming.ChannelOpenOkArgs): Promise<void>;
   flowOk(channel: number, args: incoming.ChannelFlowOkArgs): Promise<void>;
   closeOk(channel: number, args: incoming.ChannelCloseOkArgs): Promise<void>;
@@ -221,58 +267,76 @@ export interface ChannelMethods {
 export function initChannel(send: Send, receive: Receive): ChannelMethods {
   return {
     async open(channel: number, args: incoming.ChannelOpenArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 20,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 11
       });
     },
     async flow(channel: number, args: incoming.ChannelFlowArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 20,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 21
       });
     },
     async close(channel: number, args: incoming.ChannelCloseArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 20,
         methodId: 40,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 41
       });
     },
 
     async openOk(channel: number, args: incoming.ChannelOpenOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 11,
         args
       });
     },
     async flowOk(channel: number, args: incoming.ChannelFlowOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 21,
         args
       });
     },
     async closeOk(channel: number, args: incoming.ChannelCloseOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 20,
         methodId: 41,
         args
@@ -280,31 +344,40 @@ export function initChannel(send: Send, receive: Receive): ChannelMethods {
     }
   };
 }
+export interface AccessProperties {}
+
 export interface AccessMethods {
   request(
     channel: number,
     args: incoming.AccessRequestArgs
   ): Promise<outgoing.AccessRequestOkArgs>;
+
   requestOk(channel: number, args: incoming.AccessRequestOkArgs): Promise<void>;
 }
 
 export function initAccess(send: Send, receive: Receive): AccessMethods {
   return {
     async request(channel: number, args: incoming.AccessRequestArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 30,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 30,
         methodId: 11
       });
     },
 
     async requestOk(channel: number, args: incoming.AccessRequestOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 30,
         methodId: 11,
         args
@@ -312,6 +385,8 @@ export function initAccess(send: Send, receive: Receive): AccessMethods {
     }
   };
 }
+export interface ExchangeProperties {}
+
 export interface ExchangeMethods {
   declare(
     channel: number,
@@ -329,6 +404,7 @@ export interface ExchangeMethods {
     channel: number,
     args: incoming.ExchangeUnbindArgs
   ): Promise<outgoing.ExchangeUnbindOkArgs>;
+
   declareOk(
     channel: number,
     args: incoming.ExchangeDeclareOkArgs
@@ -341,77 +417,101 @@ export interface ExchangeMethods {
 export function initExchange(send: Send, receive: Receive): ExchangeMethods {
   return {
     async declare(channel: number, args: incoming.ExchangeDeclareArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 40,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 11
       });
     },
     async delete(channel: number, args: incoming.ExchangeDeleteArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 40,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 21
       });
     },
     async bind(channel: number, args: incoming.ExchangeBindArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 40,
         methodId: 30,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 31
       });
     },
     async unbind(channel: number, args: incoming.ExchangeUnbindArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 40,
         methodId: 40,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 41
       });
     },
 
     async declareOk(channel: number, args: incoming.ExchangeDeclareOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 11,
         args
       });
     },
     async deleteOk(channel: number, args: incoming.ExchangeDeleteOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 21,
         args
       });
     },
     async bindOk(channel: number, args: incoming.ExchangeBindOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 31,
         args
       });
     },
     async unbindOk(channel: number, args: incoming.ExchangeUnbindOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 40,
         methodId: 51,
         args
@@ -419,6 +519,8 @@ export function initExchange(send: Send, receive: Receive): ExchangeMethods {
     }
   };
 }
+export interface QueueProperties {}
+
 export interface QueueMethods {
   declare(
     channel: number,
@@ -440,6 +542,7 @@ export interface QueueMethods {
     channel: number,
     args: incoming.QueueUnbindArgs
   ): Promise<outgoing.QueueUnbindOkArgs>;
+
   declareOk(channel: number, args: incoming.QueueDeclareOkArgs): Promise<void>;
   bindOk(channel: number, args: incoming.QueueBindOkArgs): Promise<void>;
   purgeOk(channel: number, args: incoming.QueuePurgeOkArgs): Promise<void>;
@@ -450,96 +553,126 @@ export interface QueueMethods {
 export function initQueue(send: Send, receive: Receive): QueueMethods {
   return {
     async declare(channel: number, args: incoming.QueueDeclareArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 50,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 11
       });
     },
     async bind(channel: number, args: incoming.QueueBindArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 50,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 21
       });
     },
     async purge(channel: number, args: incoming.QueuePurgeArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 50,
         methodId: 30,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 31
       });
     },
     async delete(channel: number, args: incoming.QueueDeleteArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 50,
         methodId: 40,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 41
       });
     },
     async unbind(channel: number, args: incoming.QueueUnbindArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 50,
         methodId: 50,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 51
       });
     },
 
     async declareOk(channel: number, args: incoming.QueueDeclareOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 11,
         args
       });
     },
     async bindOk(channel: number, args: incoming.QueueBindOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 21,
         args
       });
     },
     async purgeOk(channel: number, args: incoming.QueuePurgeOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 31,
         args
       });
     },
     async deleteOk(channel: number, args: incoming.QueueDeleteOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 41,
         args
       });
     },
     async unbindOk(channel: number, args: incoming.QueueUnbindOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 50,
         methodId: 51,
         args
@@ -547,6 +680,23 @@ export function initQueue(send: Send, receive: Receive): QueueMethods {
     }
   };
 }
+export interface BasicProperties {
+  ["content-type"]?: string;
+  ["content-encoding"]?: string;
+  ["headers"]?: Record<string, any>;
+  ["delivery-mode"]?: number;
+  ["priority"]?: number;
+  ["correlation-id"]?: string;
+  ["reply-to"]?: string;
+  ["expiration"]?: string;
+  ["message-id"]?: string;
+  ["timestamp"]?: number;
+  ["type"]?: string;
+  ["user-id"]?: string;
+  ["app-id"]?: string;
+  ["cluster-id"]?: string;
+}
+
 export interface BasicMethods {
   qos(
     channel: number,
@@ -568,13 +718,33 @@ export interface BasicMethods {
     channel: number,
     args: incoming.BasicRecoverArgs
   ): Promise<outgoing.BasicRecoverOkArgs>;
+  publish(
+    channel: number,
+    args: incoming.BasicPublishArgs,
+    props: BasicProperties,
+    content: Uint8Array
+  ): Promise<void>;
+  return(
+    channel: number,
+    args: incoming.BasicReturnArgs,
+    props: BasicProperties,
+    content: Uint8Array
+  ): Promise<void>;
+  deliver(
+    channel: number,
+    args: incoming.BasicDeliverArgs,
+    props: BasicProperties,
+    content: Uint8Array
+  ): Promise<void>;
+  getOk(
+    channel: number,
+    args: incoming.BasicGetOkArgs,
+    props: BasicProperties,
+    content: Uint8Array
+  ): Promise<void>;
   qosOk(channel: number, args: incoming.BasicQosOkArgs): Promise<void>;
   consumeOk(channel: number, args: incoming.BasicConsumeOkArgs): Promise<void>;
   cancelOk(channel: number, args: incoming.BasicCancelOkArgs): Promise<void>;
-  publish(channel: number, args: incoming.BasicPublishArgs): Promise<void>;
-  return(channel: number, args: incoming.BasicReturnArgs): Promise<void>;
-  deliver(channel: number, args: incoming.BasicDeliverArgs): Promise<void>;
-  getOk(channel: number, args: incoming.BasicGetOkArgs): Promise<void>;
   getEmpty(channel: number, args: incoming.BasicGetEmptyArgs): Promise<void>;
   ack(channel: number, args: incoming.BasicAckArgs): Promise<void>;
   reject(channel: number, args: incoming.BasicRejectArgs): Promise<void>;
@@ -589,152 +759,352 @@ export interface BasicMethods {
 export function initBasic(send: Send, receive: Receive): BasicMethods {
   return {
     async qos(channel: number, args: incoming.BasicQosArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 60,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 11
       });
     },
     async consume(channel: number, args: incoming.BasicConsumeArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 60,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 21
       });
     },
     async cancel(channel: number, args: incoming.BasicCancelArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 60,
         methodId: 30,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 31
       });
     },
     async get(channel: number, args: incoming.BasicGetArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 60,
         methodId: 70,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 71
       });
     },
     async recover(channel: number, args: incoming.BasicRecoverArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 60,
         methodId: 110,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 111
       });
     },
 
+    async publish(
+      channel: number,
+      args: incoming.BasicPublishArgs,
+      props: BasicProperties,
+      content: Uint8Array
+    ) {
+      await send({
+        type: 1,
+        channel,
+        classId: 60,
+        methodId: 40,
+        args
+      });
+
+      await send({
+        type: 2,
+        channel,
+        class: 60,
+        weight: 0,
+        flags: [
+          // TODO: NOT WORKING 
+          props["content-type"] !== undefined,
+          props["content-encoding"] !== undefined,
+          props["headers"] !== undefined,
+          props["delivery-mode"] !== undefined,
+          props["priority"] !== undefined,
+          props["correlation-id"] !== undefined,
+          props["reply-to"] !== undefined,
+          props["expiration"] !== undefined,
+          props["message-id"] !== undefined,
+          props["timestamp"] !== undefined,
+          props["type"] !== undefined,
+          props["user-id"] !== undefined,
+          props["app-id"] !== undefined,
+          props["cluster-id"] !== undefined
+        ],
+        size: content.length,
+        properties: props
+      });
+
+      if (content.length > 0) {
+        await send({
+          type: 3,
+          channel,
+          payload: content
+        });
+      }
+    },
+    async return(
+      channel: number,
+      args: incoming.BasicReturnArgs,
+      props: BasicProperties,
+      content: Uint8Array
+    ) {
+      await send({
+        type: 1,
+        channel,
+        classId: 60,
+        methodId: 50,
+        args
+      });
+
+      await send({
+        type: 2,
+        channel,
+        class: 60,
+        weight: 0,
+        flags: [
+          props["content-type"] !== undefined,
+          props["content-encoding"] !== undefined,
+          props["headers"] !== undefined,
+          props["delivery-mode"] !== undefined,
+          props["priority"] !== undefined,
+          props["correlation-id"] !== undefined,
+          props["reply-to"] !== undefined,
+          props["expiration"] !== undefined,
+          props["message-id"] !== undefined,
+          props["timestamp"] !== undefined,
+          props["type"] !== undefined,
+          props["user-id"] !== undefined,
+          props["app-id"] !== undefined,
+          props["cluster-id"] !== undefined
+        ],
+        size: content.length,
+        properties: props
+      });
+
+      if (content.length > 0) {
+        await send({
+          type: 3,
+          channel,
+          payload: content
+        });
+      }
+    },
+    async deliver(
+      channel: number,
+      args: incoming.BasicDeliverArgs,
+      props: BasicProperties,
+      content: Uint8Array
+    ) {
+      await send({
+        type: 1,
+        channel,
+        classId: 60,
+        methodId: 60,
+        args
+      });
+
+      await send({
+        type: 2,
+        channel,
+        class: 60,
+        weight: 0,
+        flags: [
+          props["content-type"] !== undefined,
+          props["content-encoding"] !== undefined,
+          props["headers"] !== undefined,
+          props["delivery-mode"] !== undefined,
+          props["priority"] !== undefined,
+          props["correlation-id"] !== undefined,
+          props["reply-to"] !== undefined,
+          props["expiration"] !== undefined,
+          props["message-id"] !== undefined,
+          props["timestamp"] !== undefined,
+          props["type"] !== undefined,
+          props["user-id"] !== undefined,
+          props["app-id"] !== undefined,
+          props["cluster-id"] !== undefined
+        ],
+        size: content.length,
+        properties: props
+      });
+
+      if (content.length > 0) {
+        await send({
+          type: 3,
+          channel,
+          payload: content
+        });
+      }
+    },
+    async getOk(
+      channel: number,
+      args: incoming.BasicGetOkArgs,
+      props: BasicProperties,
+      content: Uint8Array
+    ) {
+      await send({
+        type: 1,
+        channel,
+        classId: 60,
+        methodId: 71,
+        args
+      });
+
+      await send({
+        type: 2,
+        channel,
+        class: 60,
+        weight: 0,
+        flags: [
+          props["content-type"] !== undefined,
+          props["content-encoding"] !== undefined,
+          props["headers"] !== undefined,
+          props["delivery-mode"] !== undefined,
+          props["priority"] !== undefined,
+          props["correlation-id"] !== undefined,
+          props["reply-to"] !== undefined,
+          props["expiration"] !== undefined,
+          props["message-id"] !== undefined,
+          props["timestamp"] !== undefined,
+          props["type"] !== undefined,
+          props["user-id"] !== undefined,
+          props["app-id"] !== undefined,
+          props["cluster-id"] !== undefined
+        ],
+        size: content.length,
+        properties: props
+      });
+
+      if (content.length > 0) {
+        await send({
+          type: 3,
+          channel,
+          payload: content
+        });
+      }
+    },
+
     async qosOk(channel: number, args: incoming.BasicQosOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 11,
         args
       });
     },
     async consumeOk(channel: number, args: incoming.BasicConsumeOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 21,
         args
       });
     },
     async cancelOk(channel: number, args: incoming.BasicCancelOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 31,
         args
       });
     },
-    async publish(channel: number, args: incoming.BasicPublishArgs) {
-      await send(channel, {
-        classId: 60,
-        methodId: 40,
-        args
-      });
-    },
-    async return(channel: number, args: incoming.BasicReturnArgs) {
-      await send(channel, {
-        classId: 60,
-        methodId: 50,
-        args
-      });
-    },
-    async deliver(channel: number, args: incoming.BasicDeliverArgs) {
-      await send(channel, {
-        classId: 60,
-        methodId: 60,
-        args
-      });
-    },
-    async getOk(channel: number, args: incoming.BasicGetOkArgs) {
-      await send(channel, {
-        classId: 60,
-        methodId: 71,
-        args
-      });
-    },
     async getEmpty(channel: number, args: incoming.BasicGetEmptyArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 72,
         args
       });
     },
     async ack(channel: number, args: incoming.BasicAckArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 80,
         args
       });
     },
     async reject(channel: number, args: incoming.BasicRejectArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 90,
         args
       });
     },
     async recoverAsync(channel: number, args: incoming.BasicRecoverAsyncArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 100,
         args
       });
     },
     async recoverOk(channel: number, args: incoming.BasicRecoverOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 111,
         args
       });
     },
     async nack(channel: number, args: incoming.BasicNackArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 60,
         methodId: 120,
         args
@@ -742,6 +1112,8 @@ export function initBasic(send: Send, receive: Receive): BasicMethods {
     }
   };
 }
+export interface TxProperties {}
+
 export interface TxMethods {
   select(
     channel: number,
@@ -755,6 +1127,7 @@ export interface TxMethods {
     channel: number,
     args: incoming.TxRollbackArgs
   ): Promise<outgoing.TxRollbackOkArgs>;
+
   selectOk(channel: number, args: incoming.TxSelectOkArgs): Promise<void>;
   commitOk(channel: number, args: incoming.TxCommitOkArgs): Promise<void>;
   rollbackOk(channel: number, args: incoming.TxRollbackOkArgs): Promise<void>;
@@ -763,58 +1136,76 @@ export interface TxMethods {
 export function initTx(send: Send, receive: Receive): TxMethods {
   return {
     async select(channel: number, args: incoming.TxSelectArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 90,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 11
       });
     },
     async commit(channel: number, args: incoming.TxCommitArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 90,
         methodId: 20,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 21
       });
     },
     async rollback(channel: number, args: incoming.TxRollbackArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 90,
         methodId: 30,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 31
       });
     },
 
     async selectOk(channel: number, args: incoming.TxSelectOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 11,
         args
       });
     },
     async commitOk(channel: number, args: incoming.TxCommitOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 21,
         args
       });
     },
     async rollbackOk(channel: number, args: incoming.TxRollbackOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 90,
         methodId: 31,
         args
@@ -822,31 +1213,40 @@ export function initTx(send: Send, receive: Receive): TxMethods {
     }
   };
 }
+export interface ConfirmProperties {}
+
 export interface ConfirmMethods {
   select(
     channel: number,
     args: incoming.ConfirmSelectArgs
   ): Promise<outgoing.ConfirmSelectOkArgs>;
+
   selectOk(channel: number, args: incoming.ConfirmSelectOkArgs): Promise<void>;
 }
 
 export function initConfirm(send: Send, receive: Receive): ConfirmMethods {
   return {
     async select(channel: number, args: incoming.ConfirmSelectArgs) {
-      await send(channel, {
+      await send({
+        channel,
+        type: 1,
         classId: 85,
         methodId: 10,
         args
       });
 
-      return receive(channel, {
+      return receive({
+        type: 1,
+        channel,
         classId: 85,
         methodId: 11
       });
     },
 
     async selectOk(channel: number, args: incoming.ConfirmSelectOkArgs) {
-      await send(channel, {
+      await send({
+        type: 1,
+        channel,
         classId: 85,
         methodId: 11,
         args
