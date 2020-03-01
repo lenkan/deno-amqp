@@ -1,155 +1,63 @@
-import { AmqpProtocol, IncomingFrame } from "./framing/mod.ts";
+import { AmqpSocket } from "./framing/socket.ts";
 import {
+  channelOpen,
+  channelOpenOk,
   QueueDeclareArgs,
-  ExchangeDeclareArgs
-} from "./framing/method_encoder.ts";
-import {
-  QueueDeclareOkArgs,
-  ExchangeDeclareOkArgs,
-  BasicDeliverArgs
-} from "./framing/method_decoder.ts";
-import { BASIC, BASIC_DELIVER, BASIC_PUBLISH, FRAME_METHOD, FRAME_HEADER, FRAME_BODY } from "./framing/constants.ts";
-import { HeaderFrame, ContentFrame } from "./framing/frame_decoder.ts";
+  QueueDeclareOk,
+  queueDeclare,
+  queueDeclareOk,
+  BasicConsumeArgs,
+  BasicDeliverArgs,
+  BasicProperties,
+  BasicConsumeOk,
+  basicConsume,
+  basicConsumeOk,
+  basicDeliver,
+  basic,
+  BasicPublishArgs,
+  basicPublish
+} from "./amqp_definitions.ts";
 
-export interface AmqpChannelOptions {
-  channelNumber: number;
+export interface BasicConsumer {
+  (args: BasicDeliverArgs, props: BasicProperties, data: Uint8Array): void;
 }
 
-export interface AmqpChannel {
-  declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOkArgs>;
-  declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOkArgs>;
-  consume(queue: string, handler: (message: Message) => void): Promise<void>;
-  publish(exchange: string, routingKey: string): Promise<void>;
-}
+export class AmqpChannel {
+  constructor(private socket: AmqpSocket, private id: number) {}
 
-export interface Message {
-  exchange: string;
-  redelivered: boolean;
-  routingKey: string;
-  payload: Uint8Array;
-}
+  async open() {
+    await this.socket.sendMethod(this.id, channelOpen, {});
+    await this.socket.receiveMethod(this.id, channelOpenOk);
+  }
 
-function toHexString(byteArray: Uint8Array) {
-  return Array.from(byteArray, byte => {
-    return ("0" + (byte & 0xff).toString(16)).slice(-2);
-  }).join("");
-}
+  async declareQueue(
+    args: QueueDeclareArgs
+  ): Promise<QueueDeclareOk> {
+    await this.socket.sendMethod(this.id, queueDeclare, args);
+    return this.socket.receiveMethod(this.id, queueDeclareOk);
+  }
 
-class Consumer {
-  constructor(
-    public tag: string,
-    private handler: (message: Message) => void
-  ) {}
+  async consume(
+    args: BasicConsumeArgs,
+    handler: BasicConsumer
+  ): Promise<BasicConsumeOk> {
+    await this.socket.sendMethod(this.id, basicConsume, args);
+    const ok = await this.socket.receiveMethod(this.id, basicConsumeOk);
 
-  handleHeader(frame: HeaderFrame) {}
-  handleContent(frame: ContentFrame) {}
-  handleDeliver(args: BasicDeliverArgs) {}
-}
-
-function createConsumer(
-  channel: number,
-  tag: string,
-  handler: (msg: Message) => void
-) {
-  let args: BasicDeliverArgs | null = null;
-  let header: HeaderFrame | null = null;
-
-  return (frame: IncomingFrame) => {
-    if (frame.channel !== channel) {
-      return;
-    }
-
-    if (
-      frame.type === FRAME_METHOD &&
-      frame.classId === BASIC &&
-      frame.methodId === BASIC_DELIVER &&
-      frame.args.consumerTag === tag
-    ) {
-      args = frame.args;
-      header = null;
-    }
-
-    if (frame.type === FRAME_HEADER && args !== null) {
-      console.log("Receiving shizzle header");
-      console.log(JSON.stringify(frame, null, 2));
-      header = frame;
-      if (header.size === 0) {
-        handler({
-          exchange: args.exchange,
-          payload: new Uint8Array([]),
-          redelivered: args.redelivered,
-          routingKey: args.routingKey
-        });
-
-        header = null;
-        args = null;
-      }
-    }
-
-    if (frame.type === FRAME_BODY && args !== null && header !== null) {
-      if (header.size === frame.payload.length) {
-        handler({
-          exchange: args.exchange,
-          payload: frame.payload,
-          redelivered: args.redelivered,
-          routingKey: args.routingKey
-        });
-
-        header = null;
-        args = null;
-      } else {
-        throw new Error(`Cannot handle split frames yet`);
-      }
-    }
-  };
-}
-
-export function createChannel(
-  channel: number,
-  amqp: AmqpProtocol
-): AmqpChannel {
-  const consumers: ((frame: IncomingFrame) => void)[] = [];
-
-  amqp.listen(frame => {
-    if (frame.channel !== channel) {
-      return;
-    }
-
-    consumers.forEach(consumer => consumer(frame));
-  });
-
-  async function consume(queue: string, handler: (message: Message) => void) {
-    const { consumerTag } = await amqp.basic.consume(channel, {
-      queue
+    this.socket.subscribeMethod(this.id, basicDeliver, async args => {
+      const content = await this.socket.receiveContent(this.id, basic);
+      handler(args, content.properties, content.data);
     });
 
-    const consumer = createConsumer(channel, consumerTag, handler);
-    consumers.push(consumer);
+    return ok;
   }
 
-  async function publish(exchange: string, routingKey: string) {
-    await amqp.basic.publish(
-      channel,
-      {
-        exchange,
-        routingKey
-      },
-      { "content-type": "application/json" },
-      new Uint8Array([67])
-    );
-    // await amqp.send({
-    //   type: "content",
-    //   channel,
-    //   payload
-    // })
-    // amqp.send({ channel, })
-    // await amqp.basic.deliver(channel, {  })
+  async publish(
+    args: BasicPublishArgs,
+    props: BasicProperties,
+    data: Uint8Array
+  ): Promise<void> {
+    await this.socket.sendMethod(this.id, basicPublish, args);
+    await this.socket.sendContent(this.id, basic, props, data);
   }
-
-  return {
-    declareQueue: args => amqp.queue.declare(channel, args),
-    declareExchange: args => amqp.exchange.declare(channel, args),
-    consume,
-    publish
-  };
 }

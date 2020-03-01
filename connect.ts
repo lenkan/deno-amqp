@@ -1,9 +1,8 @@
-import { createConnection, AmqpConnection } from "./amqp_connection.ts";
-
-const { dial } = Deno;
-
-export { AmqpConnection } from "./amqp_connection.ts";
-export { AmqpChannel } from "./amqp_channel.ts";
+import { createSocket } from "./framing/socket.ts";
+import { AmqpConnection } from "./amqp_connection.ts";
+import { connectionStartOk, connectionTune, connectionTuneOk, connectionOpen,
+  connectionOpenOk, connectionClose, connectionCloseOk, connectionStart,
+  ConnectionStart } from "./amqp_definitions.ts";
 
 export interface AmqpOptions {
   /**
@@ -35,6 +34,11 @@ export interface AmqpOptions {
   password?: string;
 }
 
+const NULL_CHAR = String.fromCharCode(0);
+function credentials(username: string, password: string) {
+  return `${NULL_CHAR}${username}${NULL_CHAR}${password}`;
+}
+
 export async function connect(
   options: AmqpOptions = {}
 ): Promise<AmqpConnection> {
@@ -45,11 +49,46 @@ export async function connect(
     password = "guest"
   } = options;
 
-  const socket = await dial({ hostname: hostname, port: port });
-  const connection = createConnection(socket, {
-    username: username,
-    password: password
-  });
-  
+  const conn = await Deno.connect({ hostname, port });
+  const socket = createSocket(conn);
+
+  socket.start().catch(e => console.error(e));
+  await socket.receiveMethod(0, connectionStart).then(handleStart);
+
+  async function handleStart(start: ConnectionStart) {
+    console.dir(start);
+    await socket.sendMethod(
+      0,
+      connectionStartOk,
+      {
+        clientProperties: {},
+        response: credentials(username, password)
+      }
+    );
+    console.log("Sent startOk");
+
+    await socket.receiveMethod(0, connectionTune).then(tune => {
+      console.log("Received tune");
+      return socket.sendMethod(
+        0,
+        connectionTuneOk,
+        { ...tune, heartbeat: 0 }
+      );
+    });
+
+    await socket.sendMethod(
+      0,
+      connectionOpen,
+      {}
+    );
+
+    await socket.receiveMethod(0, connectionOpenOk);
+
+    socket.subscribeMethod(0, connectionClose, _ => {
+      socket.sendMethod(0, connectionCloseOk, {});
+    });
+  }
+
+  const connection = new AmqpConnection(socket);
   return connection;
 }

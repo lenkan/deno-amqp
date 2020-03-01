@@ -36,36 +36,130 @@
     "https://jira.amqp.org/confluence/download/attachments/720900/amqp-xml-doc0-9.pdf?version=1\n"
   ],
   "domains": [
-    ["bit", "bit"],
-    ["channel-id", "longstr"],
-    ["class-id", "short"],
-    ["consumer-tag", "shortstr"],
-    ["delivery-tag", "longlong"],
-    ["destination", "shortstr"],
-    ["duration", "longlong"],
-    ["exchange-name", "shortstr"],
-    ["long", "long"],
-    ["longlong", "longlong"],
-    ["longstr", "longstr"],
-    ["method-id", "short"],
-    ["no-ack", "bit"],
-    ["no-local", "bit"],
-    ["octet", "octet"],
-    ["offset", "longlong"],
-    ["path", "shortstr"],
-    ["peer-properties", "table"],
-    ["queue-name", "shortstr"],
-    ["redelivered", "bit"],
-    ["reference", "longstr"],
-    ["reject-code", "short"],
-    ["reject-text", "shortstr"],
-    ["reply-code", "short"],
-    ["reply-text", "shortstr"],
-    ["security-token", "longstr"],
-    ["short", "short"],
-    ["shortstr", "shortstr"],
-    ["table", "table"],
-    ["timestamp", "timestamp"]
+    [
+      "bit",
+      "bit"
+    ],
+    [
+      "channel-id",
+      "longstr"
+    ],
+    [
+      "class-id",
+      "short"
+    ],
+    [
+      "consumer-tag",
+      "shortstr"
+    ],
+    [
+      "delivery-tag",
+      "longlong"
+    ],
+    [
+      "destination",
+      "shortstr"
+    ],
+    [
+      "duration",
+      "longlong"
+    ],
+    [
+      "exchange-name",
+      "shortstr"
+    ],
+    [
+      "long",
+      "long"
+    ],
+    [
+      "longlong",
+      "longlong"
+    ],
+    [
+      "longstr",
+      "longstr"
+    ],
+    [
+      "message-count",
+      "long"
+    ],
+    [
+      "method-id",
+      "short"
+    ],
+    [
+      "no-ack",
+      "bit"
+    ],
+    [
+      "no-local",
+      "bit"
+    ],
+    [
+      "octet",
+      "octet"
+    ],
+    [
+      "offset",
+      "longlong"
+    ],
+    [
+      "path",
+      "shortstr"
+    ],
+    [
+      "peer-properties",
+      "table"
+    ],
+    [
+      "queue-name",
+      "shortstr"
+    ],
+    [
+      "redelivered",
+      "bit"
+    ],
+    [
+      "reference",
+      "longstr"
+    ],
+    [
+      "reject-code",
+      "short"
+    ],
+    [
+      "reject-text",
+      "shortstr"
+    ],
+    [
+      "reply-code",
+      "short"
+    ],
+    [
+      "reply-text",
+      "shortstr"
+    ],
+    [
+      "security-token",
+      "longstr"
+    ],
+    [
+      "short",
+      "short"
+    ],
+    [
+      "shortstr",
+      "shortstr"
+    ],
+    [
+      "table",
+      "table"
+    ],
+    [
+      "timestamp",
+      "timestamp"
+    ]
   ],
   "constants": [
     {
@@ -557,7 +651,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -613,7 +707,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -644,11 +738,11 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "destination"
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "source"
             },
             {
@@ -684,11 +778,11 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "destination"
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "source"
             },
             {
@@ -730,7 +824,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
@@ -772,11 +866,11 @@
           "id": 11,
           "arguments": [
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue"
             },
             {
-              "type": "long",
+              "domain": "message-count",
               "name": "message-count"
             },
             {
@@ -795,12 +889,12 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -836,7 +930,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
@@ -853,7 +947,7 @@
           "id": 31,
           "arguments": [
             {
-              "type": "long",
+              "domain": "message-count",
               "name": "message-count"
             }
           ],
@@ -868,7 +962,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
@@ -895,7 +989,7 @@
           "id": 41,
           "arguments": [
             {
-              "type": "long",
+              "domain": "message-count",
               "name": "message-count"
             }
           ],
@@ -910,12 +1004,12 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -979,7 +1073,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
@@ -1063,7 +1157,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange",
               "default-value": ""
             },
@@ -1099,7 +1193,7 @@
               "default-value": ""
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -1127,7 +1221,7 @@
               "default-value": false
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -1146,7 +1240,7 @@
               "default-value": 0
             },
             {
-              "type": "shortstr",
+              "domain": "queue-name",
               "name": "queue",
               "default-value": ""
             },
@@ -1173,7 +1267,7 @@
               "default-value": false
             },
             {
-              "type": "shortstr",
+              "domain": "exchange-name",
               "name": "exchange"
             },
             {
@@ -1181,7 +1275,7 @@
               "name": "routing-key"
             },
             {
-              "type": "long",
+              "domain": "message-count",
               "name": "message-count"
             }
           ],
