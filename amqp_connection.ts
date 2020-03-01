@@ -1,6 +1,10 @@
 import { AmqpSocket } from "./framing/socket.ts";
 import { AmqpChannel } from "./amqp_channel.ts";
-import { connectionClose, connection, connectionCloseOk } from "./amqp_definitions.ts";
+import {
+  connectionClose,
+  connection,
+  connectionCloseOk
+} from "./amqp_definitions.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -35,7 +39,7 @@ export class AmqpConnection {
       }
     );
 
-    await this.socket.receiveMethod(0, connectionCloseOk)
+    await this.socket.receiveMethod(0, connectionCloseOk);
     await this.socket.close();
   }
 }
