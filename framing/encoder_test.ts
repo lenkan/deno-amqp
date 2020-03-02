@@ -5,10 +5,13 @@ import {
 import * as enc from "./encoder.ts";
 import { padArray } from "./utils.ts";
 
-const { test } = Deno;
+let { test } = Deno;
 
-function xtest(...args: any[]) {
-}
+// const otest = test;
+// test = xtest;
+
+// function xtest(...args: any[]) {
+// }
 
 function arrayOf(...a: number[]) {
   return new Uint8Array(a);
@@ -43,12 +46,14 @@ test("encode short uint", () => {
   assertEquals(enc.encodeShortUint(0), arrayOf(0, 0));
   assertEquals(enc.encodeShortUint(137), arrayOf(0, 137));
   assertEquals(enc.encodeShortUint(65535), arrayOf(255, 255));
+  assertEquals(enc.encodeShortUint(0xEBCD), arrayOf(0xEB, 0xCD));
 });
 
 test("decode short uint", () => {
   assertEquals(enc.decodeShortUint(bufferOf(0, 0)), 0);
   assertEquals(enc.decodeShortUint(bufferOf(0, 137)), 137);
   assertEquals(enc.decodeShortUint(bufferOf(255, 255)), 65535);
+  assertEquals(enc.decodeShortUint(bufferOf(0xEB, 0xCD)), 0xEBCD);
 });
 
 test("encode short uint - invalid throws", () => {
@@ -187,6 +192,39 @@ test("decode bit field - more than a byte", () => {
   assertEquals(enc.decodeBits(data, 13), expected);
 });
 
+test("encode table - with array", () => {
+  const table = {
+    a: [123, true, "abc"]
+  };
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(encoded, arrayOf(
+    ...[0, 0, 0, 19],
+    ...[1, 97],
+    ...[65, 0, 0, 0, 12],
+    ...[105, 0, 0, 0, 123],
+    ...[116, 1],
+    ...[115, 3, 97, 98, 99]
+  ));
+});
+
+test("decode table - with array", () => {
+  const table = {
+    a: [123, true, "abc"]
+  };
+  const data = bufferOf(
+    ...[0, 0, 0, 19],
+    ...[1, 97],
+    ...[65, 0, 0, 0, 12],
+    ...[105, 0, 0, 0, 123],
+    ...[116, 1],
+    ...[115, 3, 97, 98, 99]
+  )
+
+  const encoded = enc.decodeTable(data);
+  assertEquals(encoded, table);
+});
+
 test("encode decode table", () => {
   const table = {
     shortString: "abc",
@@ -195,7 +233,12 @@ test("encode decode table", () => {
       nestedValue: 123
     },
     booleanTrueValue: true,
-    booleanFalseValue: true
+    booleanFalseValue: true,
+    arrayField: [
+      123,
+      true,
+      "abc"
+    ]
   };
 
   const encoded = enc.encodeTable(table);

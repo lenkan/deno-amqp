@@ -202,58 +202,105 @@ export function decodeLongString(r: Deno.SyncReader): string {
   return textDecoder.decode(data);
 }
 
+function encodeTableField(value: unknown): Uint8Array {
+  if (typeof value === "number") {
+    return new Uint8Array([
+      TableFieldType.LongUInt,
+      ...encodeLongUint(value)
+    ]);
+  }
+
+  if (typeof value === "string") {
+    const encodedString = textEncoder.encode(value);
+    if (encodedString.length <= 255) {
+      return new Uint8Array([
+        TableFieldType.ShortStr,
+        ...encodeOctet(encodedString.length),
+        ...encodedString
+      ]);
+    } else {
+      return new Uint8Array([
+        TableFieldType.LongStr,
+        ...encodeLongUint(encodedString.length),
+        ...encodedString
+      ]);
+    }
+  }
+
+  if (Array.isArray(value)) {
+    const buf = new Deno.Buffer();
+    value.forEach(v => buf.writeSync(encodeTableField(v)));
+
+    return new Uint8Array([
+      TableFieldType.FieldArray,
+      ...encodeLongUint(buf.length),
+      ...buf.bytes()
+    ]);
+  }
+
+  if (typeof value === "object") {
+    return new Uint8Array([
+      TableFieldType.FieldTable,
+      ...encodeTable(value as Record<string, unknown>)
+    ]);
+  }
+
+  if (typeof value === "boolean") {
+    return new Uint8Array([
+      TableFieldType.Boolean,
+      ...encodeOctet(1)
+    ]);
+  }
+
+  throw new Error(
+    `Don't know how to encode field of type ${typeof value} yet`
+  );
+}
+
 export function encodeTable(table: Record<string, unknown>) {
   const buffer = new Buffer();
   for (const fieldName of Object.keys(table)) {
     const value = table[fieldName];
-
-    if (typeof value === "number") {
-      buffer.writeSync(encodeShortString(fieldName));
-      buffer.writeSync(encodeOctet(TableFieldType.LongUInt));
-      buffer.writeSync(encodeLongUint(value));
-      continue;
-    }
-
-    if (typeof value === "string") {
-      buffer.writeSync(encodeShortString(fieldName));
-      const encodedString = textEncoder.encode(value);
-      if (encodedString.length <= 255) {
-        buffer.writeSync(encodeOctet(TableFieldType.ShortStr));
-        buffer.writeSync(encodeOctet(encodedString.length));
-        buffer.writeSync(encodedString);
-      } else {
-        buffer.writeSync(encodeOctet(TableFieldType.LongStr));
-        buffer.writeSync(encodeLongUint(encodedString.length));
-        buffer.writeSync(encodedString);
-      }
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      throw new Error("Don't know how to encode array fields yet");
-    }
-
-    if (typeof value === "object") {
-      buffer.writeSync(encodeShortString(fieldName));
-      buffer.writeSync(encodeOctet(TableFieldType.FieldTable));
-      buffer.writeSync(encodeTable(value as Record<string, unknown>));
-      continue;
-    }
-
-    if (typeof value === "boolean") {
-      buffer.writeSync(encodeShortString(fieldName));
-      buffer.writeSync(encodeOctet(TableFieldType.Boolean));
-      buffer.writeSync(encodeOctet(1));
-      continue;
-    }
-
-    throw new Error(
-      `Don't know how to encode field of type ${typeof value} yet`
-    );
+    buffer.writeSync(encodeShortString(fieldName));
+    buffer.writeSync(encodeTableField(value));
   }
 
   const result = buffer.bytes();
   return new Uint8Array([...encodeLongUint(result.length), ...result]);
+}
+
+function decodeTableFieldArray(r: Deno.SyncReader): unknown[] {
+  const length = decodeLongUint(r);
+  const buffer = new Deno.Buffer(readBytesSync(r, length));
+
+  const array: unknown[] = [];
+
+  while (!buffer.empty()) {
+    const value = decodeTableField(buffer);
+    array.push(value);
+  }
+
+  return array;
+}
+
+function decodeTableField(r: Deno.Buffer): unknown {
+  const type = decodeOctet(r);
+  switch (type) {
+    case TableFieldType.Boolean:
+      return decodeOctet(r) > 0;
+    case TableFieldType.LongUInt:
+      return decodeLongUint(r);
+    case TableFieldType.LongStr:
+      return decodeLongString(r);
+    case TableFieldType.ShortStr:
+      return decodeShortString(r);
+    case TableFieldType.FieldTable:
+      return decodeTable(r);
+    case TableFieldType.FieldArray:
+      return decodeTableFieldArray(r);
+    default:
+      throw new Error(`Unknown field type '${type}'`);
+  }
 }
 
 export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {
@@ -263,27 +310,8 @@ export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {
 
   while (!data.empty()) {
     const fieldName = decodeShortString(data);
-    const fieldType = decodeOctet(data);
-
-    switch (fieldType) {
-      case TableFieldType.Boolean:
-        result[fieldName] = decodeOctet(data) > 0;
-        break;
-      case TableFieldType.LongUInt:
-        result[fieldName] = decodeLongUint(data);
-        break;
-      case TableFieldType.LongStr:
-        result[fieldName] = decodeLongString(data);
-        break;
-      case TableFieldType.ShortStr:
-        result[fieldName] = decodeShortString(data);
-        break;
-      case TableFieldType.FieldTable:
-        result[fieldName] = decodeTable(data);
-        break;
-      default:
-        throw new Error(`Unknown field type '${fieldType}'`);
-    }
+    const fieldValue = decodeTableField(data);
+    result[fieldName] = fieldValue;
   }
 
   return result;
