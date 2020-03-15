@@ -13,9 +13,9 @@ test("publish subscribe test", async () => {
   const chan1 = await conn1.channel();
   const chan2 = await conn2.channel();
 
-  console.log("Declare queue");
+  // chan1.basic.
+
   const { queue } = await chan1.basic.declareQueue({});
-  console.log("Request consumer");
   const { consumerTag } = await chan1.basic.consume(
     { queue },
     (args, props, data) => {

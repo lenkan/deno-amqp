@@ -1,50 +1,44 @@
 import {
-  Method,
-  Header,
-  hasContent
-} from "../framing/methods.ts";
-import {
   MethodFrame,
   ContentFrame,
   HeaderFrame,
   AmqpWriter
 } from "../framing/socket.ts";
+import { SendMethod, ReceiveMethod } from "../amqp_types.ts";
+import { hasContent } from "../amqp_helpers.ts";
 
-export type Handler<T extends Method = Method, U extends Header = Header> = (
-  args: T["payload"],
-  props: U["props"],
-  data: Uint8Array
+export type Handler<T extends ReceiveMethod> = (
+  args: T["args"],
+  props: T extends { props: any } ? T["props"] : never,
+  data: T extends { data: Uint8Array } ? T["data"] : never
 ) => void;
 
-export type OnceHandler<
-  X,
-  T extends Method = Method,
-  U extends Header = Header
-> = (
-  args: T["payload"],
-  props: U["props"],
-  data?: Uint8Array
-) => X;
-
-interface Subscriber<T extends Method = Method> {
+interface Subscriber {
   classId: number;
   methodId: number;
-  handler: Handler<T>;
+  handler: Handler<any>;
 }
 
 export interface Subscription {
   (): void;
 }
 
+type ContentArgs = { props: any; data: Uint8Array };
+
+type SendArgs<T extends SendMethod> = T extends ContentArgs
+  ? [T["args"], T["props"], Uint8Array]
+  : [T["args"]];
+
 export class ChannelManager {
   private subscribers: Subscriber[] = [];
-  private method: Method | null = null;
-  private header: Header | null = null;
+  private method: MethodFrame["payload"] | null = null;
+  private header: HeaderFrame["payload"] | null = null;
   private buffer: Deno.Buffer | null = null;
 
   constructor(public id: number, private socket: AmqpWriter) {
     this.on = this.on.bind(this);
-    this.once = this.once.bind(this);
+    this.receive = this.receive.bind(this);
+    this.send = this.send.bind(this);
   }
 
   push(frame: MethodFrame | ContentFrame | HeaderFrame): void {
@@ -53,21 +47,21 @@ export class ChannelManager {
     }
 
     if (frame.type === "method") {
-      if (hasContent(frame.method)) {
-        this.method = frame.method;
+      if (hasContent(frame.payload.classId, frame.payload.methodId)) {
+        this.method = frame.payload;
       } else {
         this.subscribers.forEach(sub => {
-          if (sub.classId === frame.method.classId &&
-            sub.methodId === frame.method.methodId)
+          if (sub.classId === frame.payload.classId &&
+            sub.methodId === frame.payload.methodId)
           {
-            sub.handler(frame.method.payload, {}, new Uint8Array([]));
+            sub.handler(frame.payload.args, {}, new Uint8Array([]));
           }
         });
       }
     }
 
     if (frame.type === "header") {
-      this.header = frame.header;
+      this.header = frame.payload;
       this.buffer = new Deno.Buffer();
     }
 
@@ -81,7 +75,7 @@ export class ChannelManager {
           if (this.buffer && sub.classId === this.header!.classId &&
             sub.methodId === this.method!.methodId)
           {
-            const args = this.method!.payload;
+            const args = this.method!.args;
             const props = this.header!.props;
             const data = this.buffer.bytes();
             this.method = null;
@@ -95,32 +89,28 @@ export class ChannelManager {
     }
   }
 
-  async send<
-    T extends Method["classId"],
-    U extends Method["methodId"],
-    M extends Extract<Method, { classId: T; methodId: U }>,
-    H extends Extract<Header, { classId: T }>
-  >(
-    method: M,
-    props?: H["props"],
-    data?: Uint8Array
+  async send<T extends number, U extends number>(
+    classId: T,
+    methodId: U,
+    ...args: SendArgs<Extract<SendMethod, { classId: T; methodId: U }>>
   ) {
-    await this.socket.write({ type: "method", channel: this.id, method });
-
-    if (hasContent(method)) {
-      if (!props || !data) {
-        throw new Error(
-          `Method ${method.classId}/${method.methodId} requires content`
-        );
+    await this.socket.write(
+      {
+        type: "method",
+        channel: this.id,
+        payload: { classId, methodId, args: args[0] }
       }
+    );
 
+    if (args.length === 3) {
+      const [_, props, data] = args;
       await this.socket.write(
         {
           type: "header",
           channel: this.id,
-          header: {
+          payload: {
+            classId,
             props,
-            classId: method.classId,
             weight: 0,
             size: data.length
           }
@@ -133,20 +123,15 @@ export class ChannelManager {
     }
   }
 
-  on<
-    T extends Method["classId"],
-    U extends Method["methodId"],
-    M extends Extract<Method, { classId: T; methodId: U }>,
-    H extends Extract<Header, { classId: T }>
-  >(
+  on<T extends number, U extends number>(
     classId: T,
     methodId: U,
-    handler: Handler<M, H>
+    handler: Handler<Extract<ReceiveMethod, { classId: T; methodId: U }>>
   ) {
     const subscriber = {
       classId,
       methodId,
-      handler: handler as Handler
+      handler
     };
 
     this.subscribers.push(subscriber);
@@ -155,21 +140,14 @@ export class ChannelManager {
     return cancel;
   }
 
-  once<
-    T extends Method["classId"],
-    U extends Method["methodId"],
-    M extends Extract<Method, { classId: T; methodId: U }>,
-    H extends Extract<Header, { classId: T }>,
-    R
-  >(
+  receive<T extends number, U extends number>(
     classId: T,
-    methodId: U,
-    handler: OnceHandler<R, M, H>
-  ): Promise<R> {
-    return new Promise<R>((resolve, reject) => {
-      const cancel = this.on<T, U, M, H>(classId, methodId, (...args) => {
+    methodId: U
+  ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>["args"]> {
+    return new Promise((resolve, reject) => {
+      const cancel = this.on(classId, methodId, (args: object) => {
         cancel();
-        resolve(handler(...args));
+        resolve(args as any);
       });
     });
   }

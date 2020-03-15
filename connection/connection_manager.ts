@@ -2,17 +2,20 @@ import { AmqpSocket } from "../framing/socket.ts";
 import {
   CONNECTION,
   CONNECTION_START,
-  methods,
   CONNECTION_TUNE,
   CONNECTION_OPEN_OK,
   CONNECTION_CLOSE,
   CONNECTION_CLOSE_OK,
   CHANNEL,
   CHANNEL_OPEN_OK,
-  ConnectionTuneOkPayload
-} from "../framing/methods.ts";
+  CHANNEL_OPEN,
+  CONNECTION_START_OK,
+  CONNECTION_TUNE_OK,
+  CONNECTION_OPEN
+} from "../amqp_constants.ts";
 import { AmqpBasic } from "../amqp_basic.ts";
 import { ChannelManager } from "./channel_manager.ts";
+import { ConnectionTuneOk } from "../amqp_types.ts";
 
 export interface AmqpConnectOptions {
   username: string;
@@ -45,7 +48,7 @@ export async function connect(
     heartbeatInterval
   } = options;
 
-  const tuned: ConnectionTuneOkPayload = {
+  const tuned: ConnectionTuneOk = {
     channelMax: 0,
     frameMax: 0,
     heartbeat: 0
@@ -57,12 +60,12 @@ export async function connect(
   channels.push(channel0);
 
   async function close() {
-    await channel0.send(methods.connection.close({
+    await channel0.send(CONNECTION, CONNECTION_CLOSE, {
       classId: CONNECTION,
       methodId: CONNECTION_CLOSE,
       replyCode: 503
-    }));
-    await channel0.once(CONNECTION, CONNECTION_CLOSE_OK, a => a);
+    });
+    await channel0.receive(CONNECTION, CONNECTION_CLOSE_OK);
     socket.close();
   }
 
@@ -86,13 +89,13 @@ export async function connect(
   async function negotiate() {
     await socket.start();
 
-    await channel0.once(CONNECTION, CONNECTION_START, () => {});
-    await channel0.send(methods.connection.startOk({
+    await channel0.receive(CONNECTION, CONNECTION_START);
+    await channel0.send(CONNECTION, CONNECTION_START_OK, {
       clientProperties: {},
       response: credentials(username, password)
-    }));
+    });
 
-    await channel0.once(CONNECTION, CONNECTION_TUNE, tune => tune).then(
+    await channel0.receive(CONNECTION, CONNECTION_TUNE).then(
       async args => {
         const interval = heartbeatInterval !== undefined
           ? heartbeatInterval
@@ -101,11 +104,11 @@ export async function connect(
         const channelMax = args.channelMax;
         const frameMax = args.frameMax;
 
-        await channel0.send(methods.connection.tuneOk({
+        await channel0.send(CONNECTION, CONNECTION_TUNE_OK, {
           heartbeat: interval,
           channelMax: channelMax,
           frameMax: frameMax
-        }));
+        });
 
         tuned.channelMax = channelMax;
         tuned.frameMax = frameMax;
@@ -114,8 +117,8 @@ export async function connect(
       }
     );
 
-    await channel0.send(methods.connection.open({}));
-    await channel0.once(CONNECTION, CONNECTION_OPEN_OK, o => o);
+    await channel0.send(10, CONNECTION_OPEN, {});
+    await channel0.receive(CONNECTION, CONNECTION_OPEN_OK);
   }
 
   async function listen() {
@@ -140,7 +143,7 @@ export async function connect(
   });
 
   channel0.on(CONNECTION, CONNECTION_CLOSE, async args => {
-    await channel0.send(methods.connection.closeOk({}));
+    await channel0.send(CONNECTION, CONNECTION_CLOSE_OK, {});
     socket.close();
     throw new Error(
       `Connection closed - ${args.replyCode} - ${args.replyText} - ${args.classId}/${args.methodId}`
@@ -166,8 +169,8 @@ export async function connect(
     const channel = new ChannelManager(id, socket);
     channels.push(channel);
 
-    await channel.send(methods.channel.open({}));
-    await channel.once(CHANNEL, CHANNEL_OPEN_OK, args => args);
+    await channel.send(CHANNEL, CHANNEL_OPEN, {});
+    await channel.receive(CHANNEL, CHANNEL_OPEN_OK);
 
     const basic = new AmqpBasic(channel);
 

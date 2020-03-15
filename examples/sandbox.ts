@@ -20,3 +20,5 @@ await channel2.basic.publish(
   { contentType: "application/json" },
   new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
 );
+
+await connection.close();

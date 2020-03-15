@@ -1,44 +1,43 @@
-import {
-  BasicConsumeArgs,
-  BasicQosArgs,
-  BASIC,
-  BASIC_CONSUME_OK,
-  BASIC_QOS_OK,
-  BasicCancelArgs,
-  BASIC_CANCEL_OK,
-  BasicPublishArgs,
-  BasicProperties,
-  methods,
-  BasicDeliverPayload,
-  BASIC_DELIVER,
-  BasicCancelOkPayload,
-  QueueDeclareArgs,
-  QueueDeclareOkPayload,
-  QUEUE_DECLARE_OK,
-  QUEUE,
-  ExchangeDeclareArgs,
-  ExchangeDeclareOkPayload,
-  EXCHANGE,
-  EXCHANGE_DECLARE_OK,
-  BasicAckArgs,
-  BasicConsumeOkPayload,
-  BasicQosOkPayload,
-  BasicNackArgs
-} from "./framing/methods.ts";
 import { ChannelManager } from "./connection/channel_manager.ts";
-
-export type ContentHandler<T> = (
-  args: T,
-  props: BasicProperties,
-  data: Uint8Array
-) => void;
+import {
+  BasicDeliverArgs,
+  BasicProperties,
+  BasicQosArgs,
+  BasicQosOk,
+  BasicAckArgs,
+  BasicNackArgs,
+  BasicConsumeArgs,
+  BasicConsumeOk,
+  BasicCancelArgs,
+  BasicCancelOk,
+  BasicPublishArgs,
+  QueueDeclareArgs,
+  ExchangeDeclareArgs,
+  ExchangeDeclareOk,
+  QueueDeclareOk
+} from "./amqp_types.ts";
+import {
+  BASIC,
+  BASIC_DELIVER,
+  BASIC_QOS,
+  BASIC_QOS_OK,
+  BASIC_ACK,
+  BASIC_NACK,
+  BASIC_CONSUME_OK,
+  BASIC_CONSUME,
+  BASIC_CANCEL_OK,
+  BASIC_CANCEL,
+  BASIC_PUBLISH,
+  QUEUE,
+  QUEUE_DECLARE_OK,
+  QUEUE_DECLARE,
+  EXCHANGE_DECLARE,
+  EXCHANGE,
+  EXCHANGE_DECLARE_OK
+} from "./amqp_constants.ts";
 
 export interface BasicHandler {
-  (args: BasicDeliverPayload, props: BasicProperties, data: Uint8Array): void;
-}
-
-export interface BasicConsumer {
-  consumerTag: string;
+  (args: BasicDeliverArgs, props: BasicProperties, data: Uint8Array): void;
 }
 
 export class AmqpBasic {
@@ -54,31 +53,31 @@ export class AmqpBasic {
     });
   }
 
-  async qos(args: BasicQosArgs): Promise<BasicQosOkPayload> {
-    await this.socket.send(methods.basic.qos(args));
-    return this.socket.once(BASIC, BASIC_QOS_OK, a => a);
+  async qos(args: BasicQosArgs): Promise<BasicQosOk> {
+    await this.socket.send(BASIC, BASIC_QOS, args);
+    return this.socket.receive(BASIC, BASIC_QOS_OK);
   }
 
   async ack(args: BasicAckArgs) {
-    await this.socket.send(methods.basic.ack(args));
+    await this.socket.send(BASIC, BASIC_ACK, args);
   }
 
   async nack(args: BasicNackArgs) {
-    await this.socket.send(methods.basic.nack(args));
+    await this.socket.send(BASIC, BASIC_NACK, args);
   }
 
   async consume(args: BasicConsumeArgs, handler: BasicHandler): Promise<
-    BasicConsumeOkPayload
+    BasicConsumeOk
   > {
-    await this.socket.send(methods.basic.consume(args));
-    const response = await this.socket.once(BASIC, BASIC_CONSUME_OK, a => a);
+    await this.socket.send(BASIC, BASIC_CONSUME, args);
+    const response = await this.socket.receive(BASIC, BASIC_CONSUME_OK);
     this.consumers.push({ tag: response.consumerTag, handler });
     return response;
   }
 
-  async cancel(args: BasicCancelArgs): Promise<BasicCancelOkPayload> {
-    await this.socket.send(methods.basic.cancel(args));
-    const response = await this.socket.once(BASIC, BASIC_CANCEL_OK, a => a);
+  async cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
+    await this.socket.send(BASIC, BASIC_CANCEL, args);
+    const response = await this.socket.receive(BASIC, BASIC_CANCEL_OK);
 
     const index = this.consumers.findIndex(c => c.tag === args.consumerTag);
     if (index !== -1) {
@@ -93,23 +92,22 @@ export class AmqpBasic {
     props: BasicProperties,
     data: Uint8Array
   ): Promise<void> {
-    await this.socket.send(methods.basic.publish(args), props, data);
+    await this.socket.send(BASIC, BASIC_PUBLISH, args, props, data);
   }
 
-  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOkPayload> {
-    await this.socket.send(methods.queue.declare(args));
-    const response = await this.socket.once(QUEUE, QUEUE_DECLARE_OK, a => a);
+  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
+    await this.socket.send(QUEUE, QUEUE_DECLARE, args);
+    const response = await this.socket.receive(QUEUE, QUEUE_DECLARE_OK);
     return response;
   }
 
   async declareExchange(args: ExchangeDeclareArgs): Promise<
-    ExchangeDeclareOkPayload
+    ExchangeDeclareOk
   > {
-    await this.socket.send(methods.exchange.declare(args));
-    const response = await this.socket.once(
+    await this.socket.send(EXCHANGE, EXCHANGE_DECLARE, args);
+    const response = await this.socket.receive(
       EXCHANGE,
-      EXCHANGE_DECLARE_OK,
-      a => a
+      EXCHANGE_DECLARE_OK
     );
     return response;
   }

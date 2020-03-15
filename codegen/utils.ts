@@ -101,12 +101,20 @@ export function printMethodArgsInterface(
   clazz: ClassDefinition,
   method: MethodDefinition
 ) {
+  const name = `${pascalCase(clazz.name)}${pascalCase(
+    method.name
+  )}Args`;
   return `
-export interface ${pascalCase(clazz.name)}${pascalCase(method.name)}Args {
+export interface ${name} {
     ${method.arguments.map(arg => {
     const isOptional = arg["default-value"] !== undefined;
+    const comment = isOptional
+      ? `/** Default ${JSON.stringify(arg["default-value"])} */`
+      : "";
     const type = resolveTypescriptType(resolveType(spec, arg));
-    return `${camelCase(arg.name)}${isOptional ? "?" : ""}: ${type};`;
+    return `${comment}${camelCase(arg.name)}${isOptional
+      ? "?"
+      : ""}: ${type};`;
   }).join("\n")}
 }
     `;
@@ -117,8 +125,9 @@ export function printMethodValueInterface(
   clazz: ClassDefinition,
   method: MethodDefinition
 ) {
+  const name = `${pascalCase(clazz.name)}${pascalCase(method.name)}`;
   return `
-export interface ${pascalCase(clazz.name)}${pascalCase(method.name)}Payload {
+export interface ${name} extends ${name}Args {
     ${method.arguments.map(arg => {
     const type = resolveTypescriptType(resolveType(spec, arg));
     return `${camelCase(arg.name)}: ${type};`;

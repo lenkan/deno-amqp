@@ -1,28 +1,47 @@
-import { encodeFrame, readFrame } from "../framing/encoder.ts";
 import {
-  decodeMethod,
-  encodeMethod,
-  encodeHeader,
-  decodeHeader,
-  Header,
-  Method
-} from "./methods.ts";
+  encodeFrame,
+  readFrame,
+  encodeShortUint,
+  encodeLongUint,
+  decodeShortUint,
+  decodeLongUint
+} from "./encoder.ts";
+import {
+  encodeArgs,
+  encodeProps,
+  decodeArgs,
+  decodeProps
+} from "./method_encoder.ts";
+import {
+  FRAME_HEADER,
+  FRAME_HEARTBEAT,
+  FRAME_BODY,
+  FRAME_METHOD
+} from "../amqp_constants.ts";
 
-const FRAME_METHOD = 1;
-const FRAME_HEADER = 2;
-const FRAME_BODY = 3;
-const FRAME_HEARTBEAT = 8;
+export interface Method {
+  classId: number;
+  methodId: number;
+  args: object;
+}
+
+export interface Header {
+  classId: number;
+  weight: number;
+  size: number;
+  props: object;
+}
 
 export interface HeaderFrame {
   channel: number;
   type: "header";
-  header: Header;
+  payload: Header;
 }
 
 export interface MethodFrame {
   channel: number;
   type: "method";
-  method: Method;
+  payload: Method;
 }
 
 export interface HeartbeatFrame {
@@ -63,12 +82,20 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
 
   async function write(frame: Frame) {
     if (frame.type === "header") {
+      const buffer = new Deno.Buffer();
+      buffer.writeSync(encodeShortUint(frame.payload.classId));
+      buffer.writeSync(encodeShortUint(frame.payload.weight));
+      buffer.writeSync(encodeLongUint(0));
+      buffer.writeSync(encodeLongUint(frame.payload.size));
+      buffer.writeSync(
+        encodeProps(frame.payload.classId, frame.payload.props)
+      );
       await conn.write(
         encodeFrame(
           {
             type: FRAME_HEADER,
             channel: frame.channel,
-            payload: encodeHeader(frame.header)
+            payload: buffer.bytes()
           }
         )
       );
@@ -98,10 +125,20 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     }
 
     if (frame.type === "method") {
+      const buffer = new Deno.Buffer();
+      buffer.writeSync(encodeShortUint(frame.payload.classId));
+      buffer.writeSync(encodeShortUint(frame.payload.methodId));
+      buffer.writeSync(
+        encodeArgs(
+          frame.payload.classId,
+          frame.payload.methodId,
+          frame.payload.args
+        )
+      );
       await conn.write(encodeFrame({
         type: FRAME_METHOD,
         channel: frame.channel,
-        payload: encodeMethod(frame.method)
+        payload: buffer.bytes()
       }));
       return;
     }
@@ -117,21 +154,28 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
 
     if (frame.type === FRAME_METHOD) {
       const r = new Deno.Buffer(frame.payload);
-      const method = decodeMethod(r);
+      const classId = decodeShortUint(r);
+      const methodId = decodeShortUint(r);
+      const args = decodeArgs(r, classId, methodId);
       return {
         channel: frame.channel,
         type: "method",
-        method
+        payload: { classId, methodId, args }
       };
     }
 
     if (frame.type === FRAME_HEADER) {
       const r = new Deno.Buffer(frame.payload);
-      const header = decodeHeader(r);
+
+      const classId = decodeShortUint(r);
+      const weight = decodeShortUint(r);
+      decodeLongUint(r); // size high bytes
+      const size = decodeLongUint(r);
+      const props = decodeProps(r, classId);
       return {
         channel: frame.channel,
         type: "header",
-        header
+        payload: { classId, weight, size, props }
       };
     }
 

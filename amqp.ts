@@ -1,6 +1,5 @@
 import { connect as amqpConnect } from "./connection/connection_manager.ts";
 import { createSocket } from "./framing/socket.ts";
-export { BasicConsumeArgs, BasicConsumeOkPayload } from "./framing/methods.ts";
 
 export interface AmqpOptions {
   hostname?: string;
