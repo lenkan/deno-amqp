@@ -219,7 +219,7 @@ test("decode table - with array", () => {
     ...[105, 0, 0, 0, 123],
     ...[116, 1],
     ...[115, 3, 97, 98, 99]
-  )
+  );
 
   const encoded = enc.decodeTable(data);
   assertEquals(encoded, table);
@@ -521,5 +521,32 @@ test("encode header props - with bit property", () => {
   assertEquals(
     enc.encodeProperties(fields),
     arrayOf(0b11100000, 0b000000, 13, 0, 19)
+  );
+});
+
+test("decode header props - with all properties defined", () => {
+  const data = bufferOf(0b11000000, 0b000000, 13, 0, 19);
+  const expected: enc.AmqpField[] = [
+    { type: "octet", value: 13 },
+    { type: "short", value: 19 }
+  ];
+
+  assertEquals(
+    enc.decodeProperties(data, ["octet", "short"]),
+    expected
+  );
+});
+
+test("decode header props - with missing property", () => {
+  const data = bufferOf(0b10100000, 0b000000, 13, 0, 19);
+  const expected: enc.AmqpField[] = [
+    { type: "octet", value: 13 },
+    { type: "short", value: undefined },
+    { type: "short", value: 19 }
+  ];
+
+  assertEquals(
+    enc.decodeProperties(data, ["octet", "short", "short"]),
+    expected
   );
 });

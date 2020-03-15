@@ -521,7 +521,7 @@ export function encodeProperties(fields: AmqpField[]): Uint8Array {
   return payload.bytes();
 }
 
-export function decodeHeaderProperties(
+export function decodeProperties(
   r: Deno.SyncReader,
   types: AmqpFieldType[]
 ): AmqpField[] {
@@ -534,6 +534,8 @@ export function decodeHeaderProperties(
       fields.push({ type, value: flag });
     } else if (flag) {
       fields.push({ type, value: decodeField(r, type) });
+    } else {
+      fields.push({ type, value: undefined });
     }
   }
 
