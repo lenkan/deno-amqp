@@ -30,9 +30,47 @@ function printHasContentFunction(spec: Spec) {
   `;
 }
 
+function printMethodNameFunction(spec: Spec) {
+  return `
+  export function getMethodName(classId: number, methodId: number) {
+    switch (classId) {
+      ${spec.classes.map(clazz => {
+    return `
+        case ${clazz.id}:
+          switch (methodId) {
+            ${clazz.methods.map(method => {
+      return `case ${method.id}: return "${clazz.name}.${method.name}";`;
+    }).join("\n")}
+          }
+          break;
+        `;
+  }).join("\n")}
+    }
+
+    throw new Error("Unknown classId/methodId");
+  }
+  `;
+}
+
+function printClassNameFunction(spec: Spec) {
+  return `
+  export function getClassName(classId: number) {
+    switch (classId) {
+      ${spec.classes.map(clazz => {
+    return `case ${clazz.id}: return "${clazz.name}";`;
+  }).join("\n")}
+    }
+
+    throw new Error("Unknown classId");
+  }
+  `;
+}
+
 function generateConnection() {
   return [
-    printHasContentFunction(spec)
+    printHasContentFunction(spec),
+    printClassNameFunction(spec),
+    printMethodNameFunction(spec)
   ].join("\n");
 }
 

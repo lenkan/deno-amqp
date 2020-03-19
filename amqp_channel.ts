@@ -3,9 +3,21 @@ import {
   ContentFrame,
   HeaderFrame,
   AmqpWriter
-} from "../framing/socket.ts";
-import { SendMethod, ReceiveMethod } from "../amqp_types.ts";
-import { hasContent } from "../amqp_helpers.ts";
+} from "./framing/socket.ts";
+import {
+  SendMethod,
+  ReceiveMethod,
+  ChannelOpenArgs,
+  ChannelCloseArgs
+} from "./amqp_types.ts";
+import { hasContent } from "./amqp_helpers.ts";
+import {
+  CHANNEL,
+  CHANNEL_CLOSE,
+  CHANNEL_CLOSE_OK,
+  CHANNEL_OPEN,
+  CHANNEL_OPEN_OK
+} from "./amqp_constants.ts";
 
 export type Handler<T extends ReceiveMethod> = (
   args: T["args"],
@@ -29,20 +41,30 @@ type SendArgs<T extends SendMethod> = T extends ContentArgs
   ? [T["args"], T["props"], Uint8Array]
   : [T["args"]];
 
-export class ChannelManager {
+export class AmqpChannel {
   private subscribers: Subscriber[] = [];
   private method: MethodFrame["payload"] | null = null;
   private header: HeaderFrame["payload"] | null = null;
   private buffer: Deno.Buffer | null = null;
 
-  constructor(public id: number, private socket: AmqpWriter) {
+  constructor(public channel: number, private socket: AmqpWriter) {
     this.on = this.on.bind(this);
     this.receive = this.receive.bind(this);
     this.send = this.send.bind(this);
   }
 
+  async open(args: ChannelOpenArgs) {
+    await this.send(CHANNEL, CHANNEL_OPEN, args);
+    return this.receive(CHANNEL, CHANNEL_OPEN_OK);
+  }
+
+  async close(args: ChannelCloseArgs) {
+    await this.send(CHANNEL, CHANNEL_CLOSE, args);
+    return this.receive(CHANNEL, CHANNEL_CLOSE_OK);
+  }
+
   push(frame: MethodFrame | ContentFrame | HeaderFrame): void {
-    if (frame.channel !== this.id) {
+    if (frame.channel !== this.channel) {
       return;
     }
 
@@ -97,7 +119,7 @@ export class ChannelManager {
     await this.socket.write(
       {
         type: "method",
-        channel: this.id,
+        channel: this.channel,
         payload: { classId, methodId, args: args[0] }
       }
     );
@@ -107,7 +129,7 @@ export class ChannelManager {
       await this.socket.write(
         {
           type: "header",
-          channel: this.id,
+          channel: this.channel,
           payload: {
             classId,
             props,
@@ -118,7 +140,7 @@ export class ChannelManager {
       );
 
       await this.socket.write(
-        { type: "content", channel: this.id, payload: data }
+        { type: "content", channel: this.channel, payload: data }
       );
     }
   }

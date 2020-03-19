@@ -5,13 +5,7 @@ import {
 import * as enc from "./encoder.ts";
 import { padArray } from "./utils.ts";
 
-let { test } = Deno;
-
-// const otest = test;
-// test = xtest;
-
-// function xtest(...args: any[]) {
-// }
+const { test } = Deno;
 
 function arrayOf(...a: number[]) {
   return new Uint8Array(a);

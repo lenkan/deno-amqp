@@ -1,6 +1,5 @@
-import { ChannelManager } from "./connection/channel_manager.ts";
+import { AmqpChannel } from "./amqp_channel.ts";
 import {
-  BasicDeliverArgs,
   BasicProperties,
   BasicQosArgs,
   BasicQosOk,
@@ -11,10 +10,7 @@ import {
   BasicCancelArgs,
   BasicCancelOk,
   BasicPublishArgs,
-  QueueDeclareArgs,
-  ExchangeDeclareArgs,
-  ExchangeDeclareOk,
-  QueueDeclareOk
+  BasicDeliverArgs
 } from "./amqp_types.ts";
 import {
   BASIC,
@@ -27,23 +23,17 @@ import {
   BASIC_CONSUME,
   BASIC_CANCEL_OK,
   BASIC_CANCEL,
-  BASIC_PUBLISH,
-  QUEUE,
-  QUEUE_DECLARE_OK,
-  QUEUE_DECLARE,
-  EXCHANGE_DECLARE,
-  EXCHANGE,
-  EXCHANGE_DECLARE_OK
+  BASIC_PUBLISH
 } from "./amqp_constants.ts";
 
-export interface BasicHandler {
+export interface BasicDeliverHandler {
   (args: BasicDeliverArgs, props: BasicProperties, data: Uint8Array): void;
 }
 
 export class AmqpBasic {
-  private consumers: { tag: string; handler: BasicHandler }[] = [];
+  private consumers: { tag: string; handler: BasicDeliverHandler }[] = [];
 
-  constructor(private socket: ChannelManager) {
+  constructor(private socket: AmqpChannel) {
     this.socket.on(BASIC, BASIC_DELIVER, (args, props, data) => {
       this.consumers.forEach(consumer => {
         if (consumer.tag === args.consumerTag) {
@@ -66,7 +56,7 @@ export class AmqpBasic {
     await this.socket.send(BASIC, BASIC_NACK, args);
   }
 
-  async consume(args: BasicConsumeArgs, handler: BasicHandler): Promise<
+  async consume(args: BasicConsumeArgs, handler: BasicDeliverHandler): Promise<
     BasicConsumeOk
   > {
     await this.socket.send(BASIC, BASIC_CONSUME, args);
@@ -93,22 +83,5 @@ export class AmqpBasic {
     data: Uint8Array
   ): Promise<void> {
     await this.socket.send(BASIC, BASIC_PUBLISH, args, props, data);
-  }
-
-  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
-    await this.socket.send(QUEUE, QUEUE_DECLARE, args);
-    const response = await this.socket.receive(QUEUE, QUEUE_DECLARE_OK);
-    return response;
-  }
-
-  async declareExchange(args: ExchangeDeclareArgs): Promise<
-    ExchangeDeclareOk
-  > {
-    await this.socket.send(EXCHANGE, EXCHANGE_DECLARE, args);
-    const response = await this.socket.receive(
-      EXCHANGE,
-      EXCHANGE_DECLARE_OK
-    );
-    return response;
   }
 }

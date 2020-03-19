@@ -1,11 +1,16 @@
 import { connect } from "../amqp.ts";
+import {
+  HARD_ERROR_CONNECTION_FORCED,
+  CHANNEL_CLOSE,
+  CHANNEL
+} from "../amqp_constants.ts";
 
-const connection = await connect({ heartbeatInterval: 1 });
+const connection = await connect({ heartbeatInterval: 0, logger: console });
 
 const channel1 = await connection.channel();
 const channel2 = await connection.channel();
 
-await channel1.basic.declareQueue({ queue: "foo.queue" });
+await channel1.queue.declare({ queue: "foo.queue" });
 await channel1.basic.consume({ queue: "foo.queue" }, (args, props, data) => {
   console.log("Received message");
   console.log(args, props, data);
@@ -21,4 +26,7 @@ await channel2.basic.publish(
   new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
 );
 
-await connection.close();
+// await channel1.close();
+
+// setTimeout(() => connection.close(), 2000);
+// await connection.close();

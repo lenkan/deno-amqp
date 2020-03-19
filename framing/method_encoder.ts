@@ -32,7 +32,8 @@ export function encodeArgs(
               },
               {
                 type: "longstr",
-                value: args["locales"] !== undefined ? args["locales"]
+                value: args["locales"] !== undefined
+                  ? args["locales"]
                   : "en_US"
               }
             ]);
@@ -289,7 +290,8 @@ export function encodeArgs(
               },
               {
                 type: "bit",
-                value: args["internal"] !== undefined ? args["internal"]
+                value: args["internal"] !== undefined
+                  ? args["internal"]
                   : false
               },
               {
@@ -414,7 +416,8 @@ export function encodeArgs(
               },
               {
                 type: "bit",
-                value: args["autoDelete"] !== undefined ? args["autoDelete"]
+                value: args["autoDelete"] !== undefined
+                  ? args["autoDelete"]
                   : false
               },
               {
@@ -649,12 +652,14 @@ export function encodeArgs(
               },
               {
                 type: "bit",
-                value: args["mandatory"] !== undefined ? args["mandatory"]
+                value: args["mandatory"] !== undefined
+                  ? args["mandatory"]
                   : false
               },
               {
                 type: "bit",
-                value: args["immediate"] !== undefined ? args["immediate"]
+                value: args["immediate"] !== undefined
+                  ? args["immediate"]
                   : false
               }
             ]);
@@ -1450,53 +1455,45 @@ export function decodeArgs(
 
 export function encodeProps(classId: number, props: any): Uint8Array {
   switch (classId) {
-    case 10:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 20:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 30:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 40:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 50:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 60:
-      {
-        return enc.encodeProperties([
-          { type: "shortstr", value: props["contentType"] },
-          { type: "shortstr", value: props["contentEncoding"] },
-          { type: "table", value: props["headers"] },
-          { type: "octet", value: props["deliveryMode"] },
-          { type: "octet", value: props["priority"] },
-          { type: "shortstr", value: props["correlationId"] },
-          { type: "shortstr", value: props["replyTo"] },
-          { type: "shortstr", value: props["expiration"] },
-          { type: "shortstr", value: props["messageId"] },
-          { type: "timestamp", value: props["timestamp"] },
-          { type: "shortstr", value: props["type"] },
-          { type: "shortstr", value: props["userId"] },
-          { type: "shortstr", value: props["appId"] },
-          { type: "shortstr", value: props["clusterId"] }
-        ]);
-      }
-    case 90:
-      {
-        return enc.encodeProperties([]);
-      }
-    case 85:
-      {
-        return enc.encodeProperties([]);
-      }
+    case 10: {
+      return enc.encodeProperties([]);
+    }
+    case 20: {
+      return enc.encodeProperties([]);
+    }
+    case 30: {
+      return enc.encodeProperties([]);
+    }
+    case 40: {
+      return enc.encodeProperties([]);
+    }
+    case 50: {
+      return enc.encodeProperties([]);
+    }
+    case 60: {
+      return enc.encodeProperties([
+        { type: "shortstr", value: props["contentType"] },
+        { type: "shortstr", value: props["contentEncoding"] },
+        { type: "table", value: props["headers"] },
+        { type: "octet", value: props["deliveryMode"] },
+        { type: "octet", value: props["priority"] },
+        { type: "shortstr", value: props["correlationId"] },
+        { type: "shortstr", value: props["replyTo"] },
+        { type: "shortstr", value: props["expiration"] },
+        { type: "shortstr", value: props["messageId"] },
+        { type: "timestamp", value: props["timestamp"] },
+        { type: "shortstr", value: props["type"] },
+        { type: "shortstr", value: props["userId"] },
+        { type: "shortstr", value: props["appId"] },
+        { type: "shortstr", value: props["clusterId"] }
+      ]);
+    }
+    case 90: {
+      return enc.encodeProperties([]);
+    }
+    case 85: {
+      return enc.encodeProperties([]);
+    }
   }
 
   throw new Error(`Unknown class ${classId}`);
@@ -1504,95 +1501,87 @@ export function encodeProps(classId: number, props: any): Uint8Array {
 
 export function decodeProps(r: Deno.SyncReader, classId: number): any {
   switch (classId) {
-    case 10:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+    case 10: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 20:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 20: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 30:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 30: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 40:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 40: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 50:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 50: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 60:
-      {
-        const fields = enc.decodeProperties(
-          r,
-          [
-            "shortstr",
-            "shortstr",
-            "table",
-            "octet",
-            "octet",
-            "shortstr",
-            "shortstr",
-            "shortstr",
-            "shortstr",
-            "timestamp",
-            "shortstr",
-            "shortstr",
-            "shortstr",
-            "shortstr"
-          ]
-        );
-        const props = {
-          contentType: fields[0].value,
-          contentEncoding: fields[1].value,
-          headers: fields[2].value,
-          deliveryMode: fields[3].value,
-          priority: fields[4].value,
-          correlationId: fields[5].value,
-          replyTo: fields[6].value,
-          expiration: fields[7].value,
-          messageId: fields[8].value,
-          timestamp: fields[9].value,
-          type: fields[10].value,
-          userId: fields[11].value,
-          appId: fields[12].value,
-          clusterId: fields[13].value
-        };
+      return props;
+    }
+    case 60: {
+      const fields = enc.decodeProperties(
+        r,
+        [
+          "shortstr",
+          "shortstr",
+          "table",
+          "octet",
+          "octet",
+          "shortstr",
+          "shortstr",
+          "shortstr",
+          "shortstr",
+          "timestamp",
+          "shortstr",
+          "shortstr",
+          "shortstr",
+          "shortstr"
+        ]
+      );
+      const props = {
+        contentType: fields[0].value,
+        contentEncoding: fields[1].value,
+        headers: fields[2].value,
+        deliveryMode: fields[3].value,
+        priority: fields[4].value,
+        correlationId: fields[5].value,
+        replyTo: fields[6].value,
+        expiration: fields[7].value,
+        messageId: fields[8].value,
+        timestamp: fields[9].value,
+        type: fields[10].value,
+        userId: fields[11].value,
+        appId: fields[12].value,
+        clusterId: fields[13].value
+      };
 
-        return props;
-      }
-    case 90:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 90: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
-    case 85:
-      {
-        const fields = enc.decodeProperties(r, []);
-        const props = {};
+      return props;
+    }
+    case 85: {
+      const fields = enc.decodeProperties(r, []);
+      const props = {};
 
-        return props;
-      }
+      return props;
+    }
   }
 
   throw new Error(`Unknown class ${classId}`);
