@@ -4,7 +4,8 @@ import {
   encodeShortUint,
   encodeLongUint,
   decodeShortUint,
-  decodeLongUint
+  decodeLongUint,
+  Frame as RawFrame
 } from "./encoder.ts";
 import {
   encodeArgs,
@@ -33,36 +34,46 @@ export interface Header {
 }
 
 export interface HeaderFrame {
-  channel: number;
   type: "header";
   payload: Header;
 }
 
 export interface MethodFrame {
-  channel: number;
   type: "method";
   payload: Method;
 }
 
 export interface HeartbeatFrame {
-  channel: number;
   type: "heartbeat";
 }
 
 export interface ContentFrame {
-  channel: number;
   type: "content";
   payload: Uint8Array;
 }
 
 export type Frame = HeaderFrame | MethodFrame | HeartbeatFrame | ContentFrame;
 
+export type FrameHandler = (frame: Frame) => void;
+export type ErrorHandler = (error: Error) => void;
+
+export interface FrameSubscriber {
+  channel: number;
+  handler: FrameHandler;
+  error: ErrorHandler;
+}
+
 export interface AmqpReader {
-  read(): Promise<Frame | null>;
+  on(
+    channel: number,
+    handler: FrameHandler,
+    onError?: ErrorHandler
+  ): void;
+  read(channel: number): Promise<Frame>;
 }
 
 export interface AmqpWriter {
-  write(frame: Frame): Promise<void>;
+  write(channel: number, frame: Frame): Promise<void>;
 }
 
 export interface AmqpSocket extends AmqpReader, AmqpWriter {
@@ -70,17 +81,56 @@ export interface AmqpSocket extends AmqpReader, AmqpWriter {
   close(): void;
 }
 
+function createSubscriber(
+  channel: number,
+  handler: FrameHandler,
+  error: ErrorHandler = e => {}
+) {
+  return ({ channel, handler, error });
+}
+
 export function createSocket(conn: Deno.Conn): AmqpSocket {
+  const subscribers: FrameSubscriber[] = [];
+
+  function cancel(subscriber: FrameSubscriber) {
+    const index = subscribers.indexOf(subscriber);
+    if (index !== -1) {
+      subscribers.splice(index, index + 1);
+    }
+  }
+
+  function on(
+    channel: number,
+    handler: FrameHandler,
+    onError: ErrorHandler = () => {}
+  ) {
+    const subscriber = createSubscriber(channel, handler, onError);
+    subscribers.push(subscriber);
+    return () => cancel(subscriber);
+  }
+
+  function read(
+    channel: number
+  ): Promise<Frame> {
+    return new Promise<Frame>((resolve, reject) => {
+      const stop = on(channel, frame => {
+        stop();
+        resolve(frame);
+      }, error => reject(error));
+    });
+  }
+
   async function start() {
     await conn.write(new TextEncoder().encode("AMQP"));
     await conn.write(new Uint8Array([0, 0, 9, 1]));
+    listen();
   }
 
   function close() {
     conn.closeWrite();
   }
 
-  async function write(frame: Frame) {
+  async function write(channel: number, frame: Frame) {
     if (frame.type === "header") {
       const buffer = new Deno.Buffer();
       buffer.writeSync(encodeShortUint(frame.payload.classId));
@@ -94,7 +144,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
         encodeFrame(
           {
             type: FRAME_HEADER,
-            channel: frame.channel,
+            channel,
             payload: buffer.bytes()
           }
         )
@@ -105,7 +155,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     if (frame.type === "content") {
       await conn.write(
         encodeFrame(
-          { type: FRAME_BODY, channel: frame.channel, payload: frame.payload }
+          { type: FRAME_BODY, channel, payload: frame.payload }
         )
       );
       return;
@@ -116,7 +166,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
         encodeFrame(
           {
             type: FRAME_HEARTBEAT,
-            channel: frame.channel,
+            channel: channel,
             payload: new Uint8Array([])
           }
         )
@@ -137,7 +187,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
       );
       await conn.write(encodeFrame({
         type: FRAME_METHOD,
-        channel: frame.channel,
+        channel: channel,
         payload: buffer.bytes()
       }));
       return;
@@ -146,59 +196,70 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     throw new Error(`Unknown frame type '${frame!.type}'`);
   }
 
-  async function read(): Promise<Frame | null> {
-    const frame = await readFrame(conn);
-    if (!frame) {
-      return null;
-    }
+  function emit(channel: number, frame: Frame) {
+    subscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(frame);
+      }
+    });
+  }
 
+  function handleFrame(frame: RawFrame) {
     if (frame.type === FRAME_METHOD) {
       const r = new Deno.Buffer(frame.payload);
       const classId = decodeShortUint(r);
       const methodId = decodeShortUint(r);
       const args = decodeArgs(r, classId, methodId);
-      return {
-        channel: frame.channel,
-        type: "method",
-        payload: { classId, methodId, args }
-      };
+      emit(
+        frame.channel,
+        { type: "method", payload: { classId, methodId, args } }
+      );
+      return;
     }
 
     if (frame.type === FRAME_HEADER) {
       const r = new Deno.Buffer(frame.payload);
-
       const classId = decodeShortUint(r);
       const weight = decodeShortUint(r);
       decodeLongUint(r); // size high bytes
       const size = decodeLongUint(r);
       const props = decodeProps(r, classId);
-      return {
-        channel: frame.channel,
-        type: "header",
-        payload: { classId, weight, size, props }
-      };
+      emit(
+        frame.channel,
+        { type: "header", payload: { classId, weight, size, props } }
+      );
+      return;
     }
 
     if (frame.type === FRAME_BODY) {
-      return {
-        channel: frame.channel,
-        type: "content",
-        payload: frame.payload
-      };
+      emit(frame.channel, { type: "content", payload: frame.payload });
+      return;
     }
 
     if (frame.type === FRAME_HEARTBEAT) {
-      return { channel: frame.channel, type: "heartbeat" };
+      emit(frame.channel, { type: "heartbeat" });
+      return;
     }
+  }
 
-    // TODO(lenkan): Close connection with error
-    throw new Error(`Unknown frame type ${frame.type}`);
+  async function listen(): Promise<void> {
+    while (true) {
+      const frame = await readFrame(conn);
+      if (!frame) {
+        const error = new Error("Connection closed by server");
+        subscribers.forEach(sub => sub.error(error));
+        return;
+      } else {
+        handleFrame(frame);
+      }
+    }
   }
 
   return {
     start,
     close,
     read,
+    on,
     write
   };
 }

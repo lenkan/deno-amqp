@@ -2,7 +2,9 @@ import {
   MethodFrame,
   ContentFrame,
   HeaderFrame,
-  AmqpWriter
+  AmqpSocket,
+  Header,
+  Method
 } from "./framing/socket.ts";
 import {
   SendMethod,
@@ -47,50 +49,47 @@ export class AmqpChannel {
   private header: HeaderFrame["payload"] | null = null;
   private buffer: Deno.Buffer | null = null;
 
-  constructor(public channel: number, private socket: AmqpWriter) {
+  constructor(public channel: number, private socket: AmqpSocket) {
     this.on = this.on.bind(this);
     this.receive = this.receive.bind(this);
     this.send = this.send.bind(this);
-  }
 
-  async open(args: ChannelOpenArgs) {
-    await this.send(CHANNEL, CHANNEL_OPEN, args);
-    return this.receive(CHANNEL, CHANNEL_OPEN_OK);
-  }
-
-  async close(args: ChannelCloseArgs) {
-    await this.send(CHANNEL, CHANNEL_CLOSE, args);
-    return this.receive(CHANNEL, CHANNEL_CLOSE_OK);
-  }
-
-  push(frame: MethodFrame | ContentFrame | HeaderFrame): void {
-    if (frame.channel !== this.channel) {
-      return;
-    }
-
-    if (frame.type === "method") {
-      if (hasContent(frame.payload.classId, frame.payload.methodId)) {
-        this.method = frame.payload;
-      } else {
-        this.subscribers.forEach(sub => {
-          if (sub.classId === frame.payload.classId &&
-            sub.methodId === frame.payload.methodId)
-          {
-            sub.handler(frame.payload.args, {}, new Uint8Array([]));
-          }
-        });
+    socket.on(channel, frame => {
+      switch (frame.type) {
+        case "header":
+          return this.handleHeader(frame.payload);
+        case "content":
+          return this.handleContent(frame.payload);
+        case "method":
+          return this.handleMethod(frame.payload);
       }
-    }
+    });
+  }
 
-    if (frame.type === "header") {
-      this.header = frame.payload;
-      this.buffer = new Deno.Buffer();
+  private handleMethod(method: Method) {
+    if (hasContent(method.classId, method.methodId)) {
+      this.method = method;
+    } else {
+      this.subscribers.forEach(sub => {
+        if (sub.classId === method.classId &&
+          sub.methodId === method.methodId)
+        {
+          sub.handler(method.args, {}, new Uint8Array([]));
+        }
+      });
     }
+  }
 
-    if (frame.type === "content" && this.method && this.header &&
+  private handleHeader(header: Header) {
+    this.header = header;
+    this.buffer = new Deno.Buffer();
+  }
+
+  private handleContent(content: Uint8Array) {
+    if (this.method && this.header &&
       this.buffer)
     {
-      this.buffer.writeSync(frame.payload);
+      this.buffer.writeSync(content);
 
       if (this.buffer.length === this.header!.size) {
         this.subscribers.forEach(sub => {
@@ -111,36 +110,60 @@ export class AmqpChannel {
     }
   }
 
+  async open(args: ChannelOpenArgs) {
+    await this.send(CHANNEL, CHANNEL_OPEN, args);
+    return this.receive(CHANNEL, CHANNEL_OPEN_OK);
+  }
+
+  async close(args: ChannelCloseArgs) {
+    await this.send(CHANNEL, CHANNEL_CLOSE, args);
+    return this.receive(CHANNEL, CHANNEL_CLOSE_OK);
+  }
+
+  push(frame: MethodFrame | ContentFrame | HeaderFrame): void {
+    if (frame.type === "method") {
+      if (hasContent(frame.payload.classId, frame.payload.methodId)) {
+        this.method = frame.payload;
+      } else {
+        this.subscribers.forEach(sub => {
+          if (sub.classId === frame.payload.classId &&
+            sub.methodId === frame.payload.methodId)
+          {
+            sub.handler(frame.payload.args, {}, new Uint8Array([]));
+          }
+        });
+      }
+    }
+
+    if (frame.type === "header") {
+    }
+  }
+
   async send<T extends number, U extends number>(
     classId: T,
     methodId: U,
     ...args: SendArgs<Extract<SendMethod, { classId: T; methodId: U }>>
   ) {
-    await this.socket.write(
-      {
-        type: "method",
-        channel: this.channel,
-        payload: { classId, methodId, args: args[0] }
-      }
-    );
+    await this.socket.write(this.channel, {
+      type: "method",
+      payload: { classId, methodId, args: args[0] }
+    });
 
     if (args.length === 3) {
       const [_, props, data] = args;
-      await this.socket.write(
-        {
-          type: "header",
-          channel: this.channel,
-          payload: {
-            classId,
-            props,
-            weight: 0,
-            size: data.length
-          }
+      await this.socket.write(this.channel, {
+        type: "header",
+        payload: {
+          classId,
+          props,
+          weight: 0,
+          size: data.length
         }
-      );
+      });
 
       await this.socket.write(
-        { type: "content", channel: this.channel, payload: data }
+        this.channel,
+        { type: "content", payload: data }
       );
     }
   }
@@ -162,16 +185,19 @@ export class AmqpChannel {
     return cancel;
   }
 
-  receive<T extends number, U extends number>(
+  async receive<T extends number, U extends number>(
     classId: T,
     methodId: U
   ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>["args"]> {
-    return new Promise((resolve, reject) => {
-      const cancel = this.on(classId, methodId, (args: object) => {
-        cancel();
-        resolve(args as any);
-      });
-    });
+      const frame = await this.socket.read(this.channel);
+      if(frame.type !== "method") {
+        throw new Error("Expected method, got " + frame.type)
+      }
+      if(frame.payload.classId !== classId || frame.payload.methodId !== methodId) {
+        throw new Error(`Expected ${classId}-${methodId}, got ${frame.payload.classId}-${frame.payload.methodId}`);
+      }
+
+      return frame.payload.args as any;
   }
 
   private unsubscribe(subscriber: Subscriber) {

@@ -54,8 +54,10 @@ export async function connect(options: AmqpOptions = {}): Promise<AmqpClient> {
     const exchange = new AmqpExchange(channel);
     const queue = new AmqpQueue(channel);
     const close = async () => {
-      await channel.close( { classId: 0, methodId: 0, replyCode: HARD_ERROR_CONNECTION_FORCED });
-    }
+      await channel.close(
+        { classId: 0, methodId: 0, replyCode: HARD_ERROR_CONNECTION_FORCED }
+      );
+    };
     return { close, basic, exchange, queue };
   }
 

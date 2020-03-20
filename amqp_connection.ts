@@ -14,7 +14,12 @@ import {
 } from "./amqp_constants.ts";
 import { AmqpChannel } from "./amqp_channel.ts";
 import { Logger, createLogger } from "./amqp_connection_logger.ts";
-import { ConnectionCloseArgs, ChannelCloseArgs } from "./amqp_types.ts";
+import {
+  ConnectionCloseArgs,
+  ChannelCloseArgs,
+  ConnectionClose,
+  ConnectionCloseOk
+} from "./amqp_types.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -27,28 +32,7 @@ function credentials(username: string, password: string) {
   return `${NULL_CHAR}${username}${NULL_CHAR}${password}`;
 }
 
-function getFrameError(frame: Frame): ChannelCloseArgs | null {
-  if (frame.type === "heartbeat" && frame.channel !== 0) {
-    return { classId: 0, methodId: 0, replyCode: HARD_ERROR_COMMAND_INVALID };
-  }
-
-  if ((frame.type === "method" || frame.type === "header") &&
-    frame.payload.classId === CONNECTION && frame.channel !== 0)
-  {
-    const methodId = "methodId" in frame.payload
-      ? frame.payload.methodId
-      : 0;
-
-    return {
-      classId: frame.payload.classId,
-      methodId,
-      replyCode: HARD_ERROR_COMMAND_INVALID
-    };
-  }
-  return null;
-}
-
-export class AmqpConnection implements AmqpWriter {
+export class AmqpConnection {
   private username: string;
   private password: string;
   private heartbeatInterval: number;
@@ -69,54 +53,74 @@ export class AmqpConnection implements AmqpWriter {
     this.username = options.username;
     this.password = options.password;
     this.heartbeatInterval = options.heartbeatInterval || 0;
-    this.channel0 = new AmqpChannel(0, this);
+    this.channel0 = new AmqpChannel(0, socket);
     this.channels.push(this.channel0);
     this.logger = createLogger(logger);
+
+    this.channel0.on(
+      CONNECTION,
+      CONNECTION_CLOSE,
+      args => this.handleClose(args)
+    );
+
+    this.channel0.on(
+      CONNECTION,
+      CONNECTION_CLOSE_OK,
+      args => this.handleCloseOk(args)
+    );
+    this.socket.on(0, async frame => {
+      if (frame.type === "heartbeat") {
+        return;
+      }
+    });
   }
 
-  write(frame: Frame): Promise<void> {
-    this.logger.logSend(frame);
-    return this.socket.write(frame);
+  private async handleClose(close: ConnectionClose) {
+    await this.channel0.send(CONNECTION, CONNECTION_CLOSE_OK, {});
+    console.error(
+      "Connection closed by server ",
+      JSON.stringify(close)
+    );
+    this.socket.close();
+  }
+
+  private async handleCloseOk(close: ConnectionCloseOk) {
+    this.socket.close();
   }
 
   async open() {
-    return new Promise(async (resolve, reject) => {
-      this.listen().catch(reject);
+    await this.socket.start();
 
-      await this.socket.start();
-
-      await this.channel0.receive(CONNECTION, CONNECTION_START);
-      await this.channel0.send(CONNECTION, CONNECTION_START_OK, {
-        clientProperties: {},
-        response: credentials(this.username, this.password)
-      });
-
-      await this.channel0.receive(CONNECTION, CONNECTION_TUNE).then(
-        async args => {
-          const interval = this.heartbeatInterval !== undefined
-            ? this.heartbeatInterval
-            : args.heartbeat;
-
-          const channelMax = args.channelMax;
-          const frameMax = args.frameMax;
-
-          await this.channel0.send(CONNECTION, CONNECTION_TUNE_OK, {
-            heartbeat: interval,
-            channelMax: channelMax,
-            frameMax: frameMax
-          });
-
-          this.channelMax = channelMax;
-          this.frameMax = frameMax;
-          this.heartbeatInterval = interval;
-          // await resetSendHeartbeatTimer();
-        }
-      );
-
-      await this.channel0.send(10, CONNECTION_OPEN, {});
-      await this.channel0.receive(CONNECTION, CONNECTION_OPEN_OK);
-      return resolve();
+    await this.channel0.receive(CONNECTION, CONNECTION_START);
+    await this.channel0.send(CONNECTION, CONNECTION_START_OK, {
+      clientProperties: {},
+      response: credentials(this.username, this.password)
     });
+
+    await this.channel0.receive(CONNECTION, CONNECTION_TUNE).then(
+      async args => {
+        const interval = this.heartbeatInterval !== undefined
+          ? this.heartbeatInterval
+          : args.heartbeat;
+
+        const channelMax = args.channelMax;
+        const frameMax = args.frameMax;
+
+        await this.channel0.send(CONNECTION, CONNECTION_TUNE_OK, {
+          heartbeat: interval,
+          channelMax: channelMax,
+          frameMax: frameMax
+        });
+
+        this.channelMax = channelMax;
+        this.frameMax = frameMax;
+        this.heartbeatInterval = interval;
+        // await resetSendHeartbeatTimer();
+      }
+    );
+
+    await this.channel0.send(10, CONNECTION_OPEN, {});
+    await this.channel0.receive(CONNECTION, CONNECTION_OPEN_OK);
   }
 
   async close(args?: Partial<ConnectionCloseArgs>) {
@@ -133,56 +137,12 @@ export class AmqpConnection implements AmqpWriter {
   createChannel(): AmqpChannel {
     for (let i = 0; i < this.channelMax; ++i) {
       if (!this.channels.find(c => c.channel === i)) {
-        const channel = new AmqpChannel(i, this);
+        const channel = new AmqpChannel(i, this.socket);
         this.channels.push(channel);
         return channel;
       }
     }
 
     throw new Error(`Maximum channels ${this.channelMax} reached`);
-  }
-
-  private async listen() {
-    while (true) {
-      const frame = await this.socket.read();
-
-      if (!frame) {
-        this.socket.close();
-        throw new Error(`Connection failed`);
-      }
-
-      this.logger.logRecv(frame);
-
-      const error = getFrameError(frame);
-      if (error) {
-        await this.channel0.send(CONNECTION, CONNECTION_CLOSE, error);
-      }
-
-      if (frame.type === "heartbeat") {
-        continue;
-      }
-
-      this.channels.forEach(channel => channel.push(frame));
-
-      if (frame.type === "method" && frame.channel === 0 &&
-        frame.payload.classId === CONNECTION &&
-        frame.payload.methodId === CONNECTION_CLOSE)
-      {
-        await this.channel0.send(CONNECTION, CONNECTION_CLOSE_OK, {});
-        console.error(
-          "Connection closed by server ",
-          JSON.stringify(frame.payload.args)
-        );
-        this.socket.close();
-      }
-
-      if (frame.type === "method" && frame.channel === 0 &&
-        frame.payload.classId === CONNECTION &&
-        frame.payload.methodId === CONNECTION_CLOSE_OK)
-      {
-        this.socket.close();
-        return;
-      }
-    }
   }
 }

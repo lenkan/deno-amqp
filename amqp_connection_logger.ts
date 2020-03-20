@@ -31,12 +31,12 @@ function formatFrame(frame: Frame) {
 }
 
 export function createLogger(logger?: Logger) {
-  function logSend(frame: Frame) {
-    logger && logger.log(`SEND(${frame.channel}) ${formatFrame(frame)}`);
+  function logSend(channel: number, frame: Frame) {
+    logger && logger.log(`SEND(${channel}) ${formatFrame(frame)}`);
   }
 
-  function logRecv(frame: Frame) {
-    const prefix = `RECV(${frame.channel}) `;
+  function logRecv(channel: number, frame: Frame) {
+    const prefix = `RECV(${channel}) `;
     logger && logger.log(prefix + formatFrame(frame));
   }
   return { logSend, logRecv };
