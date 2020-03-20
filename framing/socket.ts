@@ -64,7 +64,7 @@ export interface FrameSubscriber {
 }
 
 export interface AmqpReader {
-  on(
+  subscribe(
     channel: number,
     handler: FrameHandler,
     onError?: ErrorHandler
@@ -76,17 +76,55 @@ export interface AmqpWriter {
   write(channel: number, frame: Frame): Promise<void>;
 }
 
-export interface AmqpSocket extends AmqpReader, AmqpWriter {
+export interface AmqpReaderWriter extends AmqpReader, AmqpWriter {}
+
+export interface AmqpSocket extends AmqpReaderWriter {
   start(): Promise<void>;
   close(): void;
 }
 
-function createSubscriber(
-  channel: number,
-  handler: FrameHandler,
-  error: ErrorHandler = e => {}
-) {
-  return ({ channel, handler, error });
+function encodeMethod(method: Method): Uint8Array {
+  const buffer = new Deno.Buffer();
+  buffer.writeSync(encodeShortUint(method.classId));
+  buffer.writeSync(encodeShortUint(method.methodId));
+  buffer.writeSync(
+    encodeArgs(
+      method.classId,
+      method.methodId,
+      method.args
+    )
+  );
+  return buffer.bytes();
+}
+
+function decodeMethod(payload: Uint8Array): Method {
+  const r = new Deno.Buffer(payload);
+  const classId = decodeShortUint(r);
+  const methodId = decodeShortUint(r);
+  const args = decodeArgs(r, classId, methodId);
+  return { classId, methodId, args };
+}
+
+function encodeHeader(header: Header): Uint8Array {
+  const buffer = new Deno.Buffer();
+  buffer.writeSync(encodeShortUint(header.classId));
+  buffer.writeSync(encodeShortUint(header.weight));
+  buffer.writeSync(encodeLongUint(0));
+  buffer.writeSync(encodeLongUint(header.size));
+  buffer.writeSync(
+    encodeProps(header.classId, header.props)
+  );
+  return buffer.bytes();
+}
+
+function decodeHeader(payload: Uint8Array): Header {
+  const r = new Deno.Buffer(payload);
+  const classId = decodeShortUint(r);
+  const weight = decodeShortUint(r);
+  decodeLongUint(r); // size high bytes
+  const size = decodeLongUint(r);
+  const props = decodeProps(r, classId);
+  return { classId, weight, size, props };
 }
 
 export function createSocket(conn: Deno.Conn): AmqpSocket {
@@ -99,12 +137,12 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     }
   }
 
-  function on(
+  function subscribe(
     channel: number,
     handler: FrameHandler,
     onError: ErrorHandler = () => {}
   ) {
-    const subscriber = createSubscriber(channel, handler, onError);
+    const subscriber = { channel, handler, error: onError };
     subscribers.push(subscriber);
     return () => cancel(subscriber);
   }
@@ -113,7 +151,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     channel: number
   ): Promise<Frame> {
     return new Promise<Frame>((resolve, reject) => {
-      const stop = on(channel, frame => {
+      const stop = subscribe(channel, frame => {
         stop();
         resolve(frame);
       }, error => reject(error));
@@ -132,63 +170,37 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
 
   async function write(channel: number, frame: Frame) {
     if (frame.type === "header") {
-      const buffer = new Deno.Buffer();
-      buffer.writeSync(encodeShortUint(frame.payload.classId));
-      buffer.writeSync(encodeShortUint(frame.payload.weight));
-      buffer.writeSync(encodeLongUint(0));
-      buffer.writeSync(encodeLongUint(frame.payload.size));
-      buffer.writeSync(
-        encodeProps(frame.payload.classId, frame.payload.props)
-      );
-      await conn.write(
-        encodeFrame(
-          {
-            type: FRAME_HEADER,
-            channel,
-            payload: buffer.bytes()
-          }
-        )
-      );
+      await conn.write(encodeFrame({
+        type: FRAME_HEADER,
+        channel,
+        payload: encodeHeader(frame.payload)
+      }));
       return;
     }
 
     if (frame.type === "content") {
-      await conn.write(
-        encodeFrame(
-          { type: FRAME_BODY, channel, payload: frame.payload }
-        )
-      );
+      await conn.write(encodeFrame({
+        type: FRAME_BODY,
+        channel,
+        payload: frame.payload
+      }));
       return;
     }
 
     if (frame.type === "heartbeat") {
-      await conn.write(
-        encodeFrame(
-          {
-            type: FRAME_HEARTBEAT,
-            channel: channel,
-            payload: new Uint8Array([])
-          }
-        )
-      );
+      await conn.write(encodeFrame({
+        type: FRAME_HEARTBEAT,
+        channel: channel,
+        payload: new Uint8Array([])
+      }));
       return;
     }
 
     if (frame.type === "method") {
-      const buffer = new Deno.Buffer();
-      buffer.writeSync(encodeShortUint(frame.payload.classId));
-      buffer.writeSync(encodeShortUint(frame.payload.methodId));
-      buffer.writeSync(
-        encodeArgs(
-          frame.payload.classId,
-          frame.payload.methodId,
-          frame.payload.args
-        )
-      );
       await conn.write(encodeFrame({
         type: FRAME_METHOD,
         channel: channel,
-        payload: buffer.bytes()
+        payload: encodeMethod(frame.payload)
       }));
       return;
     }
@@ -206,39 +218,28 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
 
   function handleFrame(frame: RawFrame) {
     if (frame.type === FRAME_METHOD) {
-      const r = new Deno.Buffer(frame.payload);
-      const classId = decodeShortUint(r);
-      const methodId = decodeShortUint(r);
-      const args = decodeArgs(r, classId, methodId);
-      emit(
-        frame.channel,
-        { type: "method", payload: { classId, methodId, args } }
-      );
-      return;
+      return emit(frame.channel, {
+        type: "method",
+        payload: decodeMethod(frame.payload)
+      });
     }
 
     if (frame.type === FRAME_HEADER) {
-      const r = new Deno.Buffer(frame.payload);
-      const classId = decodeShortUint(r);
-      const weight = decodeShortUint(r);
-      decodeLongUint(r); // size high bytes
-      const size = decodeLongUint(r);
-      const props = decodeProps(r, classId);
-      emit(
-        frame.channel,
-        { type: "header", payload: { classId, weight, size, props } }
-      );
-      return;
+      return emit(frame.channel, {
+        type: "header",
+        payload: decodeHeader(frame.payload)
+      });
     }
 
     if (frame.type === FRAME_BODY) {
-      emit(frame.channel, { type: "content", payload: frame.payload });
-      return;
+      return emit(frame.channel, {
+        type: "content",
+        payload: frame.payload
+      });
     }
 
     if (frame.type === FRAME_HEARTBEAT) {
-      emit(frame.channel, { type: "heartbeat" });
-      return;
+      return emit(frame.channel, { type: "heartbeat" });
     }
   }
 
@@ -259,7 +260,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     start,
     close,
     read,
-    on,
+    subscribe,
     write
   };
 }

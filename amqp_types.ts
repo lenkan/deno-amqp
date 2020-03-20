@@ -23,7 +23,7 @@ export interface BasicProperties {
   replyTo?: string;
   expiration?: string;
   messageId?: string;
-  timestamp?: Uint8Array;
+  timestamp?: string;
   type?: string;
   userId?: string;
   appId?: string;
@@ -306,7 +306,7 @@ export interface BasicReturnArgs {
 
 export interface BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: number;
+  deliveryTag: string;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -319,7 +319,7 @@ export interface BasicGetArgs {
 }
 
 export interface BasicGetOkArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -331,12 +331,12 @@ export interface BasicGetEmptyArgs {
 }
 
 export interface BasicAckArgs {
-  /** Default 0 */ deliveryTag?: number;
+  /** Default 0 */ deliveryTag?: string;
   /** Default false */ multiple?: boolean;
 }
 
 export interface BasicRejectArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   /** Default true */ requeue?: boolean;
 }
 
@@ -352,7 +352,7 @@ export interface BasicRecoverOkArgs {
 }
 
 export interface BasicNackArgs {
-  /** Default 0 */ deliveryTag?: number;
+  /** Default 0 */ deliveryTag?: string;
   /** Default false */ multiple?: boolean;
   /** Default true */ requeue?: boolean;
 }
@@ -654,7 +654,7 @@ export interface BasicReturn extends BasicReturnArgs {
 
 export interface BasicDeliver extends BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: number;
+  deliveryTag: string;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -667,7 +667,7 @@ export interface BasicGet extends BasicGetArgs {
 }
 
 export interface BasicGetOk extends BasicGetOkArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -679,12 +679,12 @@ export interface BasicGetEmpty extends BasicGetEmptyArgs {
 }
 
 export interface BasicAck extends BasicAckArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   multiple: boolean;
 }
 
 export interface BasicReject extends BasicRejectArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   requeue: boolean;
 }
 
@@ -700,7 +700,7 @@ export interface BasicRecoverOk extends BasicRecoverOkArgs {
 }
 
 export interface BasicNack extends BasicNackArgs {
-  deliveryTag: number;
+  deliveryTag: string;
   multiple: boolean;
   requeue: boolean;
 }

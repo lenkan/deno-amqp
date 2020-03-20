@@ -34,7 +34,7 @@ export class AmqpBasic {
   private consumers: { tag: string; handler: BasicDeliverHandler }[] = [];
 
   constructor(private socket: AmqpChannel) {
-    this.socket.on(BASIC, BASIC_DELIVER, (args, props, data) => {
+    this.socket.subscribe(BASIC, BASIC_DELIVER, (args, props, data) => {
       this.consumers.forEach(consumer => {
         if (consumer.tag === args.consumerTag) {
           consumer.handler(args, props, data);

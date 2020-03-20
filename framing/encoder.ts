@@ -1,5 +1,5 @@
 import { splitArray, padArray, readBytesSync, readBytes } from "./utils.ts";
-
+import * as hex from "https://deno.land/std@v0.35.0/encoding/hex.ts";
 const Buffer = Deno.Buffer;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -153,17 +153,16 @@ export function decodeLongUint(r: Deno.SyncReader) {
   return value;
 }
 
-export function encodeLongLongUint(value: Uint8Array | number) {
-  if (typeof value === "number") {
-    return new Uint8Array([...encodeLongUint(0), ...encodeLongUint(value)]);
-  } else {
-    return value;
+export function encodeLongLongUint(value: string) {
+  if (value.length !== 16) {
+    throw new Error("longlong uint must be 16 characters");
   }
+  return hex.decodeString(value);
 }
 
-export function decodeLongLongUint(r: Deno.SyncReader): Uint8Array {
-  const data = readBytesSync(r, 8);
-  return new Uint8Array([...data.slice(0, 8)]);
+export function decodeLongLongUint(r: Deno.SyncReader): string {
+  const bytes = readBytesSync(r, 8);
+  return hex.encodeToString(bytes);
 }
 
 export function encodeShortString(value: string) {
@@ -327,7 +326,7 @@ export function encodeField(
     case "long":
       return encodeLongUint(value as number);
     case "longlong":
-      return encodeLongLongUint(value as number);
+      return encodeLongLongUint(value as string);
     case "table":
       return encodeTable(value as Record<string, unknown>);
     case "octet":
@@ -337,7 +336,7 @@ export function encodeField(
     case "longstr":
       return encodeLongString(value as string);
     case "timestamp":
-      return encodeLongLongUint(value as Uint8Array);
+      return encodeLongLongUint(value as string);
     default:
       assertUnreachable(type);
   }

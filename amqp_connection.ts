@@ -57,18 +57,18 @@ export class AmqpConnection {
     this.channels.push(this.channel0);
     this.logger = createLogger(logger);
 
-    this.channel0.on(
+    this.channel0.subscribe(
       CONNECTION,
       CONNECTION_CLOSE,
       args => this.handleClose(args)
     );
 
-    this.channel0.on(
+    this.channel0.subscribe(
       CONNECTION,
       CONNECTION_CLOSE_OK,
       args => this.handleCloseOk(args)
     );
-    this.socket.on(0, async frame => {
+    this.socket.subscribe(0, async frame => {
       if (frame.type === "heartbeat") {
         return;
       }

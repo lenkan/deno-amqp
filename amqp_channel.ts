@@ -1,10 +1,8 @@
 import {
-  MethodFrame,
-  ContentFrame,
-  HeaderFrame,
-  AmqpSocket,
   Header,
-  Method
+  Method,
+  AmqpReaderWriter,
+  Frame
 } from "./framing/socket.ts";
 import {
   SendMethod,
@@ -21,16 +19,28 @@ import {
   CHANNEL_OPEN_OK
 } from "./amqp_constants.ts";
 
+type ExtractReceiveMethod<T extends number, U extends number> = Extract<
+  ReceiveMethod,
+  { classId: T; methodId: U }
+>;
+type ExtractSendMethod<T extends number, U extends number> = Extract<
+  SendMethod,
+  { classId: T; methodId: U }
+>;
+
 export type Handler<T extends ReceiveMethod> = (
   args: T["args"],
   props: T extends { props: any } ? T["props"] : never,
   data: T extends { data: Uint8Array } ? T["data"] : never
 ) => void;
 
+export type ErrorHandler = (error: Error) => void;
+
 interface Subscriber {
   classId: number;
   methodId: number;
   handler: Handler<any>;
+  error: ErrorHandler;
 }
 
 export interface Subscription {
@@ -43,27 +53,33 @@ type SendArgs<T extends SendMethod> = T extends ContentArgs
   ? [T["args"], T["props"], Uint8Array]
   : [T["args"]];
 
+function noop() {
+  // do nothing
+}
+
 export class AmqpChannel {
   private subscribers: Subscriber[] = [];
-  private method: MethodFrame["payload"] | null = null;
-  private header: HeaderFrame["payload"] | null = null;
+  private method: Method | null = null;
+  private header: Header | null = null;
   private buffer: Deno.Buffer | null = null;
 
-  constructor(public channel: number, private socket: AmqpSocket) {
-    this.on = this.on.bind(this);
+  constructor(public channel: number, private socket: AmqpReaderWriter) {
+    this.subscribe = this.subscribe.bind(this);
     this.receive = this.receive.bind(this);
     this.send = this.send.bind(this);
 
-    socket.on(channel, frame => {
-      switch (frame.type) {
-        case "header":
-          return this.handleHeader(frame.payload);
-        case "content":
-          return this.handleContent(frame.payload);
-        case "method":
-          return this.handleMethod(frame.payload);
-      }
-    });
+    socket.subscribe(channel, frame => this.handleFrame(frame));
+  }
+
+  private handleFrame(frame: Frame) {
+    switch (frame.type) {
+      case "header":
+        return this.handleHeader(frame.payload);
+      case "content":
+        return this.handleContent(frame.payload);
+      case "method":
+        return this.handleMethod(frame.payload);
+    }
   }
 
   private handleMethod(method: Method) {
@@ -120,29 +136,10 @@ export class AmqpChannel {
     return this.receive(CHANNEL, CHANNEL_CLOSE_OK);
   }
 
-  push(frame: MethodFrame | ContentFrame | HeaderFrame): void {
-    if (frame.type === "method") {
-      if (hasContent(frame.payload.classId, frame.payload.methodId)) {
-        this.method = frame.payload;
-      } else {
-        this.subscribers.forEach(sub => {
-          if (sub.classId === frame.payload.classId &&
-            sub.methodId === frame.payload.methodId)
-          {
-            sub.handler(frame.payload.args, {}, new Uint8Array([]));
-          }
-        });
-      }
-    }
-
-    if (frame.type === "header") {
-    }
-  }
-
   async send<T extends number, U extends number>(
     classId: T,
     methodId: U,
-    ...args: SendArgs<Extract<SendMethod, { classId: T; methodId: U }>>
+    ...args: SendArgs<ExtractSendMethod<T, U>>
   ) {
     await this.socket.write(this.channel, {
       type: "method",
@@ -168,36 +165,41 @@ export class AmqpChannel {
     }
   }
 
-  on<T extends number, U extends number>(
+  subscribe<T extends number, U extends number>(
     classId: T,
     methodId: U,
-    handler: Handler<Extract<ReceiveMethod, { classId: T; methodId: U }>>
+    handler: Handler<ExtractReceiveMethod<T, U>>,
+    onError?: ErrorHandler
   ) {
-    const subscriber = {
+    const subscriber: Subscriber = {
       classId,
       methodId,
-      handler
+      handler,
+      error: onError || noop
     };
 
     this.subscribers.push(subscriber);
 
-    const cancel = () => this.unsubscribe(subscriber);
-    return cancel;
+    return () => this.unsubscribe(subscriber);
   }
 
   async receive<T extends number, U extends number>(
     classId: T,
     methodId: U
   ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>["args"]> {
-      const frame = await this.socket.read(this.channel);
-      if(frame.type !== "method") {
-        throw new Error("Expected method, got " + frame.type)
-      }
-      if(frame.payload.classId !== classId || frame.payload.methodId !== methodId) {
-        throw new Error(`Expected ${classId}-${methodId}, got ${frame.payload.classId}-${frame.payload.methodId}`);
-      }
+    const frame = await this.socket.read(this.channel);
+    if (frame.type !== "method") {
+      throw new Error("Expected method, got " + frame.type);
+    }
 
-      return frame.payload.args as any;
+    const method = frame.payload;
+    if (method.classId !== classId || method.methodId !== methodId) {
+      throw new Error(
+        `Expected ${classId}-${methodId}, got ${method.classId}-${method.methodId}`
+      );
+    }
+
+    return method.args as any;
   }
 
   private unsubscribe(subscriber: Subscriber) {
