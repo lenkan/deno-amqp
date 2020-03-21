@@ -30,8 +30,9 @@ function printMethodArgsEncoding(
   return `enc.encodeFields([
     ${method.arguments.map(arg => {
     const type = resolveType(spec, arg);
-    const value = getArgValue("args", arg);
-    return `{ type: "${type}", value: ${value} }`;
+    const name = camelCase(arg.name);
+    const defaultValue = JSON.stringify(arg["default-value"]);
+    return `field("${type}", args["${name}"], ${defaultValue})`;
   }).join(",")}
   ]);`;
 }
@@ -45,7 +46,7 @@ function printMethodDecoding(
     '"' + resolveType(spec, a) + '"'
   ).join(",")}]);
   const args = { ${method.arguments.map((a, i) =>
-    `${camelCase(a.name)}: fields[${i}].value`
+    `${camelCase(a.name)}: fields[${i}]`
   ).join(",")}}
   return args;
   `;
@@ -57,7 +58,7 @@ function printHeaderEncoding(
   return `enc.encodeProperties([
     ${(clazz.properties || []).map(prop => {
     const name = camelCase(prop.name);
-    return `{ type: "${prop.type}", value: props["${name}"] }`;
+    return `field("${prop.type}", props["${name}"])`;
   }).join(",")}
   ]);`;
 }
@@ -70,7 +71,7 @@ function printHeaderDecoding(
     '"' + p.type + '"'
   ).join(",")}]);
   const props = { ${(clazz.properties || []).map((p, i) =>
-    `${camelCase(p.name)}: fields[${i}].value`
+    `${camelCase(p.name)}: fields[${i}]`
   ).join(",")}};
 
   return props;
@@ -79,7 +80,7 @@ function printHeaderDecoding(
 
 function printMethodEncoder(spec: Spec) {
   return `
-export function encodeArgs(classId: number, methodId: number, args: any) : Uint8Array {
+export function encodeArgs(classId: number, methodId: number, args: Record<string, enc.AmqpOptionalFieldValue>) : Uint8Array {
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `
@@ -88,7 +89,7 @@ export function encodeArgs(classId: number, methodId: number, args: any) : Uint8
           ${clazz.methods.map(method => {
       return `case ${method.id}: return ${printMethodArgsEncoding(
         method
-      )}; break;`;
+      )}; `;
     }).join("\n")}
         }
       }
@@ -104,7 +105,7 @@ export function encodeArgs(classId: number, methodId: number, args: any) : Uint8
 
 function printMethodDecoder(spec: Spec) {
   return `
-export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number): any {
+export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number): Record<string, enc.AmqpFieldValue> {
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `
@@ -128,7 +129,7 @@ export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number
 
 function printHeaderEncoder(spec: Spec) {
   return `
-export function encodeProps(classId: number, props: any) : Uint8Array {
+export function encodeProps(classId: number, props: Record<string, enc.AmqpOptionalFieldValue>) : Uint8Array {
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `case ${clazz.id}: { return ${printHeaderEncoding(clazz)} };`;
@@ -142,7 +143,7 @@ export function encodeProps(classId: number, props: any) : Uint8Array {
 
 function printPropsDecoder(spec: Spec) {
   return `
-export function decodeProps(r: Deno.SyncReader, classId: number) : any {
+export function decodeProps(r: Deno.SyncReader, classId: number) : Record<string, enc.AmqpOptionalFieldValue> {
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `case ${clazz.id}: { ${printHeaderDecoding(clazz)} };`;
@@ -157,6 +158,9 @@ export function decodeProps(r: Deno.SyncReader, classId: number) : any {
 function generateConnection() {
   return [
     'import * as enc from "./encoder.ts"',
+    `function field(type: enc.AmqpFieldType, value?: enc.AmqpFieldValue, defaultValue?: enc.AmqpFieldValue) : enc.AmqpField {
+  return { type, value: value !== undefined ? value : defaultValue } as enc.AmqpField
+}`,
     printMethodEncoder(spec),
     printMethodDecoder(spec),
     printHeaderEncoder(spec),

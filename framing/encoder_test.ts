@@ -328,13 +328,7 @@ test("decode fields", () => {
     "bit"
   ];
 
-  const expected: enc.AmqpField[] = [
-    { type: "octet", value: 123 },
-    { type: "shortstr", value: "abc" },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true }
-  ];
+  const expected: enc.AmqpFieldValue[] = [123, "abc", true, false, true];
 
   assertEquals(enc.decodeFields(data, types), expected);
 });
@@ -355,18 +349,18 @@ test("decode fields - large bit array at end", () => {
     "bit"
   ];
 
-  const expected: enc.AmqpField[] = [
-    { type: "octet", value: 123 },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: false }
+  const expected: enc.AmqpFieldValue[] = [
+    123,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false
   ];
 
   assertEquals(enc.decodeFields(data, types), expected);
@@ -388,18 +382,18 @@ test("decode fields - large bit array at start", () => {
     "octet"
   ];
 
-  const expected: enc.AmqpField[] = [
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "bit", value: true },
-    { type: "bit", value: false },
-    { type: "octet", value: 123 }
+  const expected: enc.AmqpFieldValue[] = [
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    true,
+    false,
+    true,
+    false,
+    123
   ];
 
   assertEquals(enc.decodeFields(data, types), expected);
@@ -504,7 +498,7 @@ test("encode header props - without properties", () => {
 });
 
 test("encode header props - with all properties defined", () => {
-  const fields: enc.AmqpField[] = [
+  const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
     { type: "short", value: 19 }
   ];
@@ -515,7 +509,7 @@ test("encode header props - with all properties defined", () => {
 });
 
 test("encode header props - with missing property", () => {
-  const fields: enc.AmqpField[] = [
+  const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
     { type: "short", value: undefined },
     { type: "short", value: 19 }
@@ -528,7 +522,7 @@ test("encode header props - with missing property", () => {
 });
 
 test("encode header props - with bit property", () => {
-  const fields: enc.AmqpField[] = [
+  const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
     { type: "bit", value: true },
     { type: "short", value: 19 }
@@ -542,10 +536,7 @@ test("encode header props - with bit property", () => {
 
 test("decode header props - with all properties defined", () => {
   const data = bufferOf(0b11000000, 0b000000, 13, 0, 19);
-  const expected: enc.AmqpField[] = [
-    { type: "octet", value: 13 },
-    { type: "short", value: 19 }
-  ];
+  const expected: enc.AmqpFieldValue[] = [13, 19];
 
   assertEquals(
     enc.decodeProperties(data, ["octet", "short"]),
@@ -555,11 +546,7 @@ test("decode header props - with all properties defined", () => {
 
 test("decode header props - with missing property", () => {
   const data = bufferOf(0b10100000, 0b000000, 13, 0, 19);
-  const expected: enc.AmqpField[] = [
-    { type: "octet", value: 13 },
-    { type: "short", value: undefined },
-    { type: "short", value: 19 }
-  ];
+  const expected: enc.AmqpOptionalFieldValue[] = [13, undefined, 19];
 
   assertEquals(
     enc.decodeProperties(data, ["octet", "short", "short"]),

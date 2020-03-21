@@ -1,47 +1,62 @@
+import {
+  FRAME_BODY,
+  FRAME_END,
+  FRAME_HEARTBEAT,
+  FRAME_HEADER,
+  FRAME_METHOD
+} from "../amqp_constants.ts";
 import { splitArray, padArray, readBytesSync, readBytes } from "./utils.ts";
-import * as hex from "https://deno.land/std@v0.35.0/encoding/hex.ts";
+import { hex } from "../dependencies.ts";
 const Buffer = Deno.Buffer;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-export const FRAME_METHOD = 1;
-export const FRAME_HEADER = 2;
-export const FRAME_BODY = 3;
-export const FRAME_HEARTBEAT = 8;
-export const FRAME_END = 206;
-
-export type AmqpFields = {
-  type: AmqpFieldType;
-  value: any;
-}[];
-
-export type AmqpFieldType = "timestamp"
-  | "octet"
-  | "table"
-  | "shortstr"
-  | "longstr"
-  | "bit"
-  | "short"
-  | "longlong"
-  | "long";
-
-export type AmqpFieldValue = number
-  | boolean
-  | string
-  | Record<string, unknown>
-  | Uint8Array;
-
-export interface AmqpField {
-  type: AmqpFieldType;
-
-  // TODO(lenkan): Consider typing the value
-  value: any;
+export interface AmqpOptionalNumberField {
+  type: "octet" | "short" | "long";
+  value: number | undefined;
 }
 
-export interface AmqpFieldSpec {
-  type: AmqpFieldType;
-  name: string;
+export interface AmqpOptionalStringField {
+  type: "shortstr" | "longstr" | "longlong" | "timestamp";
+  value: string | undefined;
 }
+
+export interface AmqpOptionalBitField {
+  type: "bit";
+  value: boolean | undefined;
+}
+
+export interface AmqpOptionalTableField {
+  type: "table";
+  value: Record<string, unknown> | undefined;
+}
+
+export interface AmqpNumberField extends AmqpOptionalNumberField {
+  value: number;
+}
+
+export interface AmqpStringField extends AmqpOptionalStringField {
+  value: string;
+}
+
+export interface AmqpBitField extends AmqpOptionalBitField {
+  value: boolean;
+}
+
+export interface AmqpTableField extends AmqpOptionalTableField {
+  value: Record<string, unknown>;
+}
+
+export type AmqpField = AmqpNumberField | AmqpStringField | AmqpBitField
+  | AmqpTableField;
+export type AmqpOptionalField = AmqpOptionalNumberField
+  | AmqpOptionalStringField
+  | AmqpOptionalBitField
+  | AmqpOptionalTableField;
+
+export type AmqpFieldType = AmqpField["type"];
+export type AmqpFieldValue = AmqpField["value"];
+export type AmqpOptionalFieldValue = AmqpOptionalField["value"];
 
 enum TableFieldType {
   Boolean = 116, // t
@@ -316,29 +331,28 @@ export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {
   return result;
 }
 
-export function encodeField(
-  type: Exclude<AmqpFieldType, "bit">,
-  value: AmqpFieldValue
+function encodeField(
+  field: Exclude<AmqpField, Extract<AmqpField, { type: "bit" }>>
 ) {
-  switch (type) {
+  switch (field.type) {
     case "short":
-      return encodeShortUint(value as number);
+      return encodeShortUint(field.value);
     case "long":
-      return encodeLongUint(value as number);
+      return encodeLongUint(field.value);
     case "longlong":
-      return encodeLongLongUint(value as string);
+      return encodeLongLongUint(field.value);
     case "table":
-      return encodeTable(value as Record<string, unknown>);
+      return encodeTable(field.value);
     case "octet":
-      return encodeOctet(value as number);
+      return encodeOctet(field.value);
     case "shortstr":
-      return encodeShortString(value as string);
+      return encodeShortString(field.value);
     case "longstr":
-      return encodeLongString(value as string);
+      return encodeLongString(field.value);
     case "timestamp":
-      return encodeLongLongUint(value as string);
+      return encodeLongLongUint(field.value);
     default:
-      assertUnreachable(type);
+      assertUnreachable(field);
   }
 }
 
@@ -355,7 +369,7 @@ export function encodeFields(fields: AmqpField[]): Uint8Array {
         bits.splice(0, bits.length);
       }
 
-      buffer.writeSync(encodeField(field.type, field.value));
+      buffer.writeSync(encodeField(field));
     }
   }
 
@@ -392,8 +406,8 @@ function decodeField(r: Deno.SyncReader, type: Exclude<AmqpFieldType, "bit">) {
 export function decodeFields(
   reader: Deno.SyncReader,
   types: AmqpFieldType[]
-): AmqpField[] {
-  const fields: AmqpField[] = [];
+): AmqpFieldValue[] {
+  const values: AmqpFieldValue[] = [];
   let bitField: number | null = null;
   let bitPointer = 7;
   for (const type of types) {
@@ -404,14 +418,14 @@ export function decodeFields(
       }
 
       const value = !!(bitField & (1 << bitPointer--));
-      fields.push({ type: "bit", value });
+      values.push(value);
       continue;
     }
 
-    fields.push({ type, value: decodeField(reader, type) });
+    values.push(decodeField(reader, type));
   }
 
-  return fields;
+  return values;
 }
 
 export function encodeFlags(flags: boolean[]) {
@@ -499,23 +513,20 @@ export async function readFrame(r: Deno.Reader): Promise<Frame | null> {
   };
 }
 
-export function encodeProperties(fields: AmqpField[]): Uint8Array {
+export function encodeProperties(fields: AmqpOptionalField[]): Uint8Array {
   const payload = new Deno.Buffer();
-  const flags: boolean[] = [];
-  const values: {
-    type: AmqpFieldType;
-    value: AmqpFieldValue;
-  }[] = [];
-  for (const field of fields) {
-    const flag = field.value !== undefined && field.value !== null;
-    flags.push(flag);
-    if (flag && field.type !== "bit") {
-      values.push({ type: field.type, value: field.value });
-    }
-  }
+
+  const flags = fields.map(field =>
+    field.type === "bit" ? !!field.value : field.value !== undefined
+  );
+
+  const definedFields = fields.filter((
+    field: AmqpOptionalField
+  ): field is AmqpField => field.type !== "bit" && field.value !== undefined
+  );
 
   payload.writeSync(encodeFlags(flags));
-  payload.writeSync(encodeFields(values));
+  payload.writeSync(encodeFields(definedFields));
 
   return payload.bytes();
 }
@@ -523,18 +534,18 @@ export function encodeProperties(fields: AmqpField[]): Uint8Array {
 export function decodeProperties(
   r: Deno.SyncReader,
   types: AmqpFieldType[]
-): AmqpField[] {
-  const fields: AmqpField[] = [];
+): AmqpOptionalFieldValue[] {
+  const fields: AmqpOptionalFieldValue[] = [];
   const flags = decodeFlags(r);
   for (let i = 0; i < types.length; ++i) {
     const type = types[i];
     const flag = flags[i];
     if (type === "bit") {
-      fields.push({ type, value: flag });
+      fields.push(flag);
     } else if (flag) {
-      fields.push({ type, value: decodeField(r, type) });
+      fields.push(decodeField(r, type));
     } else {
-      fields.push({ type, value: undefined });
+      fields.push(undefined);
     }
   }
 

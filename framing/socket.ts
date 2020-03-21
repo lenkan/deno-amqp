@@ -5,7 +5,8 @@ import {
   encodeLongUint,
   decodeShortUint,
   decodeLongUint,
-  Frame as RawFrame
+  Frame as RawFrame,
+  AmqpOptionalFieldValue
 } from "./encoder.ts";
 import {
   encodeArgs,
@@ -23,14 +24,14 @@ import {
 export interface Method {
   classId: number;
   methodId: number;
-  args: object;
+  args: Record<string, AmqpOptionalFieldValue>;
 }
 
 export interface Header {
   classId: number;
   weight: number;
   size: number;
-  props: object;
+  props: Record<string, AmqpOptionalFieldValue>;
 }
 
 export interface HeaderFrame {

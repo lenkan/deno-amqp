@@ -450,8 +450,7 @@ export interface ConnectionUpdateSecret extends ConnectionUpdateSecretArgs {
 }
 
 export interface ConnectionUpdateSecretOk
-  extends ConnectionUpdateSecretOkArgs
-{
+  extends ConnectionUpdateSecretOkArgs {
 }
 
 export interface ChannelOpen extends ChannelOpenArgs {

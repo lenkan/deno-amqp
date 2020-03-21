@@ -18,6 +18,7 @@ import {
   CHANNEL_OPEN,
   CHANNEL_OPEN_OK
 } from "./amqp_constants.ts";
+import { AmqpOptionalFieldValue } from "./framing/encoder.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -87,9 +88,10 @@ export class AmqpChannel {
       this.method = method;
     } else {
       this.subscribers.forEach(sub => {
-        if (sub.classId === method.classId &&
-          sub.methodId === method.methodId)
-        {
+        if (
+          sub.classId === method.classId &&
+          sub.methodId === method.methodId
+        ) {
           sub.handler(method.args, {}, new Uint8Array([]));
         }
       });
@@ -102,16 +104,18 @@ export class AmqpChannel {
   }
 
   private handleContent(content: Uint8Array) {
-    if (this.method && this.header &&
-      this.buffer)
-    {
+    if (
+      this.method && this.header &&
+      this.buffer
+    ) {
       this.buffer.writeSync(content);
 
       if (this.buffer.length === this.header!.size) {
         this.subscribers.forEach(sub => {
-          if (this.buffer && sub.classId === this.header!.classId &&
-            sub.methodId === this.method!.methodId)
-          {
+          if (
+            this.buffer && sub.classId === this.header!.classId &&
+            sub.methodId === this.method!.methodId
+          ) {
             const args = this.method!.args;
             const props = this.header!.props;
             const data = this.buffer.bytes();
@@ -143,11 +147,16 @@ export class AmqpChannel {
   ) {
     await this.socket.write(this.channel, {
       type: "method",
-      payload: { classId, methodId, args: args[0] }
+      payload: {
+        classId,
+        methodId,
+        args: args[0] as Record<string, AmqpOptionalFieldValue>
+      }
     });
 
     if (args.length === 3) {
-      const [_, props, data] = args;
+      const props = args[1] as Record<string, AmqpOptionalFieldValue>;
+      const data = args[2];
       await this.socket.write(this.channel, {
         type: "header",
         payload: {

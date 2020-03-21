@@ -1,9 +1,19 @@
 import * as enc from "./encoder.ts";
+function field(
+  type: enc.AmqpFieldType,
+  value?: enc.AmqpFieldValue,
+  defaultValue?: enc.AmqpFieldValue
+): enc.AmqpField {
+  return {
+    type,
+    value: value !== undefined ? value : defaultValue
+  } as enc.AmqpField;
+}
 
 export function encodeArgs(
   classId: number,
   methodId: number,
-  args: any
+  args: Record<string, enc.AmqpOptionalFieldValue>
 ): Uint8Array {
   switch (classId) {
     case 10:
@@ -11,159 +21,71 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "octet",
-                value: args["versionMajor"] !== undefined
-                  ? args["versionMajor"]
-                  : 0
-              },
-              {
-                type: "octet",
-                value: args["versionMinor"] !== undefined
-                  ? args["versionMinor"]
-                  : 9
-              },
-              { type: "table", value: args["serverProperties"] },
-              {
-                type: "longstr",
-                value: args["mechanisms"] !== undefined
-                  ? args["mechanisms"]
-                  : "PLAIN"
-              },
-              {
-                type: "longstr",
-                value: args["locales"] !== undefined
-                  ? args["locales"]
-                  : "en_US"
-              }
+              field("octet", args["versionMajor"], 0),
+              field("octet", args["versionMinor"], 9),
+              field("table", args["serverProperties"], undefined),
+              field("longstr", args["mechanisms"], "PLAIN"),
+              field("longstr", args["locales"], "en_US")
             ]);
-            break;
           case 11:
             return enc.encodeFields([
-              { type: "table", value: args["clientProperties"] },
-              {
-                type: "shortstr",
-                value: args["mechanism"] !== undefined
-                  ? args["mechanism"]
-                  : "PLAIN"
-              },
-              { type: "longstr", value: args["response"] },
-              {
-                type: "shortstr",
-                value: args["locale"] !== undefined ? args["locale"] : "en_US"
-              }
+              field("table", args["clientProperties"], undefined),
+              field("shortstr", args["mechanism"], "PLAIN"),
+              field("longstr", args["response"], undefined),
+              field("shortstr", args["locale"], "en_US")
             ]);
-            break;
           case 20:
             return enc.encodeFields([
-              { type: "longstr", value: args["challenge"] }
+              field("longstr", args["challenge"], undefined)
             ]);
-            break;
           case 21:
             return enc.encodeFields([
-              { type: "longstr", value: args["response"] }
+              field("longstr", args["response"], undefined)
             ]);
-            break;
           case 30:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["channelMax"] !== undefined
-                  ? args["channelMax"]
-                  : 0
-              },
-              {
-                type: "long",
-                value: args["frameMax"] !== undefined ? args["frameMax"] : 0
-              },
-              {
-                type: "short",
-                value: args["heartbeat"] !== undefined ? args["heartbeat"] : 0
-              }
+              field("short", args["channelMax"], 0),
+              field("long", args["frameMax"], 0),
+              field("short", args["heartbeat"], 0)
             ]);
-            break;
           case 31:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["channelMax"] !== undefined
-                  ? args["channelMax"]
-                  : 0
-              },
-              {
-                type: "long",
-                value: args["frameMax"] !== undefined ? args["frameMax"] : 0
-              },
-              {
-                type: "short",
-                value: args["heartbeat"] !== undefined ? args["heartbeat"] : 0
-              }
+              field("short", args["channelMax"], 0),
+              field("long", args["frameMax"], 0),
+              field("short", args["heartbeat"], 0)
             ]);
-            break;
           case 40:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["virtualHost"] !== undefined
-                  ? args["virtualHost"]
-                  : "/"
-              },
-              {
-                type: "shortstr",
-                value: args["capabilities"] !== undefined
-                  ? args["capabilities"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["insist"] !== undefined ? args["insist"] : false
-              }
+              field("shortstr", args["virtualHost"], "/"),
+              field("shortstr", args["capabilities"], ""),
+              field("bit", args["insist"], false)
             ]);
-            break;
           case 41:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["knownHosts"] !== undefined
-                  ? args["knownHosts"]
-                  : ""
-              }
+              field("shortstr", args["knownHosts"], "")
             ]);
-            break;
           case 50:
             return enc.encodeFields([
-              { type: "short", value: args["replyCode"] },
-              {
-                type: "shortstr",
-                value: args["replyText"] !== undefined ? args["replyText"] : ""
-              },
-              { type: "short", value: args["classId"] },
-              { type: "short", value: args["methodId"] }
+              field("short", args["replyCode"], undefined),
+              field("shortstr", args["replyText"], ""),
+              field("short", args["classId"], undefined),
+              field("short", args["methodId"], undefined)
             ]);
-            break;
           case 51:
             return enc.encodeFields([]);
-            break;
           case 60:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["reason"] !== undefined ? args["reason"] : ""
-              }
+              field("shortstr", args["reason"], "")
             ]);
-            break;
           case 61:
             return enc.encodeFields([]);
-            break;
           case 70:
             return enc.encodeFields([
-              { type: "longstr", value: args["newSecret"] },
-              { type: "shortstr", value: args["reason"] }
+              field("longstr", args["newSecret"], undefined),
+              field("shortstr", args["reason"], undefined)
             ]);
-            break;
           case 71:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -173,44 +95,29 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["outOfBand"] !== undefined ? args["outOfBand"] : ""
-              }
+              field("shortstr", args["outOfBand"], "")
             ]);
-            break;
           case 11:
             return enc.encodeFields([
-              {
-                type: "longstr",
-                value: args["channelId"] !== undefined ? args["channelId"] : ""
-              }
+              field("longstr", args["channelId"], "")
             ]);
-            break;
           case 20:
             return enc.encodeFields([
-              { type: "bit", value: args["active"] }
+              field("bit", args["active"], undefined)
             ]);
-            break;
           case 21:
             return enc.encodeFields([
-              { type: "bit", value: args["active"] }
+              field("bit", args["active"], undefined)
             ]);
-            break;
           case 40:
             return enc.encodeFields([
-              { type: "short", value: args["replyCode"] },
-              {
-                type: "shortstr",
-                value: args["replyText"] !== undefined ? args["replyText"] : ""
-              },
-              { type: "short", value: args["classId"] },
-              { type: "short", value: args["methodId"] }
+              field("short", args["replyCode"], undefined),
+              field("shortstr", args["replyText"], ""),
+              field("short", args["classId"], undefined),
+              field("short", args["methodId"], undefined)
             ]);
-            break;
           case 41:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -220,42 +127,17 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["realm"] !== undefined ? args["realm"] : "/data"
-              },
-              {
-                type: "bit",
-                value: args["exclusive"] !== undefined
-                  ? args["exclusive"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["passive"] !== undefined ? args["passive"] : true
-              },
-              {
-                type: "bit",
-                value: args["active"] !== undefined ? args["active"] : true
-              },
-              {
-                type: "bit",
-                value: args["write"] !== undefined ? args["write"] : true
-              },
-              {
-                type: "bit",
-                value: args["read"] !== undefined ? args["read"] : true
-              }
+              field("shortstr", args["realm"], "/data"),
+              field("bit", args["exclusive"], false),
+              field("bit", args["passive"], true),
+              field("bit", args["active"], true),
+              field("bit", args["write"], true),
+              field("bit", args["read"], true)
             ]);
-            break;
           case 11:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 1
-              }
+              field("short", args["ticket"], 1)
             ]);
-            break;
         }
       }
       break;
@@ -265,124 +147,49 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              { type: "shortstr", value: args["exchange"] },
-              {
-                type: "shortstr",
-                value: args["type"] !== undefined ? args["type"] : "direct"
-              },
-              {
-                type: "bit",
-                value: args["passive"] !== undefined ? args["passive"] : false
-              },
-              {
-                type: "bit",
-                value: args["durable"] !== undefined ? args["durable"] : false
-              },
-              {
-                type: "bit",
-                value: args["autoDelete"] !== undefined
-                  ? args["autoDelete"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["internal"] !== undefined
-                  ? args["internal"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["type"], "direct"),
+              field("bit", args["passive"], false),
+              field("bit", args["durable"], false),
+              field("bit", args["autoDelete"], false),
+              field("bit", args["internal"], false),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 11:
             return enc.encodeFields([]);
-            break;
           case 20:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              { type: "shortstr", value: args["exchange"] },
-              {
-                type: "bit",
-                value: args["ifUnused"] !== undefined
-                  ? args["ifUnused"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["exchange"], undefined),
+              field("bit", args["ifUnused"], false),
+              field("bit", args["nowait"], false)
             ]);
-            break;
           case 21:
             return enc.encodeFields([]);
-            break;
           case 30:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              { type: "shortstr", value: args["destination"] },
-              { type: "shortstr", value: args["source"] },
-              {
-                type: "shortstr",
-                value: args["routingKey"] !== undefined
-                  ? args["routingKey"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["destination"], undefined),
+              field("shortstr", args["source"], undefined),
+              field("shortstr", args["routingKey"], ""),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 31:
             return enc.encodeFields([]);
-            break;
           case 40:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              { type: "shortstr", value: args["destination"] },
-              { type: "shortstr", value: args["source"] },
-              {
-                type: "shortstr",
-                value: args["routingKey"] !== undefined
-                  ? args["routingKey"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["destination"], undefined),
+              field("shortstr", args["source"], undefined),
+              field("shortstr", args["routingKey"], ""),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 51:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -392,159 +199,64 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              {
-                type: "bit",
-                value: args["passive"] !== undefined ? args["passive"] : false
-              },
-              {
-                type: "bit",
-                value: args["durable"] !== undefined ? args["durable"] : false
-              },
-              {
-                type: "bit",
-                value: args["exclusive"] !== undefined
-                  ? args["exclusive"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["autoDelete"] !== undefined
-                  ? args["autoDelete"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("bit", args["passive"], false),
+              field("bit", args["durable"], false),
+              field("bit", args["exclusive"], false),
+              field("bit", args["autoDelete"], false),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 11:
             return enc.encodeFields([
-              { type: "shortstr", value: args["queue"] },
-              { type: "long", value: args["messageCount"] },
-              { type: "long", value: args["consumerCount"] }
+              field("shortstr", args["queue"], undefined),
+              field("long", args["messageCount"], undefined),
+              field("long", args["consumerCount"], undefined)
             ]);
-            break;
           case 20:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              { type: "shortstr", value: args["exchange"] },
-              {
-                type: "shortstr",
-                value: args["routingKey"] !== undefined
-                  ? args["routingKey"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["routingKey"], ""),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 21:
             return enc.encodeFields([]);
-            break;
           case 30:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("bit", args["nowait"], false)
             ]);
-            break;
           case 31:
             return enc.encodeFields([
-              { type: "long", value: args["messageCount"] }
+              field("long", args["messageCount"], undefined)
             ]);
-            break;
           case 40:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              {
-                type: "bit",
-                value: args["ifUnused"] !== undefined
-                  ? args["ifUnused"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["ifEmpty"] !== undefined ? args["ifEmpty"] : false
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("bit", args["ifUnused"], false),
+              field("bit", args["ifEmpty"], false),
+              field("bit", args["nowait"], false)
             ]);
-            break;
           case 41:
             return enc.encodeFields([
-              { type: "long", value: args["messageCount"] }
+              field("long", args["messageCount"], undefined)
             ]);
-            break;
           case 50:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              { type: "shortstr", value: args["exchange"] },
-              {
-                type: "shortstr",
-                value: args["routingKey"] !== undefined
-                  ? args["routingKey"]
-                  : ""
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["routingKey"], ""),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 51:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -554,243 +266,103 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "long",
-                value: args["prefetchSize"] !== undefined
-                  ? args["prefetchSize"]
-                  : 0
-              },
-              {
-                type: "short",
-                value: args["prefetchCount"] !== undefined
-                  ? args["prefetchCount"]
-                  : 0
-              },
-              {
-                type: "bit",
-                value: args["global"] !== undefined ? args["global"] : false
-              }
+              field("long", args["prefetchSize"], 0),
+              field("short", args["prefetchCount"], 0),
+              field("bit", args["global"], false)
             ]);
-            break;
           case 11:
             return enc.encodeFields([]);
-            break;
           case 20:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              {
-                type: "shortstr",
-                value: args["consumerTag"] !== undefined
-                  ? args["consumerTag"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["noLocal"] !== undefined ? args["noLocal"] : false
-              },
-              {
-                type: "bit",
-                value: args["noAck"] !== undefined ? args["noAck"] : false
-              },
-              {
-                type: "bit",
-                value: args["exclusive"] !== undefined
-                  ? args["exclusive"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              },
-              {
-                type: "table",
-                value: args["arguments"] !== undefined ? args["arguments"] : {}
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("shortstr", args["consumerTag"], ""),
+              field("bit", args["noLocal"], false),
+              field("bit", args["noAck"], false),
+              field("bit", args["exclusive"], false),
+              field("bit", args["nowait"], false),
+              field("table", args["arguments"], {})
             ]);
-            break;
           case 21:
             return enc.encodeFields([
-              { type: "shortstr", value: args["consumerTag"] }
+              field("shortstr", args["consumerTag"], undefined)
             ]);
-            break;
           case 30:
             return enc.encodeFields([
-              { type: "shortstr", value: args["consumerTag"] },
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              }
+              field("shortstr", args["consumerTag"], undefined),
+              field("bit", args["nowait"], false)
             ]);
-            break;
           case 31:
             return enc.encodeFields([
-              { type: "shortstr", value: args["consumerTag"] }
+              field("shortstr", args["consumerTag"], undefined)
             ]);
-            break;
           case 40:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["exchange"] !== undefined ? args["exchange"] : ""
-              },
-              {
-                type: "shortstr",
-                value: args["routingKey"] !== undefined
-                  ? args["routingKey"]
-                  : ""
-              },
-              {
-                type: "bit",
-                value: args["mandatory"] !== undefined
-                  ? args["mandatory"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["immediate"] !== undefined
-                  ? args["immediate"]
-                  : false
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["exchange"], ""),
+              field("shortstr", args["routingKey"], ""),
+              field("bit", args["mandatory"], false),
+              field("bit", args["immediate"], false)
             ]);
-            break;
           case 50:
             return enc.encodeFields([
-              { type: "short", value: args["replyCode"] },
-              {
-                type: "shortstr",
-                value: args["replyText"] !== undefined ? args["replyText"] : ""
-              },
-              { type: "shortstr", value: args["exchange"] },
-              { type: "shortstr", value: args["routingKey"] }
+              field("short", args["replyCode"], undefined),
+              field("shortstr", args["replyText"], ""),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["routingKey"], undefined)
             ]);
-            break;
           case 60:
             return enc.encodeFields([
-              { type: "shortstr", value: args["consumerTag"] },
-              { type: "longlong", value: args["deliveryTag"] },
-              {
-                type: "bit",
-                value: args["redelivered"] !== undefined
-                  ? args["redelivered"]
-                  : false
-              },
-              { type: "shortstr", value: args["exchange"] },
-              { type: "shortstr", value: args["routingKey"] }
+              field("shortstr", args["consumerTag"], undefined),
+              field("longlong", args["deliveryTag"], undefined),
+              field("bit", args["redelivered"], false),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["routingKey"], undefined)
             ]);
-            break;
           case 70:
             return enc.encodeFields([
-              {
-                type: "short",
-                value: args["ticket"] !== undefined ? args["ticket"] : 0
-              },
-              {
-                type: "shortstr",
-                value: args["queue"] !== undefined ? args["queue"] : ""
-              },
-              {
-                type: "bit",
-                value: args["noAck"] !== undefined ? args["noAck"] : false
-              }
+              field("short", args["ticket"], 0),
+              field("shortstr", args["queue"], ""),
+              field("bit", args["noAck"], false)
             ]);
-            break;
           case 71:
             return enc.encodeFields([
-              { type: "longlong", value: args["deliveryTag"] },
-              {
-                type: "bit",
-                value: args["redelivered"] !== undefined
-                  ? args["redelivered"]
-                  : false
-              },
-              { type: "shortstr", value: args["exchange"] },
-              { type: "shortstr", value: args["routingKey"] },
-              { type: "long", value: args["messageCount"] }
+              field("longlong", args["deliveryTag"], undefined),
+              field("bit", args["redelivered"], false),
+              field("shortstr", args["exchange"], undefined),
+              field("shortstr", args["routingKey"], undefined),
+              field("long", args["messageCount"], undefined)
             ]);
-            break;
           case 72:
             return enc.encodeFields([
-              {
-                type: "shortstr",
-                value: args["clusterId"] !== undefined ? args["clusterId"] : ""
-              }
+              field("shortstr", args["clusterId"], "")
             ]);
-            break;
           case 80:
             return enc.encodeFields([
-              {
-                type: "longlong",
-                value: args["deliveryTag"] !== undefined
-                  ? args["deliveryTag"]
-                  : 0
-              },
-              {
-                type: "bit",
-                value: args["multiple"] !== undefined
-                  ? args["multiple"]
-                  : false
-              }
+              field("longlong", args["deliveryTag"], 0),
+              field("bit", args["multiple"], false)
             ]);
-            break;
           case 90:
             return enc.encodeFields([
-              { type: "longlong", value: args["deliveryTag"] },
-              {
-                type: "bit",
-                value: args["requeue"] !== undefined ? args["requeue"] : true
-              }
+              field("longlong", args["deliveryTag"], undefined),
+              field("bit", args["requeue"], true)
             ]);
-            break;
           case 100:
             return enc.encodeFields([
-              {
-                type: "bit",
-                value: args["requeue"] !== undefined ? args["requeue"] : false
-              }
+              field("bit", args["requeue"], false)
             ]);
-            break;
           case 110:
             return enc.encodeFields([
-              {
-                type: "bit",
-                value: args["requeue"] !== undefined ? args["requeue"] : false
-              }
+              field("bit", args["requeue"], false)
             ]);
-            break;
           case 111:
             return enc.encodeFields([]);
-            break;
           case 120:
             return enc.encodeFields([
-              {
-                type: "longlong",
-                value: args["deliveryTag"] !== undefined
-                  ? args["deliveryTag"]
-                  : 0
-              },
-              {
-                type: "bit",
-                value: args["multiple"] !== undefined
-                  ? args["multiple"]
-                  : false
-              },
-              {
-                type: "bit",
-                value: args["requeue"] !== undefined ? args["requeue"] : true
-              }
+              field("longlong", args["deliveryTag"], 0),
+              field("bit", args["multiple"], false),
+              field("bit", args["requeue"], true)
             ]);
-            break;
         }
       }
       break;
@@ -800,22 +372,16 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([]);
-            break;
           case 11:
             return enc.encodeFields([]);
-            break;
           case 20:
             return enc.encodeFields([]);
-            break;
           case 21:
             return enc.encodeFields([]);
-            break;
           case 30:
             return enc.encodeFields([]);
-            break;
           case 31:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -825,15 +391,10 @@ export function encodeArgs(
         switch (methodId) {
           case 10:
             return enc.encodeFields([
-              {
-                type: "bit",
-                value: args["nowait"] !== undefined ? args["nowait"] : false
-              }
+              field("bit", args["nowait"], false)
             ]);
-            break;
           case 11:
             return enc.encodeFields([]);
-            break;
         }
       }
       break;
@@ -846,7 +407,7 @@ export function decodeArgs(
   r: Deno.SyncReader,
   classId: number,
   methodId: number
-): any {
+): Record<string, enc.AmqpFieldValue> {
   switch (classId) {
     case 10: {
       switch (methodId) {
@@ -856,11 +417,11 @@ export function decodeArgs(
             ["octet", "octet", "table", "longstr", "longstr"]
           );
           const args = {
-            versionMajor: fields[0].value,
-            versionMinor: fields[1].value,
-            serverProperties: fields[2].value,
-            mechanisms: fields[3].value,
-            locales: fields[4].value
+            versionMajor: fields[0],
+            versionMinor: fields[1],
+            serverProperties: fields[2],
+            mechanisms: fields[3],
+            locales: fields[4]
           };
           return args;
         }
@@ -870,53 +431,53 @@ export function decodeArgs(
             ["table", "shortstr", "longstr", "shortstr"]
           );
           const args = {
-            clientProperties: fields[0].value,
-            mechanism: fields[1].value,
-            response: fields[2].value,
-            locale: fields[3].value
+            clientProperties: fields[0],
+            mechanism: fields[1],
+            response: fields[2],
+            locale: fields[3]
           };
           return args;
         }
         case 20: {
           const fields = enc.decodeFields(r, ["longstr"]);
-          const args = { challenge: fields[0].value };
+          const args = { challenge: fields[0] };
           return args;
         }
         case 21: {
           const fields = enc.decodeFields(r, ["longstr"]);
-          const args = { response: fields[0].value };
+          const args = { response: fields[0] };
           return args;
         }
         case 30: {
           const fields = enc.decodeFields(r, ["short", "long", "short"]);
           const args = {
-            channelMax: fields[0].value,
-            frameMax: fields[1].value,
-            heartbeat: fields[2].value
+            channelMax: fields[0],
+            frameMax: fields[1],
+            heartbeat: fields[2]
           };
           return args;
         }
         case 31: {
           const fields = enc.decodeFields(r, ["short", "long", "short"]);
           const args = {
-            channelMax: fields[0].value,
-            frameMax: fields[1].value,
-            heartbeat: fields[2].value
+            channelMax: fields[0],
+            frameMax: fields[1],
+            heartbeat: fields[2]
           };
           return args;
         }
         case 40: {
           const fields = enc.decodeFields(r, ["shortstr", "shortstr", "bit"]);
           const args = {
-            virtualHost: fields[0].value,
-            capabilities: fields[1].value,
-            insist: fields[2].value
+            virtualHost: fields[0],
+            capabilities: fields[1],
+            insist: fields[2]
           };
           return args;
         }
         case 41: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { knownHosts: fields[0].value };
+          const args = { knownHosts: fields[0] };
           return args;
         }
         case 50: {
@@ -925,10 +486,10 @@ export function decodeArgs(
             ["short", "shortstr", "short", "short"]
           );
           const args = {
-            replyCode: fields[0].value,
-            replyText: fields[1].value,
-            classId: fields[2].value,
-            methodId: fields[3].value
+            replyCode: fields[0],
+            replyText: fields[1],
+            classId: fields[2],
+            methodId: fields[3]
           };
           return args;
         }
@@ -939,7 +500,7 @@ export function decodeArgs(
         }
         case 60: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { reason: fields[0].value };
+          const args = { reason: fields[0] };
           return args;
         }
         case 61: {
@@ -949,7 +510,7 @@ export function decodeArgs(
         }
         case 70: {
           const fields = enc.decodeFields(r, ["longstr", "shortstr"]);
-          const args = { newSecret: fields[0].value, reason: fields[1].value };
+          const args = { newSecret: fields[0], reason: fields[1] };
           return args;
         }
         case 71: {
@@ -964,22 +525,22 @@ export function decodeArgs(
       switch (methodId) {
         case 10: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { outOfBand: fields[0].value };
+          const args = { outOfBand: fields[0] };
           return args;
         }
         case 11: {
           const fields = enc.decodeFields(r, ["longstr"]);
-          const args = { channelId: fields[0].value };
+          const args = { channelId: fields[0] };
           return args;
         }
         case 20: {
           const fields = enc.decodeFields(r, ["bit"]);
-          const args = { active: fields[0].value };
+          const args = { active: fields[0] };
           return args;
         }
         case 21: {
           const fields = enc.decodeFields(r, ["bit"]);
-          const args = { active: fields[0].value };
+          const args = { active: fields[0] };
           return args;
         }
         case 40: {
@@ -988,10 +549,10 @@ export function decodeArgs(
             ["short", "shortstr", "short", "short"]
           );
           const args = {
-            replyCode: fields[0].value,
-            replyText: fields[1].value,
-            classId: fields[2].value,
-            methodId: fields[3].value
+            replyCode: fields[0],
+            replyText: fields[1],
+            classId: fields[2],
+            methodId: fields[3]
           };
           return args;
         }
@@ -1011,18 +572,18 @@ export function decodeArgs(
             ["shortstr", "bit", "bit", "bit", "bit", "bit"]
           );
           const args = {
-            realm: fields[0].value,
-            exclusive: fields[1].value,
-            passive: fields[2].value,
-            active: fields[3].value,
-            write: fields[4].value,
-            read: fields[5].value
+            realm: fields[0],
+            exclusive: fields[1],
+            passive: fields[2],
+            active: fields[3],
+            write: fields[4],
+            read: fields[5]
           };
           return args;
         }
         case 11: {
           const fields = enc.decodeFields(r, ["short"]);
-          const args = { ticket: fields[0].value };
+          const args = { ticket: fields[0] };
           return args;
         }
       }
@@ -1046,15 +607,15 @@ export function decodeArgs(
             ]
           );
           const args = {
-            ticket: fields[0].value,
-            exchange: fields[1].value,
-            type: fields[2].value,
-            passive: fields[3].value,
-            durable: fields[4].value,
-            autoDelete: fields[5].value,
-            internal: fields[6].value,
-            nowait: fields[7].value,
-            arguments: fields[8].value
+            ticket: fields[0],
+            exchange: fields[1],
+            type: fields[2],
+            passive: fields[3],
+            durable: fields[4],
+            autoDelete: fields[5],
+            internal: fields[6],
+            nowait: fields[7],
+            arguments: fields[8]
           };
           return args;
         }
@@ -1069,10 +630,10 @@ export function decodeArgs(
             ["short", "shortstr", "bit", "bit"]
           );
           const args = {
-            ticket: fields[0].value,
-            exchange: fields[1].value,
-            ifUnused: fields[2].value,
-            nowait: fields[3].value
+            ticket: fields[0],
+            exchange: fields[1],
+            ifUnused: fields[2],
+            nowait: fields[3]
           };
           return args;
         }
@@ -1087,12 +648,12 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "shortstr", "bit", "table"]
           );
           const args = {
-            ticket: fields[0].value,
-            destination: fields[1].value,
-            source: fields[2].value,
-            routingKey: fields[3].value,
-            nowait: fields[4].value,
-            arguments: fields[5].value
+            ticket: fields[0],
+            destination: fields[1],
+            source: fields[2],
+            routingKey: fields[3],
+            nowait: fields[4],
+            arguments: fields[5]
           };
           return args;
         }
@@ -1107,12 +668,12 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "shortstr", "bit", "table"]
           );
           const args = {
-            ticket: fields[0].value,
-            destination: fields[1].value,
-            source: fields[2].value,
-            routingKey: fields[3].value,
-            nowait: fields[4].value,
-            arguments: fields[5].value
+            ticket: fields[0],
+            destination: fields[1],
+            source: fields[2],
+            routingKey: fields[3],
+            nowait: fields[4],
+            arguments: fields[5]
           };
           return args;
         }
@@ -1132,23 +693,23 @@ export function decodeArgs(
             ["short", "shortstr", "bit", "bit", "bit", "bit", "bit", "table"]
           );
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            passive: fields[2].value,
-            durable: fields[3].value,
-            exclusive: fields[4].value,
-            autoDelete: fields[5].value,
-            nowait: fields[6].value,
-            arguments: fields[7].value
+            ticket: fields[0],
+            queue: fields[1],
+            passive: fields[2],
+            durable: fields[3],
+            exclusive: fields[4],
+            autoDelete: fields[5],
+            nowait: fields[6],
+            arguments: fields[7]
           };
           return args;
         }
         case 11: {
           const fields = enc.decodeFields(r, ["shortstr", "long", "long"]);
           const args = {
-            queue: fields[0].value,
-            messageCount: fields[1].value,
-            consumerCount: fields[2].value
+            queue: fields[0],
+            messageCount: fields[1],
+            consumerCount: fields[2]
           };
           return args;
         }
@@ -1158,12 +719,12 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "shortstr", "bit", "table"]
           );
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            exchange: fields[2].value,
-            routingKey: fields[3].value,
-            nowait: fields[4].value,
-            arguments: fields[5].value
+            ticket: fields[0],
+            queue: fields[1],
+            exchange: fields[2],
+            routingKey: fields[3],
+            nowait: fields[4],
+            arguments: fields[5]
           };
           return args;
         }
@@ -1175,15 +736,15 @@ export function decodeArgs(
         case 30: {
           const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            nowait: fields[2].value
+            ticket: fields[0],
+            queue: fields[1],
+            nowait: fields[2]
           };
           return args;
         }
         case 31: {
           const fields = enc.decodeFields(r, ["long"]);
-          const args = { messageCount: fields[0].value };
+          const args = { messageCount: fields[0] };
           return args;
         }
         case 40: {
@@ -1192,17 +753,17 @@ export function decodeArgs(
             ["short", "shortstr", "bit", "bit", "bit"]
           );
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            ifUnused: fields[2].value,
-            ifEmpty: fields[3].value,
-            nowait: fields[4].value
+            ticket: fields[0],
+            queue: fields[1],
+            ifUnused: fields[2],
+            ifEmpty: fields[3],
+            nowait: fields[4]
           };
           return args;
         }
         case 41: {
           const fields = enc.decodeFields(r, ["long"]);
-          const args = { messageCount: fields[0].value };
+          const args = { messageCount: fields[0] };
           return args;
         }
         case 50: {
@@ -1211,11 +772,11 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "shortstr", "table"]
           );
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            exchange: fields[2].value,
-            routingKey: fields[3].value,
-            arguments: fields[4].value
+            ticket: fields[0],
+            queue: fields[1],
+            exchange: fields[2],
+            routingKey: fields[3],
+            arguments: fields[4]
           };
           return args;
         }
@@ -1232,9 +793,9 @@ export function decodeArgs(
         case 10: {
           const fields = enc.decodeFields(r, ["long", "short", "bit"]);
           const args = {
-            prefetchSize: fields[0].value,
-            prefetchCount: fields[1].value,
-            global: fields[2].value
+            prefetchSize: fields[0],
+            prefetchCount: fields[1],
+            global: fields[2]
           };
           return args;
         }
@@ -1258,33 +819,30 @@ export function decodeArgs(
             ]
           );
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            consumerTag: fields[2].value,
-            noLocal: fields[3].value,
-            noAck: fields[4].value,
-            exclusive: fields[5].value,
-            nowait: fields[6].value,
-            arguments: fields[7].value
+            ticket: fields[0],
+            queue: fields[1],
+            consumerTag: fields[2],
+            noLocal: fields[3],
+            noAck: fields[4],
+            exclusive: fields[5],
+            nowait: fields[6],
+            arguments: fields[7]
           };
           return args;
         }
         case 21: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { consumerTag: fields[0].value };
+          const args = { consumerTag: fields[0] };
           return args;
         }
         case 30: {
           const fields = enc.decodeFields(r, ["shortstr", "bit"]);
-          const args = {
-            consumerTag: fields[0].value,
-            nowait: fields[1].value
-          };
+          const args = { consumerTag: fields[0], nowait: fields[1] };
           return args;
         }
         case 31: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { consumerTag: fields[0].value };
+          const args = { consumerTag: fields[0] };
           return args;
         }
         case 40: {
@@ -1293,11 +851,11 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "bit", "bit"]
           );
           const args = {
-            ticket: fields[0].value,
-            exchange: fields[1].value,
-            routingKey: fields[2].value,
-            mandatory: fields[3].value,
-            immediate: fields[4].value
+            ticket: fields[0],
+            exchange: fields[1],
+            routingKey: fields[2],
+            mandatory: fields[3],
+            immediate: fields[4]
           };
           return args;
         }
@@ -1307,10 +865,10 @@ export function decodeArgs(
             ["short", "shortstr", "shortstr", "shortstr"]
           );
           const args = {
-            replyCode: fields[0].value,
-            replyText: fields[1].value,
-            exchange: fields[2].value,
-            routingKey: fields[3].value
+            replyCode: fields[0],
+            replyText: fields[1],
+            exchange: fields[2],
+            routingKey: fields[3]
           };
           return args;
         }
@@ -1320,20 +878,20 @@ export function decodeArgs(
             ["shortstr", "longlong", "bit", "shortstr", "shortstr"]
           );
           const args = {
-            consumerTag: fields[0].value,
-            deliveryTag: fields[1].value,
-            redelivered: fields[2].value,
-            exchange: fields[3].value,
-            routingKey: fields[4].value
+            consumerTag: fields[0],
+            deliveryTag: fields[1],
+            redelivered: fields[2],
+            exchange: fields[3],
+            routingKey: fields[4]
           };
           return args;
         }
         case 70: {
           const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
           const args = {
-            ticket: fields[0].value,
-            queue: fields[1].value,
-            noAck: fields[2].value
+            ticket: fields[0],
+            queue: fields[1],
+            noAck: fields[2]
           };
           return args;
         }
@@ -1343,43 +901,37 @@ export function decodeArgs(
             ["longlong", "bit", "shortstr", "shortstr", "long"]
           );
           const args = {
-            deliveryTag: fields[0].value,
-            redelivered: fields[1].value,
-            exchange: fields[2].value,
-            routingKey: fields[3].value,
-            messageCount: fields[4].value
+            deliveryTag: fields[0],
+            redelivered: fields[1],
+            exchange: fields[2],
+            routingKey: fields[3],
+            messageCount: fields[4]
           };
           return args;
         }
         case 72: {
           const fields = enc.decodeFields(r, ["shortstr"]);
-          const args = { clusterId: fields[0].value };
+          const args = { clusterId: fields[0] };
           return args;
         }
         case 80: {
           const fields = enc.decodeFields(r, ["longlong", "bit"]);
-          const args = {
-            deliveryTag: fields[0].value,
-            multiple: fields[1].value
-          };
+          const args = { deliveryTag: fields[0], multiple: fields[1] };
           return args;
         }
         case 90: {
           const fields = enc.decodeFields(r, ["longlong", "bit"]);
-          const args = {
-            deliveryTag: fields[0].value,
-            requeue: fields[1].value
-          };
+          const args = { deliveryTag: fields[0], requeue: fields[1] };
           return args;
         }
         case 100: {
           const fields = enc.decodeFields(r, ["bit"]);
-          const args = { requeue: fields[0].value };
+          const args = { requeue: fields[0] };
           return args;
         }
         case 110: {
           const fields = enc.decodeFields(r, ["bit"]);
-          const args = { requeue: fields[0].value };
+          const args = { requeue: fields[0] };
           return args;
         }
         case 111: {
@@ -1390,9 +942,9 @@ export function decodeArgs(
         case 120: {
           const fields = enc.decodeFields(r, ["longlong", "bit", "bit"]);
           const args = {
-            deliveryTag: fields[0].value,
-            multiple: fields[1].value,
-            requeue: fields[2].value
+            deliveryTag: fields[0],
+            multiple: fields[1],
+            requeue: fields[2]
           };
           return args;
         }
@@ -1438,7 +990,7 @@ export function decodeArgs(
       switch (methodId) {
         case 10: {
           const fields = enc.decodeFields(r, ["bit"]);
-          const args = { nowait: fields[0].value };
+          const args = { nowait: fields[0] };
           return args;
         }
         case 11: {
@@ -1453,7 +1005,10 @@ export function decodeArgs(
   throw new Error(`Unknown method ${classId} ${methodId}`);
 }
 
-export function encodeProps(classId: number, props: any): Uint8Array {
+export function encodeProps(
+  classId: number,
+  props: Record<string, enc.AmqpOptionalFieldValue>
+): Uint8Array {
   switch (classId) {
     case 10: {
       return enc.encodeProperties([]);
@@ -1472,20 +1027,20 @@ export function encodeProps(classId: number, props: any): Uint8Array {
     }
     case 60: {
       return enc.encodeProperties([
-        { type: "shortstr", value: props["contentType"] },
-        { type: "shortstr", value: props["contentEncoding"] },
-        { type: "table", value: props["headers"] },
-        { type: "octet", value: props["deliveryMode"] },
-        { type: "octet", value: props["priority"] },
-        { type: "shortstr", value: props["correlationId"] },
-        { type: "shortstr", value: props["replyTo"] },
-        { type: "shortstr", value: props["expiration"] },
-        { type: "shortstr", value: props["messageId"] },
-        { type: "timestamp", value: props["timestamp"] },
-        { type: "shortstr", value: props["type"] },
-        { type: "shortstr", value: props["userId"] },
-        { type: "shortstr", value: props["appId"] },
-        { type: "shortstr", value: props["clusterId"] }
+        field("shortstr", props["contentType"]),
+        field("shortstr", props["contentEncoding"]),
+        field("table", props["headers"]),
+        field("octet", props["deliveryMode"]),
+        field("octet", props["priority"]),
+        field("shortstr", props["correlationId"]),
+        field("shortstr", props["replyTo"]),
+        field("shortstr", props["expiration"]),
+        field("shortstr", props["messageId"]),
+        field("timestamp", props["timestamp"]),
+        field("shortstr", props["type"]),
+        field("shortstr", props["userId"]),
+        field("shortstr", props["appId"]),
+        field("shortstr", props["clusterId"])
       ]);
     }
     case 90: {
@@ -1499,7 +1054,10 @@ export function encodeProps(classId: number, props: any): Uint8Array {
   throw new Error(`Unknown class ${classId}`);
 }
 
-export function decodeProps(r: Deno.SyncReader, classId: number): any {
+export function decodeProps(r: Deno.SyncReader, classId: number): Record<
+  string,
+  enc.AmqpOptionalFieldValue
+> {
   switch (classId) {
     case 10: {
       const fields = enc.decodeProperties(r, []);
@@ -1552,20 +1110,20 @@ export function decodeProps(r: Deno.SyncReader, classId: number): any {
         ]
       );
       const props = {
-        contentType: fields[0].value,
-        contentEncoding: fields[1].value,
-        headers: fields[2].value,
-        deliveryMode: fields[3].value,
-        priority: fields[4].value,
-        correlationId: fields[5].value,
-        replyTo: fields[6].value,
-        expiration: fields[7].value,
-        messageId: fields[8].value,
-        timestamp: fields[9].value,
-        type: fields[10].value,
-        userId: fields[11].value,
-        appId: fields[12].value,
-        clusterId: fields[13].value
+        contentType: fields[0],
+        contentEncoding: fields[1],
+        headers: fields[2],
+        deliveryMode: fields[3],
+        priority: fields[4],
+        correlationId: fields[5],
+        replyTo: fields[6],
+        expiration: fields[7],
+        messageId: fields[8],
+        timestamp: fields[9],
+        type: fields[10],
+        userId: fields[11],
+        appId: fields[12],
+        clusterId: fields[13]
       };
 
       return props;
