@@ -64,7 +64,7 @@ export function pascalCase(name: string) {
 export function resolveTypescriptType(type: string) {
   switch (type) {
     case "longlong":
-      return "string";
+      return "bigint";
     case "long":
     case "short":
     case "octet":
@@ -77,7 +77,7 @@ export function resolveTypescriptType(type: string) {
     case "table":
       return "Record<string, unknown>";
     case "timestamp":
-      return "string";
+      return "bigint";
     default:
       throw new Error(`Unknown type '${type}'`);
   }

@@ -24,8 +24,18 @@ function printSendMethodDefinition(
     classId: ${clazz.id};
     methodId: ${method.id};
     args: ${pascalCase(clazz.name)}${pascalCase(method.name)}Args;
-    ${method.content ? `props: ${pascalCase(clazz.name)}Properties;` : ""}
-    ${method.content ? "data: Uint8Array" : ""}
+  }
+  `;
+}
+
+function printContentHeaderDefinition(
+  clazz: ClassDefinition
+) {
+  return `
+  export interface ${pascalCase(clazz.name)}Header {
+    classId: ${clazz.id};
+    props: ${pascalCase(clazz.name)}Properties;
+    size: number;
   }
   `;
 }
@@ -41,10 +51,14 @@ function printReceiveMethodDefinition(
     classId: ${clazz.id};
     methodId: ${method.id};
     args: ${pascalCase(clazz.name)}${pascalCase(method.name)};
-    ${method.content ? `props: ${pascalCase(clazz.name)}Properties;` : ""}
-    ${method.content ? "data: Uint8Array" : ""}
   }
   `;
+}
+
+function printHeader(spec: Spec) {
+  return `export type Header = ${spec.classes.map(c =>
+    `${pascalCase(c.name)}Header`
+  ).join(" | ")}`;
 }
 
 function printSendMethod(spec: Spec) {
@@ -74,8 +88,10 @@ function generateTypes() {
     ...spec.classes.flatMap(clazz =>
       clazz.methods.map(m => printReceiveMethodDefinition(clazz, m))
     ),
+    ...spec.classes.map(printContentHeaderDefinition),
     printSendMethod(spec),
-    printReceiveMethod(spec)
+    printReceiveMethod(spec),
+    printHeader(spec)
   ].join("\n");
 }
 

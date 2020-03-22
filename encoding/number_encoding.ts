@@ -1,6 +1,12 @@
 import { hex } from "../dependencies.ts";
+import {
+  putVarbig,
+  putVarnum,
+  varbig,
+  varnum
+} from "https://deno.land/std@v0.36.0/encoding/binary.ts";
 
-function readBytesSync(r: Deno.SyncReader, length: number): Uint8Array {
+function readBytesSync(r: Deno.SyncReader, length: number): DataView {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 
@@ -8,7 +14,12 @@ function readBytesSync(r: Deno.SyncReader, length: number): Uint8Array {
     throw new Error("Not enough data in buffer");
   }
 
-  return data;
+  return new DataView(data.buffer);
+}
+
+function createView(size: number): [DataView, Uint8Array] {
+  const p = new Uint8Array(size);
+  return [new DataView(p.buffer), p];
 }
 
 export function encodeOctet(value: number) {
@@ -20,7 +31,7 @@ export function encodeOctet(value: number) {
 }
 
 export function decodeOctet(r: Deno.SyncReader) {
-  return readBytesSync(r, 1)[0];
+  return readBytesSync(r, 1).getUint8(0);
 }
 
 export function encodeShortUint(value: number) {
@@ -28,36 +39,33 @@ export function encodeShortUint(value: number) {
     throw new Error("Invalid value for short-uint");
   }
 
-  return new Uint8Array([value >>> 8, value]);
+  const p = new Uint8Array(2);
+  const view = new DataView(p.buffer);
+  view.setUint16(0, value);
+  return p;
 }
 
 export function decodeShortUint(buf: Deno.SyncReader) {
-  const data = readBytesSync(buf, 2);
-  return (data[0] << 8) + data[1];
+  const view = new DataView(readBytesSync(buf, 2).buffer);
+  return view.getUint16(0);
 }
 
 export function encodeLongUint(value: number) {
-  if (value < 0 || value > 0xffffffff) {
-    throw new Error("Invalid value for long-uint");
-  }
-
-  return new Uint8Array([value >>> 24, value >>> 16, value >>> 8, value]);
+  const [view, p] = createView(4);
+  view.setUint32(0, value);
+  return p;
 }
 
 export function decodeLongUint(r: Deno.SyncReader) {
-  const data = readBytesSync(r, 4);
-  const value = (data[0] << 24) + (data[1] << 16) + (data[2] << 8) + data[3];
-  return value;
+  return readBytesSync(r, 4).getUint32(0);
 }
 
-export function encodeLongLongUint(value: string) {
-  if (value.length !== 16) {
-    throw new Error("longlong uint must be 16 characters");
-  }
-  return hex.decodeString(value);
+export function encodeLongLongUint(value: bigint) {
+  const [view, p] = createView(8);
+  view.setBigUint64(0, value);
+  return p;
 }
 
-export function decodeLongLongUint(r: Deno.SyncReader): string {
-  const bytes = readBytesSync(r, 8);
-  return hex.encodeToString(bytes);
+export function decodeLongLongUint(r: Deno.SyncReader): bigint {
+  return readBytesSync(r, 8).getBigUint64(0);
 }

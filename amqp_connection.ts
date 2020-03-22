@@ -81,13 +81,13 @@ export class AmqpConnection {
   async open() {
     await this.socket.start();
 
-    await this.channel0.receive(CONNECTION, CONNECTION_START);
+    await this.channel0.receiveMethod(CONNECTION, CONNECTION_START);
     await this.channel0.send(CONNECTION, CONNECTION_START_OK, {
       clientProperties: {},
       response: credentials(this.username, this.password)
     });
 
-    await this.channel0.receive(CONNECTION, CONNECTION_TUNE).then(
+    await this.channel0.receiveMethod(CONNECTION, CONNECTION_TUNE).then(
       async args => {
         const interval = this.heartbeatInterval !== undefined
           ? this.heartbeatInterval
@@ -109,7 +109,7 @@ export class AmqpConnection {
     );
 
     await this.channel0.send(10, CONNECTION_OPEN, {});
-    await this.channel0.receive(CONNECTION, CONNECTION_OPEN_OK);
+    await this.channel0.receiveMethod(CONNECTION, CONNECTION_OPEN_OK);
   }
 
   async close(args?: Partial<ConnectionCloseArgs>) {
@@ -120,7 +120,7 @@ export class AmqpConnection {
       replyText: args?.replyText
     });
 
-    await this.channel0.receive(CONNECTION, CONNECTION_CLOSE_OK);
+    await this.channel0.receiveMethod(CONNECTION, CONNECTION_CLOSE_OK);
   }
 
   createChannel(): AmqpChannel {

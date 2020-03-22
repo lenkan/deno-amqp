@@ -30,12 +30,13 @@ export interface Header {
 
 export interface HeaderFrame {
   type: "header";
-  payload: Header;
+  payload: Uint8Array;
 }
 
 export interface MethodFrame {
   type: "method";
-  payload: Method;
+  payload: Uint8Array;
+  //  Pick<SendMethod, "classId" | "args" | "methodId">; // Method;
 }
 
 export interface ContentFrame {

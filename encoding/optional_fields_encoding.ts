@@ -4,7 +4,9 @@ import {
   decodeField,
   AmqpField,
   AmqpFieldType,
-  AmqpNumberField
+  AmqpNumberField,
+  AmqpBigintField,
+  AmqpStringField
 } from "./fields_encoding.ts";
 import { decodeBits, encodeBits } from "./bit_field_encoding.ts";
 
@@ -13,8 +15,13 @@ export interface AmqpOptionalNumberField {
   value: number | undefined;
 }
 
+export interface AmqpOptionalBigintField {
+  type: AmqpBigintField["type"];
+  value: bigint | undefined;
+}
+
 export interface AmqpOptionalStringField {
-  type: "shortstr" | "longstr" | "longlong" | "timestamp";
+  type: AmqpStringField["type"];
   value: string | undefined;
 }
 
@@ -29,6 +36,7 @@ export interface AmqpOptionalTableField {
 }
 
 export type AmqpOptionalField = AmqpOptionalNumberField
+  | AmqpOptionalBigintField
   | AmqpOptionalStringField
   | AmqpOptionalBitField
   | AmqpOptionalTableField;

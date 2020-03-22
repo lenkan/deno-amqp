@@ -4,7 +4,8 @@ import {
   resolveType,
   camelCase,
   ClassDefinition,
-  ArgumentDefinition
+  ArgumentDefinition,
+  resolveTypescriptType
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
@@ -24,21 +25,40 @@ function getArgValue(varName: string, arg: ArgumentDefinition) {
   return argValue;
 }
 
+function getDefaultValue(a: ArgumentDefinition) {
+  if (a["default-value"] === undefined) {
+    return undefined;
+  }
+
+  const type = resolveType(spec, a);
+  const tsType = resolveTypescriptType(type);
+  if (tsType === "bigint") {
+    return `BigInt(${JSON.stringify(a["default-value"])})`;
+  }
+
+  return JSON.stringify(a["default-value"]);
+}
+
 function printMethodArgsEncoding(
   method: MethodDefinition
 ) {
-  return `enc.encodeFields([
+  return `
+  w.writeSync(enc.encodeFields([
     ${method.arguments.map(arg => {
     const type = resolveType(spec, arg);
     const name = camelCase(arg.name);
-    const defaultValue = JSON.stringify(arg["default-value"]);
-    return `field("${type}", args["${name}"], ${defaultValue})`;
+    const defaultValue = getDefaultValue(arg);
+    const value = arg["default-value"] !== undefined
+      ? `method.args.${name} !== undefined ? method.args.${name} : ${defaultValue}`
+      : `method.args.${name}`;
+    return `{ type: "${type}" as const, value: ${value} }`;
   }).join(",")}
-  ]);`;
+  ]));
+  return w.bytes();
+  `;
 }
 
 function printMethodDecoding(
-  clazz: ClassDefinition,
   method: MethodDefinition
 ) {
   return `
@@ -46,21 +66,26 @@ function printMethodDecoding(
     '"' + resolveType(spec, a) + '"'
   ).join(",")}]);
   const args = { ${method.arguments.map((a, i) =>
-    `${camelCase(a.name)}: fields[${i}]`
+    `${camelCase(a.name)}: fields[${i}] as ${resolveTypescriptType(
+      resolveType(spec, a)
+    )}`
   ).join(",")}}
-  return args;
+  return { classId, methodId, args };
   `;
 }
 
 function printHeaderEncoding(
   clazz: ClassDefinition
 ) {
-  return `enc.encodeOptionalFields([
+  return `
+  w.writeSync(enc.encodeOptionalFields([
     ${(clazz.properties || []).map(prop => {
     const name = camelCase(prop.name);
-    return `field("${prop.type}", props["${name}"])`;
+    return `{ type: "${prop.type}", value: header.props.${name} }`;
   }).join(",")}
-  ]);`;
+  ]));
+  return w.bytes();
+  `;
 }
 
 function printHeaderDecoding(
@@ -71,23 +96,26 @@ function printHeaderDecoding(
     p => '"' + p.type + '"'
   ).join(",")}]);
   const props = { ${(clazz.properties || []).map((p, i) =>
-    `${camelCase(p.name)}: fields[${i}]`
+    `${camelCase(p.name)}: fields[${i}] as ${resolveTypescriptType(p.type)}`
   ).join(",")}};
 
-  return props;
+  return { classId, size, props };
   `;
 }
 
 function printMethodEncoder(spec: Spec) {
   return `
-export function encodeArgs(classId: number, methodId: number, args: Record<string, enc.AmqpOptionalFieldValue>) : Uint8Array {
-  switch(classId) {
+export function encodeMethod(method: SendMethod) : Uint8Array {
+  const w = new Deno.Buffer();
+  w.writeSync(enc.encodeShortUint(method.classId));
+  w.writeSync(enc.encodeShortUint(method.methodId));
+  switch(method.classId) {
     ${spec.classes.map(clazz => {
     return `
       case ${clazz.id}: { 
-        switch(methodId) {
+        switch(method.methodId) {
           ${clazz.methods.map(method => {
-      return `case ${method.id}: return ${printMethodArgsEncoding(
+      return `case ${method.id}: ${printMethodArgsEncoding(
         method
       )}; `;
     }).join("\n")}
@@ -97,15 +125,16 @@ export function encodeArgs(classId: number, methodId: number, args: Record<strin
      `;
   }).join("\n")}
   }
-
-  throw new Error(\`Unknown method \${classId} \${methodId}\`);
 }
   `;
 }
 
 function printMethodDecoder(spec: Spec) {
   return `
-export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number): Record<string, enc.AmqpFieldValue> {
+export function decodeMethod(data: Uint8Array): ReceiveMethod {
+  const r = new Deno.Buffer(data);
+  const classId = enc.decodeShortUint(r);
+  const methodId = enc.decodeShortUint(r);
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `
@@ -113,10 +142,11 @@ export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number
         switch(methodId) {
           ${clazz.methods.map(method => {
       return `case ${method.id}: {
-        ${printMethodDecoding(clazz, method)};
+        ${printMethodDecoding(method)};
       }`;
     }).join("\n")}
         }
+        break;
       }
      `;
   }).join("\n")}
@@ -129,21 +159,27 @@ export function decodeArgs(r: Deno.SyncReader, classId: number, methodId: number
 
 function printHeaderEncoder(spec: Spec) {
   return `
-export function encodeProps(classId: number, props: Record<string, enc.AmqpOptionalFieldValue>) : Uint8Array {
-  switch(classId) {
+export function encodeHeader(header: Header) : Uint8Array {
+  const w = new Deno.Buffer();
+  w.writeSync(enc.encodeShortUint(header.classId));
+  w.writeSync(enc.encodeShortUint(0));
+  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  switch(header.classId) {
     ${spec.classes.map(clazz => {
-    return `case ${clazz.id}: { return ${printHeaderEncoding(clazz)} };`;
+    return `case ${clazz.id}: { ${printHeaderEncoding(clazz)} };`;
   }).join("\n")}
   }
-
-  throw new Error(\`Unknown class \${classId}\`);
 }
   `;
 }
 
 function printPropsDecoder(spec: Spec) {
   return `
-export function decodeProps(r: Deno.SyncReader, classId: number) : Record<string, enc.AmqpOptionalFieldValue> {
+export function decodeHeader(data: Uint8Array) : Header {
+  const r = new Deno.Buffer(data);
+  const classId = enc.decodeShortUint(r);
+  const weight = enc.decodeShortUint(r);
+  const size = enc.decodeLongLongUint(r); 
   switch(classId) {
     ${spec.classes.map(clazz => {
     return `case ${clazz.id}: { ${printHeaderDecoding(clazz)} };`;
@@ -158,9 +194,7 @@ export function decodeProps(r: Deno.SyncReader, classId: number) : Record<string
 function generateConnection() {
   return [
     'import * as enc from "../encoding/mod.ts"',
-    `function field(type: enc.AmqpFieldType, value?: enc.AmqpFieldValue, defaultValue?: enc.AmqpFieldValue) : enc.AmqpField {
-  return { type, value: value !== undefined ? value : defaultValue } as enc.AmqpField
-}`,
+    'import { SendMethod, ReceiveMethod, Header } from "../amqp_types.ts"',
     printMethodEncoder(spec),
     printMethodDecoder(spec),
     printHeaderEncoder(spec),

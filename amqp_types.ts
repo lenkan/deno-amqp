@@ -23,7 +23,7 @@ export interface BasicProperties {
   replyTo?: string;
   expiration?: string;
   messageId?: string;
-  timestamp?: string;
+  timestamp?: bigint;
   type?: string;
   userId?: string;
   appId?: string;
@@ -306,7 +306,7 @@ export interface BasicReturnArgs {
 
 export interface BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: string;
+  deliveryTag: bigint;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -319,7 +319,7 @@ export interface BasicGetArgs {
 }
 
 export interface BasicGetOkArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -331,12 +331,12 @@ export interface BasicGetEmptyArgs {
 }
 
 export interface BasicAckArgs {
-  /** Default 0 */ deliveryTag?: string;
+  /** Default 0 */ deliveryTag?: bigint;
   /** Default false */ multiple?: boolean;
 }
 
 export interface BasicRejectArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   /** Default true */ requeue?: boolean;
 }
 
@@ -352,7 +352,7 @@ export interface BasicRecoverOkArgs {
 }
 
 export interface BasicNackArgs {
-  /** Default 0 */ deliveryTag?: string;
+  /** Default 0 */ deliveryTag?: bigint;
   /** Default false */ multiple?: boolean;
   /** Default true */ requeue?: boolean;
 }
@@ -653,7 +653,7 @@ export interface BasicReturn extends BasicReturnArgs {
 
 export interface BasicDeliver extends BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: string;
+  deliveryTag: bigint;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -666,7 +666,7 @@ export interface BasicGet extends BasicGetArgs {
 }
 
 export interface BasicGetOk extends BasicGetOkArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -678,12 +678,12 @@ export interface BasicGetEmpty extends BasicGetEmptyArgs {
 }
 
 export interface BasicAck extends BasicAckArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   multiple: boolean;
 }
 
 export interface BasicReject extends BasicRejectArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   requeue: boolean;
 }
 
@@ -699,7 +699,7 @@ export interface BasicRecoverOk extends BasicRecoverOkArgs {
 }
 
 export interface BasicNack extends BasicNackArgs {
-  deliveryTag: string;
+  deliveryTag: bigint;
   multiple: boolean;
   requeue: boolean;
 }
@@ -1009,24 +1009,18 @@ export interface SendBasicPublish {
   classId: 60;
   methodId: 40;
   args: BasicPublishArgs;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface SendBasicReturn {
   classId: 60;
   methodId: 50;
   args: BasicReturnArgs;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface SendBasicDeliver {
   classId: 60;
   methodId: 60;
   args: BasicDeliverArgs;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface SendBasicGet {
@@ -1039,8 +1033,6 @@ export interface SendBasicGetOk {
   classId: 60;
   methodId: 71;
   args: BasicGetOkArgs;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface SendBasicGetEmpty {
@@ -1413,24 +1405,18 @@ export interface ReceiveBasicPublish {
   classId: 60;
   methodId: 40;
   args: BasicPublish;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface ReceiveBasicReturn {
   classId: 60;
   methodId: 50;
   args: BasicReturn;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface ReceiveBasicDeliver {
   classId: 60;
   methodId: 60;
   args: BasicDeliver;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface ReceiveBasicGet {
@@ -1443,8 +1429,6 @@ export interface ReceiveBasicGetOk {
   classId: 60;
   methodId: 71;
   args: BasicGetOk;
-  props: BasicProperties;
-  data: Uint8Array;
 }
 
 export interface ReceiveBasicGetEmpty {
@@ -1537,6 +1521,54 @@ export interface ReceiveConfirmSelectOk {
   args: ConfirmSelectOk;
 }
 
+export interface ConnectionHeader {
+  classId: 10;
+  props: ConnectionProperties;
+  size: number;
+}
+
+export interface ChannelHeader {
+  classId: 20;
+  props: ChannelProperties;
+  size: number;
+}
+
+export interface AccessHeader {
+  classId: 30;
+  props: AccessProperties;
+  size: number;
+}
+
+export interface ExchangeHeader {
+  classId: 40;
+  props: ExchangeProperties;
+  size: number;
+}
+
+export interface QueueHeader {
+  classId: 50;
+  props: QueueProperties;
+  size: number;
+}
+
+export interface BasicHeader {
+  classId: 60;
+  props: BasicProperties;
+  size: number;
+}
+
+export interface TxHeader {
+  classId: 90;
+  props: TxProperties;
+  size: number;
+}
+
+export interface ConfirmHeader {
+  classId: 85;
+  props: ConfirmProperties;
+  size: number;
+}
+
 export type SendMethod = SendConnectionStart | SendConnectionStartOk
   | SendConnectionSecure | SendConnectionSecureOk | SendConnectionTune
   | SendConnectionTuneOk | SendConnectionOpen | SendConnectionOpenOk
@@ -1580,3 +1612,5 @@ export type ReceiveMethod = ReceiveConnectionStart | ReceiveConnectionStartOk
   | ReceiveBasicRecoverOk | ReceiveBasicNack | ReceiveTxSelect
   | ReceiveTxSelectOk | ReceiveTxCommit | ReceiveTxCommitOk | ReceiveTxRollback
   | ReceiveTxRollbackOk | ReceiveConfirmSelect | ReceiveConfirmSelectOk;
+export type Header = ConnectionHeader | ChannelHeader | AccessHeader
+  | ExchangeHeader | QueueHeader | BasicHeader | TxHeader | ConfirmHeader;

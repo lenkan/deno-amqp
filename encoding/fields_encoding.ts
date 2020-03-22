@@ -22,8 +22,13 @@ export interface AmqpNumberField {
   value: number;
 }
 
+export interface AmqpBigintField {
+  type: "longlong" | "timestamp";
+  value: bigint;
+}
+
 export interface AmqpStringField {
-  type: "shortstr" | "longstr" | "longlong" | "timestamp";
+  type: "shortstr" | "longstr";
   value: string;
 }
 
@@ -37,8 +42,8 @@ export interface AmqpTableField {
   value: Record<string, unknown>;
 }
 
-export type AmqpField = AmqpNumberField | AmqpStringField | AmqpBitField
-  | AmqpTableField;
+export type AmqpField = AmqpNumberField | AmqpBigintField | AmqpStringField
+  | AmqpBitField | AmqpTableField;
 
 export type AmqpFieldType = AmqpField["type"];
 export type AmqpFieldValue = AmqpField["value"];

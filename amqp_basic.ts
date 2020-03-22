@@ -44,30 +44,40 @@ export class AmqpBasic {
   }
 
   async qos(args: BasicQosArgs): Promise<BasicQosOk> {
-    await this.socket.send(BASIC, BASIC_QOS, args);
-    return this.socket.receive(BASIC, BASIC_QOS_OK);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_QOS, args }
+    );
+    return this.socket.receiveMethod(BASIC, BASIC_QOS_OK);
   }
 
   async ack(args: BasicAckArgs) {
-    await this.socket.send(BASIC, BASIC_ACK, args);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_ACK, args }
+    );
   }
 
   async nack(args: BasicNackArgs) {
-    await this.socket.send(BASIC, BASIC_NACK, args);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_NACK, args }
+    );
   }
 
   async consume(args: BasicConsumeArgs, handler: BasicDeliverHandler): Promise<
     BasicConsumeOk
   > {
-    await this.socket.send(BASIC, BASIC_CONSUME, args);
-    const response = await this.socket.receive(BASIC, BASIC_CONSUME_OK);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_CONSUME, args }
+    );
+    const response = await this.socket.receiveMethod(BASIC, BASIC_CONSUME_OK);
     this.consumers.push({ tag: response.consumerTag, handler });
     return response;
   }
 
   async cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
-    await this.socket.send(BASIC, BASIC_CANCEL, args);
-    const response = await this.socket.receive(BASIC, BASIC_CANCEL_OK);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_CANCEL, args }
+    );
+    const response = await this.socket.receiveMethod(BASIC, BASIC_CANCEL_OK);
 
     const index = this.consumers.findIndex(c => c.tag === args.consumerTag);
     if (index !== -1) {
@@ -82,6 +92,10 @@ export class AmqpBasic {
     props: BasicProperties,
     data: Uint8Array
   ): Promise<void> {
-    await this.socket.send(BASIC, BASIC_PUBLISH, args, props, data);
+    await this.socket.sendMethod(
+      { classId: BASIC, methodId: BASIC_PUBLISH, args }
+    );
+    await this.socket.sendHeader({ classId: BASIC, props, size: data.length });
+    await this.socket.sendContent(data);
   }
 }
