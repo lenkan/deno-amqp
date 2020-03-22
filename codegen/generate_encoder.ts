@@ -55,7 +55,7 @@ function printMethodDecoding(
 function printHeaderEncoding(
   clazz: ClassDefinition
 ) {
-  return `enc.encodeProperties([
+  return `enc.encodeOptionalFields([
     ${(clazz.properties || []).map(prop => {
     const name = camelCase(prop.name);
     return `field("${prop.type}", props["${name}"])`;
@@ -67,8 +67,8 @@ function printHeaderDecoding(
   clazz: ClassDefinition
 ) {
   return `
-  const fields = enc.decodeProperties(r, [${(clazz.properties || []).map(p =>
-    '"' + p.type + '"'
+  const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
+    p => '"' + p.type + '"'
   ).join(",")}]);
   const props = { ${(clazz.properties || []).map((p, i) =>
     `${camelCase(p.name)}: fields[${i}]`
@@ -157,7 +157,7 @@ export function decodeProps(r: Deno.SyncReader, classId: number) : Record<string
 
 function generateConnection() {
   return [
-    'import * as enc from "./encoder.ts"',
+    'import * as enc from "../encoding/mod.ts"',
     `function field(type: enc.AmqpFieldType, value?: enc.AmqpFieldValue, defaultValue?: enc.AmqpFieldValue) : enc.AmqpField {
   return { type, value: value !== undefined ? value : defaultValue } as enc.AmqpField
 }`,

@@ -1,4 +1,5 @@
-import * as enc from "./encoder.ts";
+import * as enc from "../encoding/mod.ts";
+
 function field(
   type: enc.AmqpFieldType,
   value?: enc.AmqpFieldValue,
@@ -1011,22 +1012,22 @@ export function encodeProps(
 ): Uint8Array {
   switch (classId) {
     case 10: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 20: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 30: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 40: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 50: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 60: {
-      return enc.encodeProperties([
+      return enc.encodeOptionalFields([
         field("shortstr", props["contentType"]),
         field("shortstr", props["contentEncoding"]),
         field("table", props["headers"]),
@@ -1044,10 +1045,10 @@ export function encodeProps(
       ]);
     }
     case 90: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
     case 85: {
-      return enc.encodeProperties([]);
+      return enc.encodeOptionalFields([]);
     }
   }
 
@@ -1060,37 +1061,37 @@ export function decodeProps(r: Deno.SyncReader, classId: number): Record<
 > {
   switch (classId) {
     case 10: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 20: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 30: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 40: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 50: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 60: {
-      const fields = enc.decodeProperties(
+      const fields = enc.decodeOptionalFields(
         r,
         [
           "shortstr",
@@ -1129,13 +1130,13 @@ export function decodeProps(r: Deno.SyncReader, classId: number): Record<
       return props;
     }
     case 90: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;
     }
     case 85: {
-      const fields = enc.decodeProperties(r, []);
+      const fields = enc.decodeOptionalFields(r, []);
       const props = {};
 
       return props;

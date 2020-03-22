@@ -6,7 +6,7 @@ import {
   decodeShortUint,
   decodeLongUint,
   Frame as RawFrame
-} from "./encoder.ts";
+} from "../encoding/mod.ts";
 import {
   FRAME_HEADER,
   FRAME_HEARTBEAT,
