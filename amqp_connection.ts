@@ -1,4 +1,4 @@
-import { AmqpSocket, Frame, AmqpWriter } from "./framing/socket.ts";
+import { AmqpSocket } from "./framing/socket.ts";
 import {
   CONNECTION,
   CONNECTION_START,
@@ -9,14 +9,11 @@ import {
   CONNECTION_START_OK,
   CONNECTION_TUNE_OK,
   CONNECTION_OPEN,
-  HARD_ERROR_CONNECTION_FORCED,
-  HARD_ERROR_COMMAND_INVALID
+  HARD_ERROR_CONNECTION_FORCED
 } from "./amqp_constants.ts";
 import { AmqpChannel } from "./amqp_channel.ts";
-import { Logger, createLogger } from "./amqp_connection_logger.ts";
 import {
   ConnectionCloseArgs,
-  ChannelCloseArgs,
   ConnectionClose,
   ConnectionCloseOk
 } from "./amqp_types.ts";
@@ -35,27 +32,21 @@ function credentials(username: string, password: string) {
 export class AmqpConnection {
   private username: string;
   private password: string;
-  private heartbeatInterval: number;
+  private heartbeatInterval?: number;
   private channels: AmqpChannel[] = [];
   private channel0: AmqpChannel;
   private channelMax: number = -1;
   private frameMax: number = -1;
-  private logger: {
-    logSend: (...args: any) => void;
-    logRecv: (...args: any) => void;
-  };
 
   constructor(
     private socket: AmqpSocket,
-    options: AmqpConnectionOptions,
-    logger?: Logger
+    options: AmqpConnectionOptions
   ) {
     this.username = options.username;
     this.password = options.password;
-    this.heartbeatInterval = options.heartbeatInterval || 0;
+    this.heartbeatInterval = options.heartbeatInterval;
     this.channel0 = new AmqpChannel(0, socket);
     this.channels.push(this.channel0);
-    this.logger = createLogger(logger);
 
     this.channel0.subscribe(
       CONNECTION,
@@ -68,10 +59,9 @@ export class AmqpConnection {
       CONNECTION_CLOSE_OK,
       args => this.handleCloseOk(args)
     );
-    this.socket.subscribe(0, async frame => {
-      if (frame.type === "heartbeat") {
-        return;
-      }
+    this.socket.subscribe(0, frame => {
+    }, e => {
+      console.error("EEEE", e);
     });
   }
 
@@ -114,8 +104,7 @@ export class AmqpConnection {
 
         this.channelMax = channelMax;
         this.frameMax = frameMax;
-        this.heartbeatInterval = interval;
-        // await resetSendHeartbeatTimer();
+        this.socket.tuneHeartbeat(interval);
       }
     );
 

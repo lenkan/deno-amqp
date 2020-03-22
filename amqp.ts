@@ -1,7 +1,5 @@
 import { AmqpConnection } from "./amqp_connection.ts";
 import { createSocket } from "./framing/socket.ts";
-import { Logger } from "./amqp_connection_logger.ts";
-import { AmqpChannel } from "./amqp_channel.ts";
 import { AmqpBasic } from "./amqp_basic.ts";
 import { AmqpExchange } from "./amqp_exchange.ts";
 import { AmqpQueue } from "./amqp_queue.ts";
@@ -13,7 +11,7 @@ export interface AmqpOptions {
   username?: string;
   password?: string;
   heartbeatInterval?: number;
-  logger?: Logger;
+  loglevel?: "debug" | "none";
 }
 
 export interface AmqpChannelClient {
@@ -35,15 +33,14 @@ export async function connect(options: AmqpOptions = {}): Promise<AmqpClient> {
     username = "guest",
     password = "guest",
     heartbeatInterval,
-    logger
+    loglevel = "none"
   } = options;
 
   const conn = await Deno.connect({ port, hostname });
-  const socket = createSocket(conn);
+  const socket = createSocket(conn, { loglevel });
   const connection = new AmqpConnection(
     socket,
-    { username, password, heartbeatInterval },
-    logger
+    { username, password, heartbeatInterval }
   );
   await connection.open();
 

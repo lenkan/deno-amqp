@@ -304,6 +304,9 @@ function decodeTableField(r: Deno.Buffer): unknown {
       return decodeOctet(r) > 0;
     case TableFieldType.LongUInt:
       return decodeLongUint(r);
+    case TableFieldType.LongLongInt:
+      // TODO(lenkan): Decode numbers
+      return decodeLongLongUint(r);
     case TableFieldType.LongStr:
       return decodeLongString(r);
     case TableFieldType.ShortStr:

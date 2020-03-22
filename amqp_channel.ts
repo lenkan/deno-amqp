@@ -18,7 +18,12 @@ import {
   CHANNEL_OPEN,
   CHANNEL_OPEN_OK
 } from "./amqp_constants.ts";
-import { AmqpOptionalFieldValue } from "./framing/encoder.ts";
+import {
+  encodeArgs,
+  encodeProps,
+  decodeArgs,
+  decodeProps
+} from "./framing/method_encoder.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -62,6 +67,8 @@ export class AmqpChannel {
   private subscribers: Subscriber[] = [];
   private method: Method | null = null;
   private header: Header | null = null;
+  private args: Record<string, unknown> | null = null;
+  private props: Record<string, unknown> | null = null;
   private buffer: Deno.Buffer | null = null;
 
   constructor(public channel: number, private socket: AmqpReaderWriter) {
@@ -84,15 +91,25 @@ export class AmqpChannel {
   }
 
   private handleMethod(method: Method) {
+    const args = decodeArgs(
+      new Deno.Buffer(method.args),
+      method.classId,
+      method.methodId
+    );
     if (hasContent(method.classId, method.methodId)) {
       this.method = method;
+      this.args = args;
     } else {
       this.subscribers.forEach(sub => {
         if (
           sub.classId === method.classId &&
           sub.methodId === method.methodId
         ) {
-          sub.handler(method.args, {}, new Uint8Array([]));
+          sub.handler(
+            args,
+            {},
+            new Uint8Array([])
+          );
         }
       });
     }
@@ -100,6 +117,7 @@ export class AmqpChannel {
 
   private handleHeader(header: Header) {
     this.header = header;
+    this.props = decodeProps(new Deno.Buffer(header.props), header.classId);
     this.buffer = new Deno.Buffer();
   }
 
@@ -116,12 +134,14 @@ export class AmqpChannel {
             this.buffer && sub.classId === this.header!.classId &&
             sub.methodId === this.method!.methodId
           ) {
-            const args = this.method!.args;
-            const props = this.header!.props;
+            const args = this.args;
+            const props = this.props;
             const data = this.buffer.bytes();
             this.method = null;
+            this.args = null;
             this.header = null;
             this.buffer = null;
+            this.props = null;
 
             sub.handler(args, props, data);
           }
@@ -150,18 +170,22 @@ export class AmqpChannel {
       payload: {
         classId,
         methodId,
-        args: args[0] as Record<string, AmqpOptionalFieldValue>
+        args: encodeArgs(
+          classId,
+          methodId,
+          args[0] as any
+        )
       }
     });
 
     if (args.length === 3) {
-      const props = args[1] as Record<string, AmqpOptionalFieldValue>;
+      const props = args[1] as any;
       const data = args[2];
       await this.socket.write(this.channel, {
         type: "header",
         payload: {
           classId,
-          props,
+          props: encodeProps(classId, props),
           weight: 0,
           size: data.length
         }
@@ -208,7 +232,8 @@ export class AmqpChannel {
       );
     }
 
-    return method.args as any;
+    const reader = new Deno.Buffer(method.args);
+    return decodeArgs(reader, classId, methodId) as any;
   }
 
   private unsubscribe(subscriber: Subscriber) {

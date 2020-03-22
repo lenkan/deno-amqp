@@ -1,11 +1,9 @@
 import { connect } from "../amqp.ts";
-import {
-  HARD_ERROR_CONNECTION_FORCED,
-  CHANNEL_CLOSE,
-  CHANNEL
-} from "../amqp_constants.ts";
 
-const connection = await connect({ heartbeatInterval: 0, logger: console });
+const env = Deno.env();
+const connection = await connect(
+  { heartbeatInterval: 0, loglevel: env.DEBUG ? "debug" : "none" }
+);
 
 const channel1 = await connection.channel();
 const channel2 = await connection.channel();

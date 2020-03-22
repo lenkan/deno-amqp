@@ -5,33 +5,27 @@ import {
   encodeLongUint,
   decodeShortUint,
   decodeLongUint,
-  Frame as RawFrame,
-  AmqpOptionalFieldValue
+  Frame as RawFrame
 } from "./encoder.ts";
-import {
-  encodeArgs,
-  encodeProps,
-  decodeArgs,
-  decodeProps
-} from "./method_encoder.ts";
 import {
   FRAME_HEADER,
   FRAME_HEARTBEAT,
   FRAME_BODY,
   FRAME_METHOD
 } from "../amqp_constants.ts";
+import { withTimeout } from "./with_timeout.ts";
 
 export interface Method {
   classId: number;
   methodId: number;
-  args: Record<string, AmqpOptionalFieldValue>;
+  args: Uint8Array;
 }
 
 export interface Header {
   classId: number;
   weight: number;
   size: number;
-  props: Record<string, AmqpOptionalFieldValue>;
+  props: Uint8Array;
 }
 
 export interface HeaderFrame {
@@ -44,16 +38,12 @@ export interface MethodFrame {
   payload: Method;
 }
 
-export interface HeartbeatFrame {
-  type: "heartbeat";
-}
-
 export interface ContentFrame {
   type: "content";
   payload: Uint8Array;
 }
 
-export type Frame = HeaderFrame | MethodFrame | HeartbeatFrame | ContentFrame;
+export type Frame = HeaderFrame | MethodFrame | ContentFrame;
 
 export type FrameHandler = (frame: Frame) => void;
 export type ErrorHandler = (error: Error) => void;
@@ -81,6 +71,7 @@ export interface AmqpReaderWriter extends AmqpReader, AmqpWriter {}
 
 export interface AmqpSocket extends AmqpReaderWriter {
   start(): Promise<void>;
+  tuneHeartbeat(interval: number): void;
   close(): void;
 }
 
@@ -88,13 +79,7 @@ function encodeMethod(method: Method): Uint8Array {
   const buffer = new Deno.Buffer();
   buffer.writeSync(encodeShortUint(method.classId));
   buffer.writeSync(encodeShortUint(method.methodId));
-  buffer.writeSync(
-    encodeArgs(
-      method.classId,
-      method.methodId,
-      method.args
-    )
-  );
+  buffer.writeSync(method.args);
   return buffer.bytes();
 }
 
@@ -102,8 +87,7 @@ function decodeMethod(payload: Uint8Array): Method {
   const r = new Deno.Buffer(payload);
   const classId = decodeShortUint(r);
   const methodId = decodeShortUint(r);
-  const args = decodeArgs(r, classId, methodId);
-  return { classId, methodId, args };
+  return { classId, methodId, args: r.bytes() };
 }
 
 function encodeHeader(header: Header): Uint8Array {
@@ -112,9 +96,7 @@ function encodeHeader(header: Header): Uint8Array {
   buffer.writeSync(encodeShortUint(header.weight));
   buffer.writeSync(encodeLongUint(0));
   buffer.writeSync(encodeLongUint(header.size));
-  buffer.writeSync(
-    encodeProps(header.classId, header.props)
-  );
+  buffer.writeSync(header.props);
   return buffer.bytes();
 }
 
@@ -124,12 +106,21 @@ function decodeHeader(payload: Uint8Array): Header {
   const weight = decodeShortUint(r);
   decodeLongUint(r); // size high bytes
   const size = decodeLongUint(r);
-  const props = decodeProps(r, classId);
-  return { classId, weight, size, props };
+  return { classId, weight, size, props: r.bytes() };
 }
 
-export function createSocket(conn: Deno.Conn): AmqpSocket {
+export interface SocketOptions {
+  loglevel: "debug" | "none";
+}
+
+export function createSocket(
+  conn: Deno.ReadWriteCloser,
+  options: SocketOptions = { loglevel: "none" }
+): AmqpSocket {
   const subscribers: FrameSubscriber[] = [];
+  let running = false;
+  let sendTimer: number | null;
+  let heartbeatTimeout: number = 0;
 
   function cancel(subscriber: FrameSubscriber) {
     const index = subscribers.indexOf(subscriber);
@@ -162,21 +153,90 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
   async function start() {
     await conn.write(new TextEncoder().encode("AMQP"));
     await conn.write(new Uint8Array([0, 0, 9, 1]));
-    listen();
+
+    listen().catch(error => {
+      subscribers.forEach(sub => sub.error(error));
+      close();
+    });
   }
 
-  function close() {
-    conn.closeWrite();
+  function close(reason?: string) {
+    console.log("Closing connection: " + reason || "");
+    conn.close();
+    running = false;
+  }
+
+  function resetSendTimer() {
+    if (sendTimer !== null) {
+      clearTimeout(sendTimer);
+    }
+
+    if (heartbeatTimeout > 0) {
+      setTimeout(() => {
+        conn.write(
+          encodeFrame(
+            { type: FRAME_HEARTBEAT, channel: 0, payload: new Uint8Array([]) }
+          )
+        );
+      }, heartbeatTimeout * 1000);
+    }
+  }
+
+  function logSend(channel: number, frame: Frame) {
+    // TODO(lenkan): Move to other module
+    if (options.loglevel === "debug") {
+      const prefix = `SEND(${channel}) `;
+      if (frame.type === "header") {
+        console.log(
+          prefix +
+            `header(${frame.payload.classId}) size(${frame.payload.size})`
+        );
+      }
+      if (frame.type === "content") {
+        console.log(prefix + `payload(${frame.payload.toString()})`);
+      }
+
+      if (frame.type === "method") {
+        console.log(
+          prefix + `method(${frame.payload.classId}/${frame.payload.methodId})`
+        );
+      }
+    }
+  }
+
+  function logRecv(channel: number, frame: Frame) {
+    // TODO(lenkan): Move to other module
+    if (options.loglevel === "debug") {
+      const prefix = `SEND(${channel}) `;
+      if (frame.type === "header") {
+        console.log(
+          prefix +
+            `header(${frame.payload.classId}) size(${frame.payload.size})`
+        );
+      }
+      if (frame.type === "content") {
+        console.log(prefix + `payload(${frame.payload.toString()})`);
+      }
+
+      if (frame.type === "method") {
+        console.log(
+          prefix + `method(${frame.payload.classId}/${frame.payload.methodId})`
+        );
+      }
+    }
   }
 
   async function write(channel: number, frame: Frame) {
+    resetSendTimer();
+    logSend(channel, frame);
+
     if (frame.type === "header") {
+      const payload = encodeHeader(frame.payload);
       await conn.write(encodeFrame({
         type: FRAME_HEADER,
         channel,
-        payload: encodeHeader(frame.payload)
+        payload
       }));
-      return;
     }
 
     if (frame.type === "content") {
@@ -185,31 +245,20 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
         channel,
         payload: frame.payload
       }));
-      return;
-    }
-
-    if (frame.type === "heartbeat") {
-      await conn.write(encodeFrame({
-        type: FRAME_HEARTBEAT,
-        channel: channel,
-        payload: new Uint8Array([])
-      }));
-      return;
     }
 
     if (frame.type === "method") {
+      const payload = encodeMethod(frame.payload);
       await conn.write(encodeFrame({
         type: FRAME_METHOD,
         channel: channel,
-        payload: encodeMethod(frame.payload)
+        payload
       }));
-      return;
     }
-
-    throw new Error(`Unknown frame type '${frame!.type}'`);
   }
 
   function emit(channel: number, frame: Frame) {
+    logRecv(channel, frame);
     subscribers.forEach(sub => {
       if (sub.channel === channel) {
         sub.handler(frame);
@@ -219,16 +268,19 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
 
   function handleFrame(frame: RawFrame) {
     if (frame.type === FRAME_METHOD) {
+      const payload = decodeMethod(frame.payload);
+
       return emit(frame.channel, {
         type: "method",
-        payload: decodeMethod(frame.payload)
+        payload
       });
     }
 
     if (frame.type === FRAME_HEADER) {
+      const payload = decodeHeader(frame.payload);
       return emit(frame.channel, {
         type: "header",
-        payload: decodeHeader(frame.payload)
+        payload
       });
     }
 
@@ -238,23 +290,33 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
         payload: frame.payload
       });
     }
+  }
 
-    if (frame.type === FRAME_HEARTBEAT) {
-      return emit(frame.channel, { type: "heartbeat" });
-    }
+  async function nextFrame(): Promise<RawFrame> {
+    const timeoutMessage =
+      `missed heartbeat from server, timeout ${heartbeatTimeout}s`;
+
+    return withTimeout(async () => {
+      const frame = await readFrame(conn);
+
+      if (!frame) {
+        throw new Error("Connection closed by server");
+      }
+
+      return frame;
+    }, heartbeatTimeout * 1000 * 2, timeoutMessage);
   }
 
   async function listen(): Promise<void> {
-    while (true) {
-      const frame = await readFrame(conn);
-      if (!frame) {
-        const error = new Error("Connection closed by server");
-        subscribers.forEach(sub => sub.error(error));
-        return;
-      } else {
-        handleFrame(frame);
-      }
+    running = true;
+    while (running) {
+      handleFrame(await nextFrame());
     }
+  }
+
+  function tuneHeartbeat(interval: number) {
+    heartbeatTimeout = interval;
+    resetSendTimer();
   }
 
   return {
@@ -262,6 +324,7 @@ export function createSocket(conn: Deno.Conn): AmqpSocket {
     close,
     read,
     subscribe,
-    write
+    write,
+    tuneHeartbeat
   };
 }

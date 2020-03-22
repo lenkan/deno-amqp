@@ -1,19 +1,12 @@
 import {
   assertEquals,
-  assertThrows
-} from "https://deno.land/std/testing/asserts.ts";
+  assertThrows,
+  bufferOf,
+  arrayOf,
+  test
+} from "../testing.ts";
 import * as enc from "./encoder.ts";
 import { padArray } from "./utils.ts";
-
-const { test } = Deno;
-
-function arrayOf(...a: number[]) {
-  return new Uint8Array(a);
-}
-
-function bufferOf(...a: number[]) {
-  return new Deno.Buffer(arrayOf(...a));
-}
 
 test("encode octet", () => {
   assertEquals(enc.encodeOctet(0), arrayOf(0));
