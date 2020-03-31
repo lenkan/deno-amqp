@@ -6,26 +6,11 @@ import {
   decodeShortUint,
   decodeLongUint
 } from "./number_encoding.ts";
-import {
-  FRAME_BODY,
-  FRAME_HEADER,
-  FRAME_HEARTBEAT,
-  FRAME_METHOD,
-  FRAME_END
-} from "../amqp_constants.ts";
 
 export interface Frame {
   type: number;
   channel: number;
   payload: Uint8Array;
-}
-
-const frameTypes = [FRAME_BODY, FRAME_HEADER, FRAME_HEARTBEAT, FRAME_METHOD];
-
-function assertType(type: number) {
-  if (!frameTypes.includes(type)) {
-    throw new Error(`Invalid frame type '${type}'`);
-  }
 }
 
 async function readBytes(
@@ -52,7 +37,7 @@ export function encodeFrame(frame: Frame) {
   buffer.writeSync(encodeShortUint(frame.channel));
   buffer.writeSync(encodeLongUint(frame.payload.length));
   buffer.writeSync(frame.payload);
-  buffer.writeSync(encodeOctet(FRAME_END));
+  buffer.writeSync(encodeOctet(206));
   return buffer.bytes();
 }
 
@@ -72,11 +57,9 @@ export async function readFrame(r: Deno.Reader): Promise<Frame | null> {
     throw new Error(`Not enough data in reader`);
   }
 
-  if (rest[rest.length - 1] !== FRAME_END) {
+  if (rest[rest.length - 1] !== 206) {
     throw new Error(`Unexpected end token ${rest[rest.length - 1]}`);
   }
-
-  assertType(type);
 
   return {
     type: type,

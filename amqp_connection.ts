@@ -1,22 +1,12 @@
 import { AmqpSocket } from "./framing/socket.ts";
-import {
-  CONNECTION,
-  CONNECTION_START,
-  CONNECTION_TUNE,
-  CONNECTION_OPEN_OK,
-  CONNECTION_CLOSE,
-  CONNECTION_CLOSE_OK,
-  CONNECTION_START_OK,
-  CONNECTION_TUNE_OK,
-  CONNECTION_OPEN,
-  HARD_ERROR_CONNECTION_FORCED
-} from "./amqp_constants.ts";
 import { AmqpChannel } from "./amqp_channel.ts";
 import {
+  AmqpProtocol,
   ConnectionCloseArgs,
   ConnectionClose,
-  ConnectionCloseOk
-} from "./amqp_types.ts";
+  ConnectionCloseOk,
+  HARD_ERROR_CONNECTION_FORCED
+} from "./amqp_protocol.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -34,9 +24,9 @@ export class AmqpConnection {
   private password: string;
   private heartbeatInterval?: number;
   private channels: AmqpChannel[] = [];
-  private channel0: AmqpChannel;
   private channelMax: number = -1;
   private frameMax: number = -1;
+  private protocol: AmqpProtocol;
 
   constructor(
     private socket: AmqpSocket,
@@ -45,28 +35,17 @@ export class AmqpConnection {
     this.username = options.username;
     this.password = options.password;
     this.heartbeatInterval = options.heartbeatInterval;
-    this.channel0 = new AmqpChannel(0, socket);
-    this.channels.push(this.channel0);
+    this.protocol = new AmqpProtocol(socket);
 
-    this.channel0.subscribe(
-      CONNECTION,
-      CONNECTION_CLOSE,
-      args => this.handleClose(args)
-    );
-
-    this.channel0.subscribe(
-      CONNECTION,
-      CONNECTION_CLOSE_OK,
+    this.protocol.subscribeConnectionClose(0, args => this.handleClose(args));
+    this.protocol.subscribeConnectionCloseOk(
+      0,
       args => this.handleCloseOk(args)
     );
-    this.socket.subscribe(0, frame => {
-    }, e => {
-      console.error("EEEE", e);
-    });
   }
 
   private async handleClose(close: ConnectionClose) {
-    await this.channel0.send(CONNECTION, CONNECTION_CLOSE_OK, {});
+    await this.protocol.sendConnectionCloseOk(0, {});
     console.error(
       "Connection closed by server ",
       JSON.stringify(close)
@@ -81,13 +60,13 @@ export class AmqpConnection {
   async open() {
     await this.socket.start();
 
-    await this.channel0.receiveMethod(CONNECTION, CONNECTION_START);
-    await this.channel0.send(CONNECTION, CONNECTION_START_OK, {
+    await this.protocol.receiveConnectionStart(0);
+    await this.protocol.sendConnectionStartOk(0, {
       clientProperties: {},
       response: credentials(this.username, this.password)
     });
 
-    await this.channel0.receiveMethod(CONNECTION, CONNECTION_TUNE).then(
+    await this.protocol.receiveConnectionTune(0).then(
       async args => {
         const interval = this.heartbeatInterval !== undefined
           ? this.heartbeatInterval
@@ -96,7 +75,7 @@ export class AmqpConnection {
         const channelMax = args.channelMax;
         const frameMax = args.frameMax;
 
-        await this.channel0.send(CONNECTION, CONNECTION_TUNE_OK, {
+        await this.protocol.sendConnectionTuneOk(0, {
           heartbeat: interval,
           channelMax: channelMax,
           frameMax: frameMax
@@ -108,25 +87,22 @@ export class AmqpConnection {
       }
     );
 
-    await this.channel0.send(10, CONNECTION_OPEN, {});
-    await this.channel0.receiveMethod(CONNECTION, CONNECTION_OPEN_OK);
+    await this.protocol.sendConnectionOpen(0, {});
   }
 
   async close(args?: Partial<ConnectionCloseArgs>) {
-    await this.channel0.send(CONNECTION, CONNECTION_CLOSE, {
+    await this.protocol.sendConnectionClose(0, {
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
       replyText: args?.replyText
     });
-
-    await this.channel0.receiveMethod(CONNECTION, CONNECTION_CLOSE_OK);
   }
 
   createChannel(): AmqpChannel {
     for (let i = 0; i < this.channelMax; ++i) {
-      if (!this.channels.find(c => c.channel === i)) {
-        const channel = new AmqpChannel(i, this.socket);
+      if (!this.channels.find(c => c.channelNumber === i)) {
+        const channel = new AmqpChannel(i, this.protocol);
         this.channels.push(channel);
         return channel;
       }
