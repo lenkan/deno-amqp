@@ -142,22 +142,22 @@ test("encode header props - with bit property", () => {
   );
 });
 
-test("decode header props - with all properties defined", () => {
-  const data = bufferOf(0b11000000, 0b000000, 13, 0, 19);
-  const expected: enc.AmqpOptionalFieldValue[] = [13, 19];
+// test("decode header props - with all properties defined", () => {
+//   const data = bufferOf(0b11000000, 0b000000, 13, 0, 19);
+//   const expected: enc.AmqpOptionalFieldValue[] = [13, 19];
 
-  assertEquals(
-    enc.decodeOptionalFields(data, ["octet", "short"]),
-    expected
-  );
-});
+//   assertEquals(
+//     enc.decodeOptionalFields(data, ["octet", "short"]),
+//     expected
+//   );
+// });
 
-test("decode header props - with missing property", () => {
-  const data = bufferOf(0b10100000, 0b000000, 13, 0, 19);
-  const expected: enc.AmqpOptionalFieldValue[] = [13, undefined, 19];
+// test("decode header props - with missing property", () => {
+//   const data = bufferOf(0b10100000, 0b000000, 13, 0, 19);
+//   const expected: enc.AmqpOptionalFieldValue[] = [13, undefined, 19];
 
-  assertEquals(
-    enc.decodeOptionalFields(data, ["octet", "short", "short"]),
-    expected
-  );
-});
+//   assertEquals(
+//     enc.decodeOptionalFields(data, ["octet", "short", "short"]),
+//     expected
+//   );
+// });

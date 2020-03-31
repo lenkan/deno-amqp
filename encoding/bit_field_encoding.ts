@@ -5,16 +5,31 @@ function writeBitField(bits: boolean[]): number {
     throw new Error(`Too many bits to fit in one byte`);
   }
 
-  const field = (bits[0] ? 0b10000000 : 0) |
-    (bits[1] ? 0b01000000 : 0) |
-    (bits[2] ? 0b00100000 : 0) |
-    (bits[3] ? 0b00010000 : 0) |
-    (bits[4] ? 0b00001000 : 0) |
-    (bits[5] ? 0b00000100 : 0) |
-    (bits[6] ? 0b00000010 : 0) |
-    (bits[7] ? 0b00000001 : 0);
+  const field = (bits[7] ? 0b10000000 : 0) |
+    (bits[6] ? 0b01000000 : 0) |
+    (bits[5] ? 0b00100000 : 0) |
+    (bits[4] ? 0b00010000 : 0) |
+    (bits[3] ? 0b00001000 : 0) |
+    (bits[2] ? 0b00000100 : 0) |
+    (bits[1] ? 0b00000010 : 0) |
+    (bits[0] ? 0b00000001 : 0);
 
   return field;
+}
+
+function readBitField(num: number) {
+  const bits: boolean[] = [];
+
+  bits.push((0b00000001 & num) !== 0);
+  bits.push((0b00000010 & num) !== 0);
+  bits.push((0b00000100 & num) !== 0);
+  bits.push((0b00001000 & num) !== 0);
+  bits.push((0b00010000 & num) !== 0);
+  bits.push((0b00100000 & num) !== 0);
+  bits.push((0b01000000 & num) !== 0);
+  bits.push((0b10000000 & num) !== 0);
+
+  return bits;
 }
 
 export function encodeBits(
@@ -33,14 +48,7 @@ export function decodeBits(r: Deno.SyncReader, length: number) {
   const bits: boolean[] = [];
 
   for (const byte of data) {
-    bits.push((0b10000000 & byte) !== 0);
-    bits.push((0b01000000 & byte) !== 0);
-    bits.push((0b00100000 & byte) !== 0);
-    bits.push((0b00010000 & byte) !== 0);
-    bits.push((0b00001000 & byte) !== 0);
-    bits.push((0b00000100 & byte) !== 0);
-    bits.push((0b00000010 & byte) !== 0);
-    bits.push((0b00000001 & byte) !== 0);
+    bits.push(...readBitField(byte));
   }
 
   return bits.slice(0, length);
