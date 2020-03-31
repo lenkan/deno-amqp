@@ -100,7 +100,7 @@ export class AmqpConnection {
   }
 
   createChannel(): AmqpChannel {
-    for (let i = 0; i < this.channelMax; ++i) {
+    for (let i = 1; i < this.channelMax; ++i) {
       if (!this.channels.find(c => c.channelNumber === i)) {
         const channel = new AmqpChannel(i, this.protocol);
         this.channels.push(channel);

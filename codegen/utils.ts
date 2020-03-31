@@ -64,7 +64,7 @@ export function pascalCase(name: string) {
 export function resolveTypescriptType(type: string) {
   switch (type) {
     case "longlong":
-      return "bigint";
+      return "number";
     case "long":
     case "short":
     case "octet":
@@ -77,7 +77,7 @@ export function resolveTypescriptType(type: string) {
     case "table":
       return "Record<string, unknown>";
     case "timestamp":
-      return "bigint";
+      return "number";
     default:
       throw new Error(`Unknown type '${type}'`);
   }
@@ -165,7 +165,7 @@ export function printHeaderDefinition(
   export interface ${pascalCase(clazz.name)}Header {
     classId: ${clazz.id};
     props: ${pascalCase(clazz.name)}Properties;
-    size: bigint;
+    size: number;
   }
   `;
 }
@@ -176,15 +176,9 @@ export function printHeaderUnion(spec: Spec) {
   ).join(" | ")}`;
 }
 
-export function getDefaultValue(spec: Spec, a: ArgumentDefinition) {
+export function getDefaultValue(a: ArgumentDefinition) {
   if (a["default-value"] === undefined) {
     return undefined;
-  }
-
-  const type = resolveType(spec, a);
-  const tsType = resolveTypescriptType(type);
-  if (tsType === "bigint") {
-    return `BigInt(${JSON.stringify(a["default-value"])})`;
   }
 
   return JSON.stringify(a["default-value"]);
@@ -206,10 +200,14 @@ export function ${name}(args: ${argsName}): Uint8Array {
     ${method.arguments.map(arg => {
     const type = resolveType(spec, arg);
     const name = camelCase(arg.name);
-    const defaultValue = getDefaultValue(spec, arg);
+    const defaultValue = getDefaultValue(arg);
     const value = arg["default-value"] !== undefined
       ? `args.${name} !== undefined ? args.${name} : ${defaultValue}`
       : `args.${name}`;
+    if (type === "longlong" || type === "timestamp") {
+      return `{ type: "${type}" as const, value: BigInt(${value}) }`;
+    }
+
     return `{ type: "${type}" as const, value: ${value} }`;
   }).join(",")}
   ]));
@@ -230,11 +228,15 @@ function ${name}(r: Deno.SyncReader): ${returnName} {
   const fields = enc.decodeFields(r, [${method.arguments.map(a =>
     '"' + resolveType(spec, a) + '"'
   ).join(",")}]);
-  const args = { ${method.arguments.map((a, i) =>
-    `${camelCase(a.name)}: fields[${i}] as ${resolveTypescriptType(
-      resolveType(spec, a)
-    )}`
-  ).join(",")}}
+  const args = { ${method.arguments.map((a, i) => {
+    const type = resolveType(spec, a);
+    if (type === "longlong" || type === "timestamp") {
+      return `${camelCase(a.name)}: Number(fields[${i}])`;
+    }
+    return `${camelCase(a.name)}: fields[${i}] as ${resolveTypescriptType(
+      type
+    )}`;
+  }).join(",")}}
   return args;
 }`;
 }
@@ -281,6 +283,9 @@ export function ${name}(size: bigint, props: ${argName}): Uint8Array {
   w.writeSync(enc.encodeOptionalFields([
     ${(clazz.properties || []).map(prop => {
     const name = camelCase(prop.name);
+    if (prop.type === "longlong" || prop.type === "timestamp") {
+      return `{ type: "${prop.type}", value: props.${name} !== undefined ? BigInt(props.${name}) : undefined }`;
+    }
     return `{ type: "${prop.type}", value: props.${name} }`;
   }).join(",")}
   ]));
@@ -296,7 +301,7 @@ export function printDecodeHeaderFunction(
   return `
 function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r); 
+  const size = Number(enc.decodeLongLongUint(r)); 
   const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
     p => '"' + p.type + '"'
   ).join(",")}]);

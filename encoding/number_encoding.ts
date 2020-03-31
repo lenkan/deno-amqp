@@ -1,11 +1,3 @@
-import { hex } from "../dependencies.ts";
-import {
-  putVarbig,
-  putVarnum,
-  varbig,
-  varnum
-} from "https://deno.land/std@v0.36.0/encoding/binary.ts";
-
 function readBytesSync(r: Deno.SyncReader, length: number): DataView {
   const data = new Uint8Array(length);
   const result = r.readSync(data);

@@ -24,6 +24,14 @@ await channel2.publish(
   new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
 );
 
+await Promise.all(Array.from({ length: 100 }).map((_, i) => {
+  return channel2.publish(
+    { routingKey: "foo.queue" },
+    { contentType: "application/json" },
+    new TextEncoder().encode(i.toString())
+  );
+}));
+
 // await channel1.close();
 
 // setTimeout(() => connection.close(), 2000);

@@ -32,7 +32,6 @@ function printSendMethodFunction(
   const encodeName = `encode${pascalName}`;
   const argsName = `${pascalName}Args`;
   const propsName = `${pascalCase(clazz.name)}Properties`;
-  const send = `await this.socket.write(channel, 1, ${encodeName}(args));`;
   const responses = method.synchronous
     ? clazz.methods.filter(m =>
       m.id > method.id && m.name.startsWith(`${method.name}-`)
@@ -42,20 +41,32 @@ function printSendMethodFunction(
   if (method.content) {
     return `
       async ${name}(channel: number, args: ${argsName}, props: ${propsName}, data: Uint8Array) {
-        ${send}
-        await this.socket.write(channel, 2, encode${pascalCase(
+        await Promise.all([
+          this.socket.write(channel, 1, ${encodeName}(args)),
+          this.socket.write(channel, 2, encode${pascalCase(
       clazz.name
-    )}Header(BigInt(data.length), props));
-        await this.socket.write(channel, 3, data);
+    )}Header(BigInt(data.length), props)),
+        this.socket.write(channel, 3, data)
+          ]);
       }
     `;
-  } else if (method.synchronous) {
+  } else if (method.synchronous && responses.length === 1) {
+    const res = responses[0];
+    const returnType = `${pascalCase(clazz.name)}${pascalCase(res.name)}`;
+    return `
+      async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
+        await this.socket.write(channel, 1, ${encodeName}(args));
+        const reply = await this.assertMethod(channel, ${clazz.id}, ${res.id});
+        return reply.args;
+      }
+    `;
+  } else if (method.synchronous && responses.length > 1) {
     const returnType = responses.map(m =>
       `${pascalCase(clazz.name)}${pascalCase(m.name)}`
     ).join(" | ");
     return `
       async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
-        ${send}
+        await this.socket.write(channel, 1, ${encodeName}(args));
         const reply = await this.receiveMethod(channel);
           ${responses.map(res => {
       return `if(reply.classId === ${clazz.id} && reply.methodId === ${res.id}) {
@@ -63,13 +74,15 @@ function printSendMethodFunction(
             }`;
     }).join("\n")}
         
-        throw new Error("Unexpected method");
+        throw new Error(\`Expected ${responses.map(x =>
+      `'${clazz.id}/${x.id}'`
+    ).join(" or ")} got \${reply.classId}\${reply.methodId}\`)
       }
     `;
   } else {
     return `
       async ${name}(channel: number, args: ${argsName}) : Promise<void> {
-        ${send}
+        await this.socket.write(channel, 1, ${encodeName}(args));
       }
     `;
   }
@@ -88,13 +101,8 @@ function printReceiveMethodFunction(
     )}`;
     return `
       async ${name}(channel: number): Promise<${returnType}> {
-        const method = await this.receiveMethod(channel);
-
-        if(method.classId === ${clazz.id} && method.methodId === ${method.id}) {
-          return method.args;
-        }
-
-        throw new Error("");
+        const method = await this.assertMethod(channel, ${clazz.id}, ${method.id});
+        return method.args;
       }
     `;
   }
@@ -160,6 +168,15 @@ function printAmqpProtocolClass() {
 export class AmqpProtocol {
   constructor(private socket: Socket) {}
 
+  private async assertMethod<T extends number, U extends number>(channel: number, classId: T, methodId: U) : Promise<Extract<ReceiveMethod, { classId: T, methodId: U }>> {
+    const method = await this.receiveMethod(channel);
+    if(method.classId === classId && method.methodId === methodId) {
+      return method as Extract<ReceiveMethod, { classId: T, methodId: U }>;
+    }
+
+    throw new Error(\`Expected \${classId}/\${methodId}, got \${method.classId}\${method.methodId}\`)
+  }
+
   private async receiveMethod(channel: number) {
     return new Promise<ReceiveMethod>((resolve, reject) => {
       const cancel = this.socket.subscribe(channel, (err, type, payload) => {
@@ -198,7 +215,7 @@ export class AmqpProtocol {
     });
   }
 
-  private async receiveContent(channel: number, size: bigint) {
+  private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
     return new Promise<Uint8Array>((resolve, reject) => {
       const cancel = this.socket.subscribe(channel, (err, type, payload) => {
@@ -212,7 +229,7 @@ export class AmqpProtocol {
           return resolve(buffer.bytes());
         }
 
-        if (buffer.length >= Number(size)) {
+        if (buffer.length >= size) {
           cancel();
           return resolve(buffer.bytes())
         }

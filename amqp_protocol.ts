@@ -124,7 +124,7 @@ export interface BasicProperties {
   replyTo?: string;
   expiration?: string;
   messageId?: string;
-  timestamp?: bigint;
+  timestamp?: number;
   type?: string;
   userId?: string;
   appId?: string;
@@ -407,7 +407,7 @@ export interface BasicReturnArgs {
 
 export interface BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: bigint;
+  deliveryTag: number;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -420,7 +420,7 @@ export interface BasicGetArgs {
 }
 
 export interface BasicGetOkArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   /** Default false */ redelivered?: boolean;
   exchange: string;
   routingKey: string;
@@ -432,12 +432,12 @@ export interface BasicGetEmptyArgs {
 }
 
 export interface BasicAckArgs {
-  /** Default 0 */ deliveryTag?: bigint;
+  /** Default 0 */ deliveryTag?: number;
   /** Default false */ multiple?: boolean;
 }
 
 export interface BasicRejectArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   /** Default true */ requeue?: boolean;
 }
 
@@ -453,7 +453,7 @@ export interface BasicRecoverOkArgs {
 }
 
 export interface BasicNackArgs {
-  /** Default 0 */ deliveryTag?: bigint;
+  /** Default 0 */ deliveryTag?: number;
   /** Default false */ multiple?: boolean;
   /** Default true */ requeue?: boolean;
 }
@@ -754,7 +754,7 @@ export interface BasicReturn extends BasicReturnArgs {
 
 export interface BasicDeliver extends BasicDeliverArgs {
   consumerTag: string;
-  deliveryTag: bigint;
+  deliveryTag: number;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -767,7 +767,7 @@ export interface BasicGet extends BasicGetArgs {
 }
 
 export interface BasicGetOk extends BasicGetOkArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   redelivered: boolean;
   exchange: string;
   routingKey: string;
@@ -779,12 +779,12 @@ export interface BasicGetEmpty extends BasicGetEmptyArgs {
 }
 
 export interface BasicAck extends BasicAckArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   multiple: boolean;
 }
 
 export interface BasicReject extends BasicRejectArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   requeue: boolean;
 }
 
@@ -800,7 +800,7 @@ export interface BasicRecoverOk extends BasicRecoverOkArgs {
 }
 
 export interface BasicNack extends BasicNackArgs {
-  deliveryTag: bigint;
+  deliveryTag: number;
   multiple: boolean;
   requeue: boolean;
 }
@@ -1229,49 +1229,49 @@ export interface ReceiveConfirmSelectOk {
 export interface ConnectionHeader {
   classId: 10;
   props: ConnectionProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface ChannelHeader {
   classId: 20;
   props: ChannelProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface AccessHeader {
   classId: 30;
   props: AccessProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface ExchangeHeader {
   classId: 40;
   props: ExchangeProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface QueueHeader {
   classId: 50;
   props: QueueProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface BasicHeader {
   classId: 60;
   props: BasicProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface TxHeader {
   classId: 90;
   props: TxProperties;
-  size: bigint;
+  size: number;
 }
 
 export interface ConfirmHeader {
   classId: 85;
   props: ConfirmProperties;
-  size: bigint;
+  size: number;
 }
 
 export type ReceiveMethod = ReceiveConnectionStart | ReceiveConnectionStartOk
@@ -2144,7 +2144,7 @@ export function encodeBasicDeliver(args: BasicDeliverArgs): Uint8Array {
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeFields([
     { type: "shortstr" as const, value: args.consumerTag },
-    { type: "longlong" as const, value: args.deliveryTag },
+    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
     {
       type: "bit" as const,
       value: args.redelivered !== undefined ? args.redelivered : false
@@ -2181,7 +2181,7 @@ export function encodeBasicGetOk(args: BasicGetOkArgs): Uint8Array {
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(71));
   w.writeSync(enc.encodeFields([
-    { type: "longlong" as const, value: args.deliveryTag },
+    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
     {
       type: "bit" as const,
       value: args.redelivered !== undefined ? args.redelivered : false
@@ -2213,7 +2213,7 @@ export function encodeBasicAck(args: BasicAckArgs): Uint8Array {
   w.writeSync(enc.encodeFields([
     {
       type: "longlong" as const,
-      value: args.deliveryTag !== undefined ? args.deliveryTag : BigInt(0)
+      value: BigInt(args.deliveryTag !== undefined ? args.deliveryTag : 0)
     },
     {
       type: "bit" as const,
@@ -2228,7 +2228,7 @@ export function encodeBasicReject(args: BasicRejectArgs): Uint8Array {
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeFields([
-    { type: "longlong" as const, value: args.deliveryTag },
+    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
     {
       type: "bit" as const,
       value: args.requeue !== undefined ? args.requeue : true
@@ -2280,7 +2280,7 @@ export function encodeBasicNack(args: BasicNackArgs): Uint8Array {
   w.writeSync(enc.encodeFields([
     {
       type: "longlong" as const,
-      value: args.deliveryTag !== undefined ? args.deliveryTag : BigInt(0)
+      value: BigInt(args.deliveryTag !== undefined ? args.deliveryTag : 0)
     },
     {
       type: "bit" as const,
@@ -2843,7 +2843,7 @@ function decodeBasicDeliver(r: Deno.SyncReader): BasicDeliver {
   );
   const args = {
     consumerTag: fields[0] as string,
-    deliveryTag: fields[1] as bigint,
+    deliveryTag: Number(fields[1]),
     redelivered: fields[2] as boolean,
     exchange: fields[3] as string,
     routingKey: fields[4] as string
@@ -2867,7 +2867,7 @@ function decodeBasicGetOk(r: Deno.SyncReader): BasicGetOk {
     ["longlong", "bit", "shortstr", "shortstr", "long"]
   );
   const args = {
-    deliveryTag: fields[0] as bigint,
+    deliveryTag: Number(fields[0]),
     redelivered: fields[1] as boolean,
     exchange: fields[2] as string,
     routingKey: fields[3] as string,
@@ -2885,7 +2885,7 @@ function decodeBasicGetEmpty(r: Deno.SyncReader): BasicGetEmpty {
 function decodeBasicAck(r: Deno.SyncReader): BasicAck {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
-    deliveryTag: fields[0] as bigint,
+    deliveryTag: Number(fields[0]),
     multiple: fields[1] as boolean
   };
   return args;
@@ -2894,7 +2894,7 @@ function decodeBasicAck(r: Deno.SyncReader): BasicAck {
 function decodeBasicReject(r: Deno.SyncReader): BasicReject {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
-    deliveryTag: fields[0] as bigint,
+    deliveryTag: Number(fields[0]),
     requeue: fields[1] as boolean
   };
   return args;
@@ -2921,7 +2921,7 @@ function decodeBasicRecoverOk(r: Deno.SyncReader): BasicRecoverOk {
 function decodeBasicNack(r: Deno.SyncReader): BasicNack {
   const fields = enc.decodeFields(r, ["longlong", "bit", "bit"]);
   const args = {
-    deliveryTag: fields[0] as bigint,
+    deliveryTag: Number(fields[0]),
     multiple: fields[1] as boolean,
     requeue: fields[2] as boolean
   };
@@ -3266,7 +3266,12 @@ export function encodeBasicHeader(
     { type: "shortstr", value: props.replyTo },
     { type: "shortstr", value: props.expiration },
     { type: "shortstr", value: props.messageId },
-    { type: "timestamp", value: props.timestamp },
+    {
+      type: "timestamp",
+      value: props.timestamp !== undefined
+        ? BigInt(props.timestamp)
+        : undefined
+    },
     { type: "shortstr", value: props.type },
     { type: "shortstr", value: props.userId },
     { type: "shortstr", value: props.appId },
@@ -3298,7 +3303,7 @@ export function encodeConfirmHeader(
 
 function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3307,7 +3312,7 @@ function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
 
 function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3316,7 +3321,7 @@ function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
 
 function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3325,7 +3330,7 @@ function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
 
 function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3334,7 +3339,7 @@ function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
 
 function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3343,7 +3348,7 @@ function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
 
 function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(
     r,
     [
@@ -3373,7 +3378,7 @@ function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
     replyTo: fields[6] as string,
     expiration: fields[7] as string,
     messageId: fields[8] as string,
-    timestamp: fields[9] as bigint,
+    timestamp: fields[9] as number,
     type: fields[10] as string,
     userId: fields[11] as string,
     appId: fields[12] as string,
@@ -3385,7 +3390,7 @@ function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
 
 function decodeTxHeader(r: Deno.SyncReader): TxHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3394,7 +3399,7 @@ function decodeTxHeader(r: Deno.SyncReader): TxHeader {
 
 function decodeConfirmHeader(r: Deno.SyncReader): ConfirmHeader {
   const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
+  const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -3437,6 +3442,21 @@ interface Socket {
 export class AmqpProtocol {
   constructor(private socket: Socket) {}
 
+  private async assertMethod<T extends number, U extends number>(
+    channel: number,
+    classId: T,
+    methodId: U
+  ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>> {
+    const method = await this.receiveMethod(channel);
+    if (method.classId === classId && method.methodId === methodId) {
+      return method as Extract<ReceiveMethod, { classId: T; methodId: U }>;
+    }
+
+    throw new Error(
+      `Expected ${classId}/${methodId}, got ${method.classId}${method.methodId}`
+    );
+  }
+
   private async receiveMethod(channel: number) {
     return new Promise<ReceiveMethod>((resolve, reject) => {
       const cancel = this.socket.subscribe(channel, (err, type, payload) => {
@@ -3475,7 +3495,7 @@ export class AmqpProtocol {
     });
   }
 
-  private async receiveContent(channel: number, size: bigint) {
+  private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
     return new Promise<Uint8Array>((resolve, reject) => {
       const cancel = this.socket.subscribe(channel, (err, type, payload) => {
@@ -3489,7 +3509,7 @@ export class AmqpProtocol {
           return resolve(buffer.bytes());
         }
 
-        if (buffer.length >= Number(size)) {
+        if (buffer.length >= size) {
           cancel();
           return resolve(buffer.bytes());
         }
@@ -3504,12 +3524,8 @@ export class AmqpProtocol {
     args: ConnectionStartArgs
   ): Promise<ConnectionStartOk> {
     await this.socket.write(channel, 1, encodeConnectionStart(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 11);
+    return reply.args;
   }
 
   async sendConnectionStartOk(
@@ -3524,12 +3540,8 @@ export class AmqpProtocol {
     args: ConnectionSecureArgs
   ): Promise<ConnectionSecureOk> {
     await this.socket.write(channel, 1, encodeConnectionSecure(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 21);
+    return reply.args;
   }
 
   async sendConnectionSecureOk(
@@ -3543,12 +3555,8 @@ export class AmqpProtocol {
     ConnectionTuneOk
   > {
     await this.socket.write(channel, 1, encodeConnectionTune(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 31) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 31);
+    return reply.args;
   }
 
   async sendConnectionTuneOk(
@@ -3562,12 +3570,8 @@ export class AmqpProtocol {
     ConnectionOpenOk
   > {
     await this.socket.write(channel, 1, encodeConnectionOpen(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 41) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 41);
+    return reply.args;
   }
 
   async sendConnectionOpenOk(
@@ -3582,12 +3586,8 @@ export class AmqpProtocol {
     args: ConnectionCloseArgs
   ): Promise<ConnectionCloseOk> {
     await this.socket.write(channel, 1, encodeConnectionClose(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 51) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 51);
+    return reply.args;
   }
 
   async sendConnectionCloseOk(
@@ -3616,12 +3616,8 @@ export class AmqpProtocol {
     args: ConnectionUpdateSecretArgs
   ): Promise<ConnectionUpdateSecretOk> {
     await this.socket.write(channel, 1, encodeConnectionUpdateSecret(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 10 && reply.methodId === 71) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 10, 71);
+    return reply.args;
   }
 
   async sendConnectionUpdateSecretOk(
@@ -3635,12 +3631,8 @@ export class AmqpProtocol {
     ChannelOpenOk
   > {
     await this.socket.write(channel, 1, encodeChannelOpen(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 20 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 20, 11);
+    return reply.args;
   }
 
   async sendChannelOpenOk(channel: number, args: ChannelOpenOkArgs): Promise<
@@ -3653,12 +3645,8 @@ export class AmqpProtocol {
     ChannelFlowOk
   > {
     await this.socket.write(channel, 1, encodeChannelFlow(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 20 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 20, 21);
+    return reply.args;
   }
 
   async sendChannelFlowOk(channel: number, args: ChannelFlowOkArgs): Promise<
@@ -3671,12 +3659,8 @@ export class AmqpProtocol {
     ChannelCloseOk
   > {
     await this.socket.write(channel, 1, encodeChannelClose(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 20 && reply.methodId === 41) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 20, 41);
+    return reply.args;
   }
 
   async sendChannelCloseOk(channel: number, args: ChannelCloseOkArgs): Promise<
@@ -3689,12 +3673,8 @@ export class AmqpProtocol {
     AccessRequestOk
   > {
     await this.socket.write(channel, 1, encodeAccessRequest(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 30 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 30, 11);
+    return reply.args;
   }
 
   async sendAccessRequestOk(
@@ -3709,12 +3689,8 @@ export class AmqpProtocol {
     args: ExchangeDeclareArgs
   ): Promise<ExchangeDeclareOk> {
     await this.socket.write(channel, 1, encodeExchangeDeclare(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 40 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 40, 11);
+    return reply.args;
   }
 
   async sendExchangeDeclareOk(
@@ -3728,12 +3704,8 @@ export class AmqpProtocol {
     ExchangeDeleteOk
   > {
     await this.socket.write(channel, 1, encodeExchangeDelete(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 40 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 40, 21);
+    return reply.args;
   }
 
   async sendExchangeDeleteOk(
@@ -3747,12 +3719,8 @@ export class AmqpProtocol {
     ExchangeBindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeBind(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 40 && reply.methodId === 31) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 40, 31);
+    return reply.args;
   }
 
   async sendExchangeBindOk(channel: number, args: ExchangeBindOkArgs): Promise<
@@ -3765,12 +3733,8 @@ export class AmqpProtocol {
     ExchangeUnbindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeUnbind(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 40 && reply.methodId === 51) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 40, 51);
+    return reply.args;
   }
 
   async sendExchangeUnbindOk(
@@ -3784,12 +3748,8 @@ export class AmqpProtocol {
     QueueDeclareOk
   > {
     await this.socket.write(channel, 1, encodeQueueDeclare(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 50 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 50, 11);
+    return reply.args;
   }
 
   async sendQueueDeclareOk(channel: number, args: QueueDeclareOkArgs): Promise<
@@ -3802,12 +3762,8 @@ export class AmqpProtocol {
     QueueBindOk
   > {
     await this.socket.write(channel, 1, encodeQueueBind(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 50 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 50, 21);
+    return reply.args;
   }
 
   async sendQueueBindOk(channel: number, args: QueueBindOkArgs): Promise<
@@ -3820,12 +3776,8 @@ export class AmqpProtocol {
     QueuePurgeOk
   > {
     await this.socket.write(channel, 1, encodeQueuePurge(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 50 && reply.methodId === 31) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 50, 31);
+    return reply.args;
   }
 
   async sendQueuePurgeOk(channel: number, args: QueuePurgeOkArgs): Promise<
@@ -3838,12 +3790,8 @@ export class AmqpProtocol {
     QueueDeleteOk
   > {
     await this.socket.write(channel, 1, encodeQueueDelete(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 50 && reply.methodId === 41) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 50, 41);
+    return reply.args;
   }
 
   async sendQueueDeleteOk(channel: number, args: QueueDeleteOkArgs): Promise<
@@ -3856,12 +3804,8 @@ export class AmqpProtocol {
     QueueUnbindOk
   > {
     await this.socket.write(channel, 1, encodeQueueUnbind(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 50 && reply.methodId === 51) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 50, 51);
+    return reply.args;
   }
 
   async sendQueueUnbindOk(channel: number, args: QueueUnbindOkArgs): Promise<
@@ -3874,12 +3818,8 @@ export class AmqpProtocol {
     BasicQosOk
   > {
     await this.socket.write(channel, 1, encodeBasicQos(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 60 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 60, 11);
+    return reply.args;
   }
 
   async sendBasicQosOk(channel: number, args: BasicQosOkArgs): Promise<void> {
@@ -3890,12 +3830,8 @@ export class AmqpProtocol {
     BasicConsumeOk
   > {
     await this.socket.write(channel, 1, encodeBasicConsume(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 60 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 60, 21);
+    return reply.args;
   }
 
   async sendBasicConsumeOk(channel: number, args: BasicConsumeOkArgs): Promise<
@@ -3908,12 +3844,8 @@ export class AmqpProtocol {
     BasicCancelOk
   > {
     await this.socket.write(channel, 1, encodeBasicCancel(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 60 && reply.methodId === 31) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 60, 31);
+    return reply.args;
   }
 
   async sendBasicCancelOk(channel: number, args: BasicCancelOkArgs): Promise<
@@ -3928,13 +3860,15 @@ export class AmqpProtocol {
     props: BasicProperties,
     data: Uint8Array
   ) {
-    await this.socket.write(channel, 1, encodeBasicPublish(args));
-    await this.socket.write(
-      channel,
-      2,
-      encodeBasicHeader(BigInt(data.length), props)
-    );
-    await this.socket.write(channel, 3, data);
+    await Promise.all([
+      this.socket.write(channel, 1, encodeBasicPublish(args)),
+      this.socket.write(
+        channel,
+        2,
+        encodeBasicHeader(BigInt(data.length), props)
+      ),
+      this.socket.write(channel, 3, data)
+    ]);
   }
 
   async sendBasicReturn(
@@ -3943,13 +3877,15 @@ export class AmqpProtocol {
     props: BasicProperties,
     data: Uint8Array
   ) {
-    await this.socket.write(channel, 1, encodeBasicReturn(args));
-    await this.socket.write(
-      channel,
-      2,
-      encodeBasicHeader(BigInt(data.length), props)
-    );
-    await this.socket.write(channel, 3, data);
+    await Promise.all([
+      this.socket.write(channel, 1, encodeBasicReturn(args)),
+      this.socket.write(
+        channel,
+        2,
+        encodeBasicHeader(BigInt(data.length), props)
+      ),
+      this.socket.write(channel, 3, data)
+    ]);
   }
 
   async sendBasicDeliver(
@@ -3958,13 +3894,15 @@ export class AmqpProtocol {
     props: BasicProperties,
     data: Uint8Array
   ) {
-    await this.socket.write(channel, 1, encodeBasicDeliver(args));
-    await this.socket.write(
-      channel,
-      2,
-      encodeBasicHeader(BigInt(data.length), props)
-    );
-    await this.socket.write(channel, 3, data);
+    await Promise.all([
+      this.socket.write(channel, 1, encodeBasicDeliver(args)),
+      this.socket.write(
+        channel,
+        2,
+        encodeBasicHeader(BigInt(data.length), props)
+      ),
+      this.socket.write(channel, 3, data)
+    ]);
   }
 
   async sendBasicGet(channel: number, args: BasicGetArgs): Promise<
@@ -3979,7 +3917,9 @@ export class AmqpProtocol {
       return reply.args;
     }
 
-    throw new Error("Unexpected method");
+    throw new Error(
+      `Expected '60/71' or '60/72' got ${reply.classId}${reply.methodId}`
+    );
   }
 
   async sendBasicGetOk(
@@ -3988,13 +3928,15 @@ export class AmqpProtocol {
     props: BasicProperties,
     data: Uint8Array
   ) {
-    await this.socket.write(channel, 1, encodeBasicGetOk(args));
-    await this.socket.write(
-      channel,
-      2,
-      encodeBasicHeader(BigInt(data.length), props)
-    );
-    await this.socket.write(channel, 3, data);
+    await Promise.all([
+      this.socket.write(channel, 1, encodeBasicGetOk(args)),
+      this.socket.write(
+        channel,
+        2,
+        encodeBasicHeader(BigInt(data.length), props)
+      ),
+      this.socket.write(channel, 3, data)
+    ]);
   }
 
   async sendBasicGetEmpty(channel: number, args: BasicGetEmptyArgs): Promise<
@@ -4024,12 +3966,8 @@ export class AmqpProtocol {
     BasicRecoverOk
   > {
     await this.socket.write(channel, 1, encodeBasicRecover(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 60 && reply.methodId === 111) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 60, 111);
+    return reply.args;
   }
 
   async sendBasicRecoverOk(channel: number, args: BasicRecoverOkArgs): Promise<
@@ -4046,12 +3984,8 @@ export class AmqpProtocol {
     TxSelectOk
   > {
     await this.socket.write(channel, 1, encodeTxSelect(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 90 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 90, 11);
+    return reply.args;
   }
 
   async sendTxSelectOk(channel: number, args: TxSelectOkArgs): Promise<void> {
@@ -4062,12 +3996,8 @@ export class AmqpProtocol {
     TxCommitOk
   > {
     await this.socket.write(channel, 1, encodeTxCommit(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 90 && reply.methodId === 21) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 90, 21);
+    return reply.args;
   }
 
   async sendTxCommitOk(channel: number, args: TxCommitOkArgs): Promise<void> {
@@ -4078,12 +4008,8 @@ export class AmqpProtocol {
     TxRollbackOk
   > {
     await this.socket.write(channel, 1, encodeTxRollback(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 90 && reply.methodId === 31) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 90, 31);
+    return reply.args;
   }
 
   async sendTxRollbackOk(channel: number, args: TxRollbackOkArgs): Promise<
@@ -4096,12 +4022,8 @@ export class AmqpProtocol {
     ConfirmSelectOk
   > {
     await this.socket.write(channel, 1, encodeConfirmSelect(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 85 && reply.methodId === 11) {
-      return reply.args;
-    }
-
-    throw new Error("Unexpected method");
+    const reply = await this.assertMethod(channel, 85, 11);
+    return reply.args;
   }
 
   async sendConfirmSelectOk(
@@ -4112,631 +4034,321 @@ export class AmqpProtocol {
   }
 
   async receiveConnectionStart(channel: number): Promise<ConnectionStart> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 10);
+    return method.args;
   }
 
   async receiveConnectionStartOk(channel: number): Promise<ConnectionStartOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 11);
+    return method.args;
   }
 
   async receiveConnectionSecure(channel: number): Promise<ConnectionSecure> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 20);
+    return method.args;
   }
 
   async receiveConnectionSecureOk(channel: number): Promise<
     ConnectionSecureOk
   > {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 21);
+    return method.args;
   }
 
   async receiveConnectionTune(channel: number): Promise<ConnectionTune> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 30) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 30);
+    return method.args;
   }
 
   async receiveConnectionTuneOk(channel: number): Promise<ConnectionTuneOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 31) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 31);
+    return method.args;
   }
 
   async receiveConnectionOpen(channel: number): Promise<ConnectionOpen> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 40) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 40);
+    return method.args;
   }
 
   async receiveConnectionOpenOk(channel: number): Promise<ConnectionOpenOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 41) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 41);
+    return method.args;
   }
 
   async receiveConnectionClose(channel: number): Promise<ConnectionClose> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 50) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 50);
+    return method.args;
   }
 
   async receiveConnectionCloseOk(channel: number): Promise<ConnectionCloseOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 51) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 51);
+    return method.args;
   }
 
   async receiveConnectionBlocked(channel: number): Promise<ConnectionBlocked> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 60) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 60);
+    return method.args;
   }
 
   async receiveConnectionUnblocked(channel: number): Promise<
     ConnectionUnblocked
   > {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 61) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 61);
+    return method.args;
   }
 
   async receiveConnectionUpdateSecret(channel: number): Promise<
     ConnectionUpdateSecret
   > {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 70) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 70);
+    return method.args;
   }
 
   async receiveConnectionUpdateSecretOk(channel: number): Promise<
     ConnectionUpdateSecretOk
   > {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 10 && method.methodId === 71) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 10, 71);
+    return method.args;
   }
 
   async receiveChannelOpen(channel: number): Promise<ChannelOpen> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 10);
+    return method.args;
   }
 
   async receiveChannelOpenOk(channel: number): Promise<ChannelOpenOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 11);
+    return method.args;
   }
 
   async receiveChannelFlow(channel: number): Promise<ChannelFlow> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 20);
+    return method.args;
   }
 
   async receiveChannelFlowOk(channel: number): Promise<ChannelFlowOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 21);
+    return method.args;
   }
 
   async receiveChannelClose(channel: number): Promise<ChannelClose> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 40) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 40);
+    return method.args;
   }
 
   async receiveChannelCloseOk(channel: number): Promise<ChannelCloseOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 20 && method.methodId === 41) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 20, 41);
+    return method.args;
   }
 
   async receiveAccessRequest(channel: number): Promise<AccessRequest> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 30 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 30, 10);
+    return method.args;
   }
 
   async receiveAccessRequestOk(channel: number): Promise<AccessRequestOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 30 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 30, 11);
+    return method.args;
   }
 
   async receiveExchangeDeclare(channel: number): Promise<ExchangeDeclare> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 10);
+    return method.args;
   }
 
   async receiveExchangeDeclareOk(channel: number): Promise<ExchangeDeclareOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 11);
+    return method.args;
   }
 
   async receiveExchangeDelete(channel: number): Promise<ExchangeDelete> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 20);
+    return method.args;
   }
 
   async receiveExchangeDeleteOk(channel: number): Promise<ExchangeDeleteOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 21);
+    return method.args;
   }
 
   async receiveExchangeBind(channel: number): Promise<ExchangeBind> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 30) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 30);
+    return method.args;
   }
 
   async receiveExchangeBindOk(channel: number): Promise<ExchangeBindOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 31) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 31);
+    return method.args;
   }
 
   async receiveExchangeUnbind(channel: number): Promise<ExchangeUnbind> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 40) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 40);
+    return method.args;
   }
 
   async receiveExchangeUnbindOk(channel: number): Promise<ExchangeUnbindOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 40 && method.methodId === 51) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 40, 51);
+    return method.args;
   }
 
   async receiveQueueDeclare(channel: number): Promise<QueueDeclare> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 10);
+    return method.args;
   }
 
   async receiveQueueDeclareOk(channel: number): Promise<QueueDeclareOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 11);
+    return method.args;
   }
 
   async receiveQueueBind(channel: number): Promise<QueueBind> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 20);
+    return method.args;
   }
 
   async receiveQueueBindOk(channel: number): Promise<QueueBindOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 21);
+    return method.args;
   }
 
   async receiveQueuePurge(channel: number): Promise<QueuePurge> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 30) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 30);
+    return method.args;
   }
 
   async receiveQueuePurgeOk(channel: number): Promise<QueuePurgeOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 31) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 31);
+    return method.args;
   }
 
   async receiveQueueDelete(channel: number): Promise<QueueDelete> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 40) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 40);
+    return method.args;
   }
 
   async receiveQueueDeleteOk(channel: number): Promise<QueueDeleteOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 41) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 41);
+    return method.args;
   }
 
   async receiveQueueUnbind(channel: number): Promise<QueueUnbind> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 50) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 50);
+    return method.args;
   }
 
   async receiveQueueUnbindOk(channel: number): Promise<QueueUnbindOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 50 && method.methodId === 51) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 50, 51);
+    return method.args;
   }
 
   async receiveBasicQos(channel: number): Promise<BasicQos> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 10);
+    return method.args;
   }
 
   async receiveBasicQosOk(channel: number): Promise<BasicQosOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 11);
+    return method.args;
   }
 
   async receiveBasicConsume(channel: number): Promise<BasicConsume> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 20);
+    return method.args;
   }
 
   async receiveBasicConsumeOk(channel: number): Promise<BasicConsumeOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 21);
+    return method.args;
   }
 
   async receiveBasicCancel(channel: number): Promise<BasicCancel> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 30) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 30);
+    return method.args;
   }
 
   async receiveBasicCancelOk(channel: number): Promise<BasicCancelOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 31) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 31);
+    return method.args;
   }
 
   async receiveBasicGet(channel: number): Promise<BasicGet> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 70) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 70);
+    return method.args;
   }
 
   async receiveBasicGetEmpty(channel: number): Promise<BasicGetEmpty> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 72) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 72);
+    return method.args;
   }
 
   async receiveBasicAck(channel: number): Promise<BasicAck> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 80) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 80);
+    return method.args;
   }
 
   async receiveBasicReject(channel: number): Promise<BasicReject> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 90) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 90);
+    return method.args;
   }
 
   async receiveBasicRecoverAsync(channel: number): Promise<BasicRecoverAsync> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 100) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 100);
+    return method.args;
   }
 
   async receiveBasicRecover(channel: number): Promise<BasicRecover> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 110) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 110);
+    return method.args;
   }
 
   async receiveBasicRecoverOk(channel: number): Promise<BasicRecoverOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 111) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 111);
+    return method.args;
   }
 
   async receiveBasicNack(channel: number): Promise<BasicNack> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 60 && method.methodId === 120) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 60, 120);
+    return method.args;
   }
 
   async receiveTxSelect(channel: number): Promise<TxSelect> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 10);
+    return method.args;
   }
 
   async receiveTxSelectOk(channel: number): Promise<TxSelectOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 11);
+    return method.args;
   }
 
   async receiveTxCommit(channel: number): Promise<TxCommit> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 20) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 20);
+    return method.args;
   }
 
   async receiveTxCommitOk(channel: number): Promise<TxCommitOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 21) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 21);
+    return method.args;
   }
 
   async receiveTxRollback(channel: number): Promise<TxRollback> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 30) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 30);
+    return method.args;
   }
 
   async receiveTxRollbackOk(channel: number): Promise<TxRollbackOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 90 && method.methodId === 31) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 90, 31);
+    return method.args;
   }
 
   async receiveConfirmSelect(channel: number): Promise<ConfirmSelect> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 85 && method.methodId === 10) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 85, 10);
+    return method.args;
   }
 
   async receiveConfirmSelectOk(channel: number): Promise<ConfirmSelectOk> {
-    const method = await this.receiveMethod(channel);
-
-    if (method.classId === 85 && method.methodId === 11) {
-      return method.args;
-    }
-
-    throw new Error("");
+    const method = await this.assertMethod(channel, 85, 11);
+    return method.args;
   }
 
   subscribeConnectionStart(
