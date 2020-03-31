@@ -2056,6 +2056,7 @@ export function encodeBasicConsume(args: BasicConsumeArgs): Uint8Array {
       value: args.arguments !== undefined ? args.arguments : {}
     }
   ]));
+
   return w.bytes();
 }
 
@@ -3434,14 +3435,81 @@ export function decodeHeader(data: Uint8Array): Header {
 interface Socket {
   write(channel: number, type: number, payload: Uint8Array): Promise<void>;
   subscribe(
-    channel: number,
-    handler: (err: Error | null, type: number, payload: Uint8Array) => void
+    handler: (
+      err: Error | null,
+      channel: number,
+      type: number,
+      payload: Uint8Array
+    ) => void
   ): () => void;
 }
 
+interface MethodSubscriber {
+  channel: number;
+  handler: (m: ReceiveMethod) => void;
+}
+
+interface HeaderSubscriber {
+  channel: number;
+  handler: (h: Header) => void;
+}
+
 export class AmqpProtocol {
+  private methodSubscribers: MethodSubscriber[] = [];
+  private headerSubscribers: HeaderSubscriber[] = [];
+
   constructor(private socket: Socket) {
-    // this.socket.subscribe(ch)
+    this.socket.subscribe((err, channel, type, payload) => {
+      if (type === 1) {
+        this.emitMethod(channel, decodeMethod(payload));
+      } else if (type === 2) {
+        this.emitHeader(channel, decodeHeader(payload));
+      }
+    });
+  }
+
+  private emitMethod(channel: number, method: ReceiveMethod) {
+    this.methodSubscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(method);
+      }
+    });
+  }
+
+  private emitHeader(channel: number, header: Header) {
+    this.headerSubscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(header);
+      }
+    });
+  }
+
+  private subscribeMethod(
+    channel: number,
+    handler: (m: ReceiveMethod) => void
+  ) {
+    const sub = { channel, handler };
+    this.methodSubscribers.push(sub);
+    return () => {
+      const index = this.methodSubscribers.indexOf(sub);
+      if (index !== -1) {
+        this.methodSubscribers.splice(index, index + 1);
+      }
+    };
+  }
+
+  private subscribeHeader(
+    channel: number,
+    handler: (m: Header) => void
+  ) {
+    const sub = { channel, handler };
+    this.headerSubscribers.push(sub);
+    return () => {
+      const index = this.headerSubscribers.indexOf(sub);
+      if (index !== -1) {
+        this.headerSubscribers.splice(index, index + 1);
+      }
+    };
   }
 
   private async assertMethod<T extends number, U extends number>(
@@ -3461,49 +3529,31 @@ export class AmqpProtocol {
 
   private async receiveMethod(channel: number) {
     return new Promise<ReceiveMethod>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
-          cancel();
-          return reject(err);
-        }
-
-        if (type !== 1) {
-          cancel();
-          return reject(err);
-        }
-
+      const cancel = this.subscribeMethod(channel, method => {
         cancel();
-        return resolve(decodeMethod(payload));
+        return resolve(method);
       });
     });
   }
 
   private async receiveHeader(channel: number) {
     return new Promise<Header>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
+      const cancel = this.subscribeHeader(
+        channel,
+        header => {
           cancel();
-          return reject(err);
+          resolve(header);
         }
-
-        if (type !== 2) {
-          cancel();
-          return reject(err);
-        }
-
-        cancel();
-        return resolve(decodeHeader(payload));
-      });
+      );
     });
   }
 
   private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
-    return new Promise<Uint8Array>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
-          cancel();
-          return reject(err);
+    return new Promise<Uint8Array>(resolve => {
+      const cancel = this.socket.subscribe((err, ch, type, data) => {
+        if (channel !== ch) {
+          return;
         }
 
         if (type !== 3) {
@@ -3511,12 +3561,11 @@ export class AmqpProtocol {
           return resolve(buffer.bytes());
         }
 
+        buffer.writeSync(data);
         if (buffer.length >= size) {
           cancel();
           return resolve(buffer.bytes());
         }
-
-        buffer.writeSync(payload);
       });
     });
   }
@@ -3526,8 +3575,14 @@ export class AmqpProtocol {
     args: ConnectionStartArgs
   ): Promise<ConnectionStartOk> {
     await this.socket.write(channel, 1, encodeConnectionStart(args));
-    const reply = await this.assertMethod(channel, 10, 11);
-    return reply.args;
+    return new Promise<ConnectionStartOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionStartOk(
@@ -3542,8 +3597,14 @@ export class AmqpProtocol {
     args: ConnectionSecureArgs
   ): Promise<ConnectionSecureOk> {
     await this.socket.write(channel, 1, encodeConnectionSecure(args));
-    const reply = await this.assertMethod(channel, 10, 21);
-    return reply.args;
+    return new Promise<ConnectionSecureOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionSecureOk(
@@ -3557,8 +3618,14 @@ export class AmqpProtocol {
     ConnectionTuneOk
   > {
     await this.socket.write(channel, 1, encodeConnectionTune(args));
-    const reply = await this.assertMethod(channel, 10, 31);
-    return reply.args;
+    return new Promise<ConnectionTuneOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 31) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionTuneOk(
@@ -3572,8 +3639,14 @@ export class AmqpProtocol {
     ConnectionOpenOk
   > {
     await this.socket.write(channel, 1, encodeConnectionOpen(args));
-    const reply = await this.assertMethod(channel, 10, 41);
-    return reply.args;
+    return new Promise<ConnectionOpenOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 41) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionOpenOk(
@@ -3588,8 +3661,14 @@ export class AmqpProtocol {
     args: ConnectionCloseArgs
   ): Promise<ConnectionCloseOk> {
     await this.socket.write(channel, 1, encodeConnectionClose(args));
-    const reply = await this.assertMethod(channel, 10, 51);
-    return reply.args;
+    return new Promise<ConnectionCloseOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 51) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionCloseOk(
@@ -3618,8 +3697,14 @@ export class AmqpProtocol {
     args: ConnectionUpdateSecretArgs
   ): Promise<ConnectionUpdateSecretOk> {
     await this.socket.write(channel, 1, encodeConnectionUpdateSecret(args));
-    const reply = await this.assertMethod(channel, 10, 71);
-    return reply.args;
+    return new Promise<ConnectionUpdateSecretOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 10 && reply.methodId === 71) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConnectionUpdateSecretOk(
@@ -3633,8 +3718,14 @@ export class AmqpProtocol {
     ChannelOpenOk
   > {
     await this.socket.write(channel, 1, encodeChannelOpen(args));
-    const reply = await this.assertMethod(channel, 20, 11);
-    return reply.args;
+    return new Promise<ChannelOpenOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 20 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendChannelOpenOk(channel: number, args: ChannelOpenOkArgs): Promise<
@@ -3647,8 +3738,14 @@ export class AmqpProtocol {
     ChannelFlowOk
   > {
     await this.socket.write(channel, 1, encodeChannelFlow(args));
-    const reply = await this.assertMethod(channel, 20, 21);
-    return reply.args;
+    return new Promise<ChannelFlowOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 20 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendChannelFlowOk(channel: number, args: ChannelFlowOkArgs): Promise<
@@ -3661,8 +3758,14 @@ export class AmqpProtocol {
     ChannelCloseOk
   > {
     await this.socket.write(channel, 1, encodeChannelClose(args));
-    const reply = await this.assertMethod(channel, 20, 41);
-    return reply.args;
+    return new Promise<ChannelCloseOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 20 && reply.methodId === 41) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendChannelCloseOk(channel: number, args: ChannelCloseOkArgs): Promise<
@@ -3675,8 +3778,14 @@ export class AmqpProtocol {
     AccessRequestOk
   > {
     await this.socket.write(channel, 1, encodeAccessRequest(args));
-    const reply = await this.assertMethod(channel, 30, 11);
-    return reply.args;
+    return new Promise<AccessRequestOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 30 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendAccessRequestOk(
@@ -3691,8 +3800,14 @@ export class AmqpProtocol {
     args: ExchangeDeclareArgs
   ): Promise<ExchangeDeclareOk> {
     await this.socket.write(channel, 1, encodeExchangeDeclare(args));
-    const reply = await this.assertMethod(channel, 40, 11);
-    return reply.args;
+    return new Promise<ExchangeDeclareOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 40 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendExchangeDeclareOk(
@@ -3706,8 +3821,14 @@ export class AmqpProtocol {
     ExchangeDeleteOk
   > {
     await this.socket.write(channel, 1, encodeExchangeDelete(args));
-    const reply = await this.assertMethod(channel, 40, 21);
-    return reply.args;
+    return new Promise<ExchangeDeleteOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 40 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendExchangeDeleteOk(
@@ -3721,8 +3842,14 @@ export class AmqpProtocol {
     ExchangeBindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeBind(args));
-    const reply = await this.assertMethod(channel, 40, 31);
-    return reply.args;
+    return new Promise<ExchangeBindOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 40 && reply.methodId === 31) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendExchangeBindOk(channel: number, args: ExchangeBindOkArgs): Promise<
@@ -3735,8 +3862,14 @@ export class AmqpProtocol {
     ExchangeUnbindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeUnbind(args));
-    const reply = await this.assertMethod(channel, 40, 51);
-    return reply.args;
+    return new Promise<ExchangeUnbindOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 40 && reply.methodId === 51) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendExchangeUnbindOk(
@@ -3750,8 +3883,14 @@ export class AmqpProtocol {
     QueueDeclareOk
   > {
     await this.socket.write(channel, 1, encodeQueueDeclare(args));
-    const reply = await this.assertMethod(channel, 50, 11);
-    return reply.args;
+    return new Promise<QueueDeclareOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 50 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendQueueDeclareOk(channel: number, args: QueueDeclareOkArgs): Promise<
@@ -3764,8 +3903,14 @@ export class AmqpProtocol {
     QueueBindOk
   > {
     await this.socket.write(channel, 1, encodeQueueBind(args));
-    const reply = await this.assertMethod(channel, 50, 21);
-    return reply.args;
+    return new Promise<QueueBindOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 50 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendQueueBindOk(channel: number, args: QueueBindOkArgs): Promise<
@@ -3778,8 +3923,14 @@ export class AmqpProtocol {
     QueuePurgeOk
   > {
     await this.socket.write(channel, 1, encodeQueuePurge(args));
-    const reply = await this.assertMethod(channel, 50, 31);
-    return reply.args;
+    return new Promise<QueuePurgeOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 50 && reply.methodId === 31) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendQueuePurgeOk(channel: number, args: QueuePurgeOkArgs): Promise<
@@ -3792,8 +3943,14 @@ export class AmqpProtocol {
     QueueDeleteOk
   > {
     await this.socket.write(channel, 1, encodeQueueDelete(args));
-    const reply = await this.assertMethod(channel, 50, 41);
-    return reply.args;
+    return new Promise<QueueDeleteOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 50 && reply.methodId === 41) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendQueueDeleteOk(channel: number, args: QueueDeleteOkArgs): Promise<
@@ -3806,8 +3963,14 @@ export class AmqpProtocol {
     QueueUnbindOk
   > {
     await this.socket.write(channel, 1, encodeQueueUnbind(args));
-    const reply = await this.assertMethod(channel, 50, 51);
-    return reply.args;
+    return new Promise<QueueUnbindOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 50 && reply.methodId === 51) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendQueueUnbindOk(channel: number, args: QueueUnbindOkArgs): Promise<
@@ -3820,8 +3983,14 @@ export class AmqpProtocol {
     BasicQosOk
   > {
     await this.socket.write(channel, 1, encodeBasicQos(args));
-    const reply = await this.assertMethod(channel, 60, 11);
-    return reply.args;
+    return new Promise<BasicQosOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 60 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendBasicQosOk(channel: number, args: BasicQosOkArgs): Promise<void> {
@@ -3832,8 +4001,14 @@ export class AmqpProtocol {
     BasicConsumeOk
   > {
     await this.socket.write(channel, 1, encodeBasicConsume(args));
-    const reply = await this.assertMethod(channel, 60, 21);
-    return reply.args;
+    return new Promise<BasicConsumeOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 60 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendBasicConsumeOk(channel: number, args: BasicConsumeOkArgs): Promise<
@@ -3846,8 +4021,14 @@ export class AmqpProtocol {
     BasicCancelOk
   > {
     await this.socket.write(channel, 1, encodeBasicCancel(args));
-    const reply = await this.assertMethod(channel, 60, 31);
-    return reply.args;
+    return new Promise<BasicCancelOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 60 && reply.methodId === 31) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendBasicCancelOk(channel: number, args: BasicCancelOkArgs): Promise<
@@ -3911,17 +4092,18 @@ export class AmqpProtocol {
     BasicGetOk | BasicGetEmpty
   > {
     await this.socket.write(channel, 1, encodeBasicGet(args));
-    const reply = await this.receiveMethod(channel);
-    if (reply.classId === 60 && reply.methodId === 71) {
-      return reply.args;
-    }
-    if (reply.classId === 60 && reply.methodId === 72) {
-      return reply.args;
-    }
-
-    throw new Error(
-      `Expected '60/71' or '60/72' got ${reply.classId}${reply.methodId}`
-    );
+    return new Promise<BasicGetOk | BasicGetEmpty>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 60 && reply.methodId === 71) {
+          cancel();
+          return resolve(reply.args);
+        }
+        if (reply.classId === 60 && reply.methodId === 72) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendBasicGetOk(
@@ -3968,8 +4150,14 @@ export class AmqpProtocol {
     BasicRecoverOk
   > {
     await this.socket.write(channel, 1, encodeBasicRecover(args));
-    const reply = await this.assertMethod(channel, 60, 111);
-    return reply.args;
+    return new Promise<BasicRecoverOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 60 && reply.methodId === 111) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendBasicRecoverOk(channel: number, args: BasicRecoverOkArgs): Promise<
@@ -3986,8 +4174,14 @@ export class AmqpProtocol {
     TxSelectOk
   > {
     await this.socket.write(channel, 1, encodeTxSelect(args));
-    const reply = await this.assertMethod(channel, 90, 11);
-    return reply.args;
+    return new Promise<TxSelectOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 90 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendTxSelectOk(channel: number, args: TxSelectOkArgs): Promise<void> {
@@ -3998,8 +4192,14 @@ export class AmqpProtocol {
     TxCommitOk
   > {
     await this.socket.write(channel, 1, encodeTxCommit(args));
-    const reply = await this.assertMethod(channel, 90, 21);
-    return reply.args;
+    return new Promise<TxCommitOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 90 && reply.methodId === 21) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendTxCommitOk(channel: number, args: TxCommitOkArgs): Promise<void> {
@@ -4010,8 +4210,14 @@ export class AmqpProtocol {
     TxRollbackOk
   > {
     await this.socket.write(channel, 1, encodeTxRollback(args));
-    const reply = await this.assertMethod(channel, 90, 31);
-    return reply.args;
+    return new Promise<TxRollbackOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 90 && reply.methodId === 31) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendTxRollbackOk(channel: number, args: TxRollbackOkArgs): Promise<
@@ -4024,8 +4230,14 @@ export class AmqpProtocol {
     ConfirmSelectOk
   > {
     await this.socket.write(channel, 1, encodeConfirmSelect(args));
-    const reply = await this.assertMethod(channel, 85, 11);
-    return reply.args;
+    return new Promise<ConfirmSelectOk>((resolve, reject) => {
+      const cancel = this.subscribeMethod(channel, reply => {
+        if (reply.classId === 85 && reply.methodId === 11) {
+          cancel();
+          return resolve(reply.args);
+        }
+      });
+    });
   }
 
   async sendConfirmSelectOk(
@@ -4357,19 +4569,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionStart) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4377,19 +4581,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionStartOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4397,19 +4593,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionSecure) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4417,19 +4605,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionSecureOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4437,19 +4617,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionTune) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 30) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 30) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4457,19 +4629,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionTuneOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 31) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 31) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4477,19 +4641,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionOpen) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 40) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 40) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4497,19 +4653,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionOpenOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 41) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 41) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4517,19 +4665,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionClose) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 50) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 50) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4537,19 +4677,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionCloseOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 51) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 51) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4557,19 +4689,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionBlocked) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 60) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 60) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4577,19 +4701,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionUnblocked) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 61) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 61) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4597,19 +4713,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionUpdateSecret) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 70) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 70) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4617,19 +4725,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionUpdateSecretOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 10 && method.methodId === 71) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 10 && method.methodId === 71) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4637,19 +4737,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelOpen) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4657,19 +4749,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelOpenOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4677,19 +4761,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelFlow) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4697,19 +4773,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelFlowOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4717,19 +4785,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelClose) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 40) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 40) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4737,19 +4797,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelCloseOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 20 && method.methodId === 41) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 20 && method.methodId === 41) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4757,19 +4809,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: AccessRequest) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 30 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 30 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4777,19 +4821,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: AccessRequestOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 30 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 30 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4797,19 +4833,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeDeclare) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4817,19 +4845,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeDeclareOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4837,19 +4857,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeDelete) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4857,19 +4869,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeDeleteOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4877,19 +4881,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeBind) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 30) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 30) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4897,19 +4893,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeBindOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 31) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 31) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4917,19 +4905,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeUnbind) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 40) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 40) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4937,19 +4917,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ExchangeUnbindOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 40 && method.methodId === 51) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 40 && method.methodId === 51) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4957,19 +4929,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueDeclare) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4977,19 +4941,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueDeclareOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -4997,19 +4953,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueBind) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5017,19 +4965,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueBindOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5037,19 +4977,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueuePurge) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 30) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 30) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5057,19 +4989,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueuePurgeOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 31) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 31) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5077,19 +5001,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueDelete) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 40) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 40) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5097,19 +5013,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueDeleteOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 41) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 41) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5117,19 +5025,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueUnbind) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 50) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 50) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5137,37 +5037,21 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: QueueUnbindOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 50 && method.methodId === 51) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 50 && method.methodId === 51) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
   subscribeBasicQos(channel: number, handler: (args: BasicQos) => void): () =>
     void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5175,19 +5059,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicQosOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5195,19 +5071,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicConsume) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5215,19 +5083,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicConsumeOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5235,19 +5095,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicCancel) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 30) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 30) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5255,19 +5107,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicCancelOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 31) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 31) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5276,21 +5120,13 @@ export class AmqpProtocol {
     handler: (args: BasicPublish, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 40) {
-          const header = await this.receiveHeader(channel);
-          const content = await this.receiveContent(channel, header.size);
-          return handler(method.args, header.props, content);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 40) {
+        const header = await this.receiveHeader(channel);
+        const content = await this.receiveContent(channel, header.size);
+        return handler(method.args, header.props, content);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5299,21 +5135,13 @@ export class AmqpProtocol {
     handler: (args: BasicReturn, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 50) {
-          const header = await this.receiveHeader(channel);
-          const content = await this.receiveContent(channel, header.size);
-          return handler(method.args, header.props, content);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 50) {
+        const header = await this.receiveHeader(channel);
+        const content = await this.receiveContent(channel, header.size);
+        return handler(method.args, header.props, content);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5322,39 +5150,23 @@ export class AmqpProtocol {
     handler: (args: BasicDeliver, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 60) {
-          const header = await this.receiveHeader(channel);
-          const content = await this.receiveContent(channel, header.size);
-          return handler(method.args, header.props, content);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 60) {
+        const header = await this.receiveHeader(channel);
+        const content = await this.receiveContent(channel, header.size);
+        return handler(method.args, header.props, content);
       }
-    );
+    });
     return cancel;
   }
 
   subscribeBasicGet(channel: number, handler: (args: BasicGet) => void): () =>
     void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 70) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 70) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5363,21 +5175,13 @@ export class AmqpProtocol {
     handler: (args: BasicGetOk, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 71) {
-          const header = await this.receiveHeader(channel);
-          const content = await this.receiveContent(channel, header.size);
-          return handler(method.args, header.props, content);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 71) {
+        const header = await this.receiveHeader(channel);
+        const content = await this.receiveContent(channel, header.size);
+        return handler(method.args, header.props, content);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5385,37 +5189,21 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicGetEmpty) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 72) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 72) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
   subscribeBasicAck(channel: number, handler: (args: BasicAck) => void): () =>
     void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 80) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 80) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5423,19 +5211,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicReject) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 90) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 90) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5443,19 +5223,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicRecoverAsync) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 100) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 100) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5463,19 +5235,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicRecover) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 110) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 110) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5483,19 +5247,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicRecoverOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 111) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 111) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5503,37 +5259,21 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicNack) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 60 && method.methodId === 120) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 60 && method.methodId === 120) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
   subscribeTxSelect(channel: number, handler: (args: TxSelect) => void): () =>
     void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5541,37 +5281,21 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: TxSelectOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
   subscribeTxCommit(channel: number, handler: (args: TxCommit) => void): () =>
     void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 20) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 20) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5579,19 +5303,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: TxCommitOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 21) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 21) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5599,19 +5315,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: TxRollback) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 30) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 30) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5619,19 +5327,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: TxRollbackOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 90 && method.methodId === 31) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 90 && method.methodId === 31) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5639,19 +5339,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConfirmSelect) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 85 && method.methodId === 10) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 85 && method.methodId === 10) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 
@@ -5659,19 +5351,11 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConfirmSelectOk) => void
   ): () => void {
-    const cancel = this.socket.subscribe(
-      channel,
-      async (err, type, payload) => {
-        if (err || type !== 1) {
-          return;
-        }
-
-        const method = decodeMethod(payload);
-        if (method.classId === 85 && method.methodId === 11) {
-          return handler(method.args);
-        }
+    const cancel = this.subscribeMethod(channel, async method => {
+      if (method.classId === 85 && method.methodId === 11) {
+        return handler(method.args);
       }
-    );
+    });
     return cancel;
   }
 }

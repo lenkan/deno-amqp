@@ -10,18 +10,21 @@ const channel2 = await connection.openChannel();
 
 await channel1.declareQueue({ queue: "foo.queue" });
 const consumer = await channel1.consume(
-  { queue: "foo.queue", noAck: true },
-  (args, props, data) => {
+  {
+    queue: "foo.queue",
+    noAck: false
+  },
+  async (args, props, data) => {
     console.log("Received message");
     console.log(args, props, data);
     console.log("Args", JSON.stringify(args));
     console.log("Properties", JSON.stringify(props));
     console.log("Message", new TextDecoder().decode(data));
-    // channel1.ack({ deliveryTag: args.deliveryTag, multiple: true });
+    await channel1.ack({ deliveryTag: args.deliveryTag });
+    await channel1.close();
+    await connection.close();
   }
 );
-
-await channel1.cancel(consumer);
 
 await channel2.publish(
   { routingKey: "foo.queue" },
@@ -29,13 +32,7 @@ await channel2.publish(
   new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
 );
 
-await channel1.publish(
-  { routingKey: "foo.queue" },
-  { contentType: "application/json" },
-  new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
-);
-
-// await channel1.close();
+await channel2.close();
 
 // setTimeout(() => connection.close(), 2000);
 // await connection.close();

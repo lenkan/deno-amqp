@@ -59,17 +59,19 @@ export async function openChannel(
 ) {
   const consumers: Consumer[] = [];
   let isOpen: boolean = false;
-  protocol.subscribeBasicDeliver(channelNumber, (args, props, data) => {
-    consumers.forEach(consumer => {
-      if (consumer.tag === args.consumerTag) {
-        consumer.handler(args, props, data);
-      }
-    });
-  });
+  const cancelDelivery = protocol.subscribeBasicDeliver(
+    channelNumber,
+    (args, props, data) => {
+      consumers.forEach(consumer => {
+        if (consumer.tag === args.consumerTag) {
+          consumer.handler(args, props, data);
+        }
+      });
+    }
+  );
 
   protocol.subscribeChannelClose(channelNumber, args => {
-    isOpen = false;
-    onClose(args);
+    handleClose(args);
     return protocol.sendChannelCloseOk(channelNumber, {});
   });
 
@@ -79,8 +81,16 @@ export async function openChannel(
     }
   }
 
+  function handleClose(args?: ChannelClose) {
+    isOpen = false;
+    args && onClose(args);
+    cancelDelivery();
+    consumers.splice(0, consumers.length);
+  }
+
   async function close(args?: ChannelCloseArgs): Promise<ChannelCloseOk> {
     assertOpen();
+    handleClose();
     return protocol.sendChannelClose(channelNumber, {
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,

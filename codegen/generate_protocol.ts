@@ -50,33 +50,23 @@ function printSendMethodFunction(
           ]);
       }
     `;
-  } else if (method.synchronous && responses.length === 1) {
-    const res = responses[0];
-    const returnType = `${pascalCase(clazz.name)}${pascalCase(res.name)}`;
-    return `
-      async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
-        await this.socket.write(channel, 1, ${encodeName}(args));
-        const reply = await this.assertMethod(channel, ${clazz.id}, ${res.id});
-        return reply.args;
-      }
-    `;
-  } else if (method.synchronous && responses.length > 1) {
+  } else if (method.synchronous) {
     const returnType = responses.map(m =>
       `${pascalCase(clazz.name)}${pascalCase(m.name)}`
     ).join(" | ");
     return `
       async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
         await this.socket.write(channel, 1, ${encodeName}(args));
-        const reply = await this.receiveMethod(channel);
-          ${responses.map(res => {
+        return new Promise<${returnType}>((resolve, reject) => {
+          const cancel = this.subscribeMethod(channel, reply => {
+            ${responses.map(res => {
       return `if(reply.classId === ${clazz.id} && reply.methodId === ${res.id}) {
-              return reply.args;
-            }`;
+                cancel();
+                return resolve(reply.args);
+              }`;
     }).join("\n")}
-        
-        throw new Error(\`Expected ${responses.map(x =>
-      `'${clazz.id}/${x.id}'`
-    ).join(" or ")} got \${reply.classId}\${reply.methodId}\`)
+          });
+        });
       }
     `;
   } else {
@@ -120,12 +110,7 @@ function printSubscribeMethodFunction(
   if (method.content) {
     return `
       ${name}(channel: number, handler: (args: ${pascalName}, props: ${propsName}, data: Uint8Array) => void): () => void {
-        const cancel = this.socket.subscribe(channel, async (err, type, payload) => {
-          if(err || type !== 1) {
-            return;
-          }
-
-          const method = decodeMethod(payload);
+        const cancel = this.subscribeMethod(channel, async method => {
           if(method.classId === ${clazz.id} && method.methodId === ${method.id}) {
               const header = await this.receiveHeader(channel);
               const content = await this.receiveContent(channel, header.size);
@@ -138,12 +123,7 @@ function printSubscribeMethodFunction(
   } else {
     return `
       ${name}(channel: number, handler: (args: ${pascalName}) => void): () => void {
-        const cancel = this.socket.subscribe(channel, async (err, type, payload) => {
-          if(err || type !== 1) {
-            return;
-          }
-
-          const method = decodeMethod(payload);
+        const cancel = this.subscribeMethod(channel, async method => {
           if(method.classId === ${clazz.id} && method.methodId === ${method.id}) {
               return handler(method.args);
           }
@@ -154,74 +134,130 @@ function printSubscribeMethodFunction(
   }
 }
 
-function printSocketInterface() {
+function printAmqpProtocolClass() {
   return `
 interface Socket {
   write(channel: number, type: number, payload: Uint8Array): Promise<void>;
-  subscribe(channel: number, handler: (err: Error | null, type: number, payload: Uint8Array) => void): () => void;
-}
-  `;
+  subscribe(
+    handler: (
+      err: Error | null,
+      channel: number,
+      type: number,
+      payload: Uint8Array
+    ) => void
+  ): () => void;
 }
 
-function printAmqpProtocolClass() {
-  return `
+interface MethodSubscriber {
+  channel: number;
+  handler: (m: ReceiveMethod) => void;
+}
+
+interface HeaderSubscriber {
+  channel: number;
+  handler: (h: Header) => void;
+}
+
 export class AmqpProtocol {
-  constructor(private socket: Socket) {}
+  private methodSubscribers: MethodSubscriber[] = [];
+  private headerSubscribers: HeaderSubscriber[] = [];
 
-  private async assertMethod<T extends number, U extends number>(channel: number, classId: T, methodId: U) : Promise<Extract<ReceiveMethod, { classId: T, methodId: U }>> {
+  constructor(private socket: Socket) {
+    this.socket.subscribe((err, channel, type, payload) => {
+      if (type === 1) {
+        this.emitMethod(channel, decodeMethod(payload));
+      } else if (type === 2) {
+        this.emitHeader(channel, decodeHeader(payload));
+      }
+    });
+  }
+
+  private emitMethod(channel: number, method: ReceiveMethod) {
+    this.methodSubscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(method);
+      }
+    });
+  }
+
+  private emitHeader(channel: number, header: Header) {
+    this.headerSubscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(header);
+      }
+    });
+  }
+
+  private subscribeMethod(
+    channel: number,
+    handler: (m: ReceiveMethod) => void
+  ) {
+    const sub = { channel, handler };
+    this.methodSubscribers.push(sub);
+    return () => {
+      const index = this.methodSubscribers.indexOf(sub);
+      if (index !== -1) {
+        this.methodSubscribers.splice(index, index + 1);
+      }
+    };
+  }
+
+  private subscribeHeader(
+    channel: number,
+    handler: (m: Header) => void
+  ) {
+    const sub = { channel, handler };
+    this.headerSubscribers.push(sub);
+    return () => {
+      const index = this.headerSubscribers.indexOf(sub);
+      if (index !== -1) {
+        this.headerSubscribers.splice(index, index + 1);
+      }
+    };
+  }
+
+  private async assertMethod<T extends number, U extends number>(
+    channel: number,
+    classId: T,
+    methodId: U
+  ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>> {
     const method = await this.receiveMethod(channel);
-    if(method.classId === classId && method.methodId === methodId) {
-      return method as Extract<ReceiveMethod, { classId: T, methodId: U }>;
+    if (method.classId === classId && method.methodId === methodId) {
+      return method as Extract<ReceiveMethod, { classId: T; methodId: U }>;
     }
 
-    throw new Error(\`Expected \${classId}/\${methodId}, got \${method.classId}\${method.methodId}\`)
+    throw new Error(
+      \`Expected \${classId}/\${methodId}, got \${method.classId}\${method.methodId}\`
+    );
   }
 
   private async receiveMethod(channel: number) {
     return new Promise<ReceiveMethod>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
-          cancel();
-          return reject(err);
-        }
-
-        if (type !== 1) {
-          cancel();
-          return reject(err);
-        }
-
+      const cancel = this.subscribeMethod(channel, method => {
         cancel();
-        return resolve(decodeMethod(payload));
+        return resolve(method);
       });
     });
   }
 
   private async receiveHeader(channel: number) {
     return new Promise<Header>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
+      const cancel = this.subscribeHeader(
+        channel,
+        header => {
           cancel();
-          return reject(err);
+          resolve(header);
         }
-
-        if (type !== 2) {
-          cancel();
-          return reject(err);
-        }
-
-        cancel();
-        return resolve(decodeHeader(payload));
-      });
+      );
     });
   }
 
   private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
     return new Promise<Uint8Array>((resolve, reject) => {
-      const cancel = this.socket.subscribe(channel, (err, type, payload) => {
-        if (err) {
-          cancel();
-          return reject(err);
+      const cancel = this.socket.subscribe((err, ch, type, data) => {
+        if (channel !== ch) {
+          return;
         }
 
         if (type !== 3) {
@@ -229,12 +265,11 @@ export class AmqpProtocol {
           return resolve(buffer.bytes());
         }
 
+        buffer.writeSync(data);
         if (buffer.length >= size) {
           cancel();
-          return resolve(buffer.bytes())
+          return resolve(buffer.bytes());
         }
-
-        buffer.writeSync(payload);
       });
     });
   }
@@ -292,7 +327,6 @@ function generateConnection() {
     ...spec.classes.flatMap(printEncodeHeaderFunction),
     ...spec.classes.flatMap(printDecodeHeaderFunction),
     printHeaderDecoder(spec),
-    printSocketInterface(),
     printAmqpProtocolClass()
   ].join("\n");
 }

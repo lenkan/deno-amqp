@@ -8,19 +8,18 @@ import { withTimeout } from "./with_timeout.ts";
 export interface FrameHandler {
   (
     error: Error | null,
+    channel: number,
     type: number,
     payload: Uint8Array
   ): void;
 }
 
 export interface FrameSubscriber {
-  channel: number;
   handler: FrameHandler;
 }
 
 export interface AmqpListener {
   subscribe(
-    channel: number,
     handler: FrameHandler
   ): () => void;
 }
@@ -58,10 +57,9 @@ export function createSocket(
   }
 
   function subscribe(
-    channel: number,
     handler: FrameHandler
   ) {
-    const subscriber = { channel, handler };
+    const subscriber = { handler };
     subscribers.push(subscriber);
     return () => cancel(subscriber);
   }
@@ -71,14 +69,15 @@ export function createSocket(
     await conn.write(new Uint8Array([0, 0, 9, 1]));
 
     listen().catch(error => {
-      subscribers.forEach(sub => sub.handler(error, 0, new Uint8Array([])));
-      close();
+      subscribers.forEach(sub => sub.handler(error, 0, 0, new Uint8Array([])));
+      close(error.message);
     });
   }
 
   function close(reason?: string) {
     console.log("Closing connection: " + reason || "");
     conn.close();
+    subscribers.splice(0, subscribers.length);
     running = false;
   }
 
@@ -128,9 +127,7 @@ export function createSocket(
   function emit(f: RawFrame) {
     logRecv(f.channel, f.type, f.payload);
     subscribers.forEach(sub => {
-      if (sub.channel === f.channel) {
-        sub.handler(null, f.type, f.payload);
-      }
+      sub.handler(null, f.channel, f.type, f.payload);
     });
   }
 
