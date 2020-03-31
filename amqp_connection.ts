@@ -1,10 +1,8 @@
 import { AmqpSocket } from "./framing/socket.ts";
-import { AmqpChannel } from "./amqp_channel.ts";
+import { AmqpChannel, openChannel } from "./amqp_channel.ts";
 import {
   AmqpProtocol,
   ConnectionCloseArgs,
-  ConnectionClose,
-  ConnectionCloseOk,
   HARD_ERROR_CONNECTION_FORCED
 } from "./amqp_protocol.ts";
 
@@ -19,79 +17,69 @@ function credentials(username: string, password: string) {
   return `${NULL_CHAR}${username}${NULL_CHAR}${password}`;
 }
 
-export class AmqpConnection {
-  private username: string;
-  private password: string;
-  private heartbeatInterval?: number;
-  private channels: AmqpChannel[] = [];
-  private channelMax: number = -1;
-  private frameMax: number = -1;
-  private protocol: AmqpProtocol;
+export interface AmqpConnection {
+  close(): Promise<void>;
+  openChannel(): Promise<AmqpChannel>;
+}
 
-  constructor(
-    private socket: AmqpSocket,
-    options: AmqpConnectionOptions
-  ) {
-    this.username = options.username;
-    this.password = options.password;
-    this.heartbeatInterval = options.heartbeatInterval;
-    this.protocol = new AmqpProtocol(socket);
+export function openConnection(
+  socket: AmqpSocket,
+  options: AmqpConnectionOptions
+): Promise<AmqpConnection> {
+  const { username, password } = options;
+  let heartbeatInterval: number | undefined = undefined;
+  const channels: { channelNumber: number }[] = [];
+  let channelMax: number = -1;
+  let frameMax: number = -1;
+  const protocol: AmqpProtocol = new AmqpProtocol(socket);
 
-    this.protocol.subscribeConnectionClose(0, args => this.handleClose(args));
-    this.protocol.subscribeConnectionCloseOk(
-      0,
-      args => this.handleCloseOk(args)
-    );
-  }
-
-  private async handleClose(close: ConnectionClose) {
-    await this.protocol.sendConnectionCloseOk(0, {});
+  protocol.subscribeConnectionClose(0, async args => {
+    await protocol.sendConnectionCloseOk(0, {});
     console.error(
       "Connection closed by server ",
-      JSON.stringify(close)
+      JSON.stringify(args)
     );
-    this.socket.close();
-  }
+    socket.close();
+  });
 
-  private async handleCloseOk(close: ConnectionCloseOk) {
-    this.socket.close();
-  }
+  protocol.subscribeConnectionCloseOk(
+    0,
+    _ => socket.close()
+  );
 
-  async open() {
-    await this.socket.start();
+  async function open() {
+    await socket.start();
 
-    await this.protocol.receiveConnectionStart(0);
-    await this.protocol.sendConnectionStartOk(0, {
+    await protocol.receiveConnectionStart(0);
+    await protocol.sendConnectionStartOk(0, {
       clientProperties: {},
-      response: credentials(this.username, this.password)
+      response: credentials(username, password)
     });
 
-    await this.protocol.receiveConnectionTune(0).then(
+    await protocol.receiveConnectionTune(0).then(
       async args => {
-        const interval = this.heartbeatInterval !== undefined
-          ? this.heartbeatInterval
+        const interval = heartbeatInterval !== undefined
+          ? heartbeatInterval
           : args.heartbeat;
 
-        const channelMax = args.channelMax;
-        const frameMax = args.frameMax;
+        channelMax = args.channelMax;
+        frameMax = args.frameMax;
 
-        await this.protocol.sendConnectionTuneOk(0, {
+        await protocol.sendConnectionTuneOk(0, {
           heartbeat: interval,
           channelMax: channelMax,
           frameMax: frameMax
         });
 
-        this.channelMax = channelMax;
-        this.frameMax = frameMax;
-        this.socket.tuneHeartbeat(interval);
+        socket.tuneHeartbeat(interval);
       }
     );
 
-    await this.protocol.sendConnectionOpen(0, {});
+    await protocol.sendConnectionOpen(0, {});
   }
 
-  async close(args?: Partial<ConnectionCloseArgs>) {
-    await this.protocol.sendConnectionClose(0, {
+  async function close(args?: Partial<ConnectionCloseArgs>) {
+    await protocol.sendConnectionClose(0, {
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
@@ -99,15 +87,36 @@ export class AmqpConnection {
     });
   }
 
-  createChannel(): AmqpChannel {
-    for (let i = 1; i < this.channelMax; ++i) {
-      if (!this.channels.find(c => c.channelNumber === i)) {
-        const channel = new AmqpChannel(i, this.protocol);
-        this.channels.push(channel);
+  function removeChannel(channelNumber: number) {
+    const index = channels.findIndex(x => x.channelNumber === channelNumber);
+    if (index !== -1) {
+      channels.splice(index, index + 1);
+    }
+  }
+
+  async function createChannel(): Promise<AmqpChannel> {
+    for (let i = 1; i < channelMax; ++i) {
+      if (!channels.find(c => c.channelNumber === i)) {
+        channels.push({ channelNumber: i });
+
+        const channel = await openChannel(i, protocol, closeArgs => {
+          console.log(
+            `Channel ${i} closed by server ${JSON.stringify(closeArgs)}`
+          );
+          removeChannel(i);
+        });
+
         return channel;
       }
     }
 
-    throw new Error(`Maximum channels ${this.channelMax} reached`);
+    throw new Error(`Maximum channels ${channelMax} reached`);
   }
+
+  const connection: AmqpConnection = { close, openChannel: createChannel };
+
+  return new Promise<AmqpConnection>(async resolve => {
+    await open();
+    return resolve(connection);
+  });
 }

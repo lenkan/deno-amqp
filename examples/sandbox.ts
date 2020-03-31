@@ -5,18 +5,23 @@ const connection = await connect(
   { heartbeatInterval: 0, loglevel: env.DEBUG ? "debug" : "none" }
 );
 
-const channel1 = await connection.channel();
-const channel2 = await connection.channel();
+const channel1 = await connection.openChannel();
+const channel2 = await connection.openChannel();
 
 await channel1.declareQueue({ queue: "foo.queue" });
-await channel1.consume({ queue: "foo.queue" }, (args, props, data) => {
-  console.log("Received message");
-  console.log(args, props, data);
-  console.log("Args", JSON.stringify(args));
-  console.log("Properties", JSON.stringify(props));
-  console.log("Message", new TextDecoder().decode(data));
-  channel1.ack({ deliveryTag: args.deliveryTag });
-});
+const consumer = await channel1.consume(
+  { queue: "foo.queue", noAck: true },
+  (args, props, data) => {
+    console.log("Received message");
+    console.log(args, props, data);
+    console.log("Args", JSON.stringify(args));
+    console.log("Properties", JSON.stringify(props));
+    console.log("Message", new TextDecoder().decode(data));
+    // channel1.ack({ deliveryTag: args.deliveryTag, multiple: true });
+  }
+);
+
+await channel1.cancel(consumer);
 
 await channel2.publish(
   { routingKey: "foo.queue" },
@@ -24,13 +29,11 @@ await channel2.publish(
   new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
 );
 
-await Promise.all(Array.from({ length: 100 }).map((_, i) => {
-  return channel2.publish(
-    { routingKey: "foo.queue" },
-    { contentType: "application/json" },
-    new TextEncoder().encode(i.toString())
-  );
-}));
+await channel1.publish(
+  { routingKey: "foo.queue" },
+  { contentType: "application/json" },
+  new TextEncoder().encode(JSON.stringify({ foo: "bar" }))
+);
 
 // await channel1.close();
 

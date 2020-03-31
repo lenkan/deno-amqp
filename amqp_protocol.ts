@@ -3440,7 +3440,9 @@ interface Socket {
 }
 
 export class AmqpProtocol {
-  constructor(private socket: Socket) {}
+  constructor(private socket: Socket) {
+    // this.socket.subscribe(ch)
+  }
 
   private async assertMethod<T extends number, U extends number>(
     channel: number,
