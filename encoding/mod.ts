@@ -5,3 +5,5 @@ export * from "./field_table_encoding.ts";
 export * from "./fields_encoding.ts";
 export * from "./optional_fields_encoding.ts";
 export * from "./frame_encoding.ts";
+export * from "./method_encoding.ts";
+export * from "./header_encoding.ts";

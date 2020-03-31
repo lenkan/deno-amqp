@@ -35,7 +35,7 @@ function printContentHeaderDefinition(
   export interface ${pascalCase(clazz.name)}Header {
     classId: ${clazz.id};
     props: ${pascalCase(clazz.name)}Properties;
-    size: number;
+    size: bigint;
   }
   `;
 }

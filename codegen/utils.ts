@@ -136,3 +136,9 @@ export interface ${name} extends ${name}Args {
 }
     `;
 }
+
+export const disclaimer = `
+/**
+ * This is a generated file
+ */
+`;
