@@ -3415,12 +3415,12 @@ interface Socket {
 
 interface MethodSubscriber {
   channel: number;
-  handler: (m: ReceiveMethod) => void;
+  handler: (e: Error | null, m: ReceiveMethod) => void;
 }
 
 interface HeaderSubscriber {
   channel: number;
-  handler: (h: Header) => void;
+  handler: (e: Error | null, h: Header) => void;
 }
 
 type ExtractMethod<T extends number, U extends number> = Extract<
@@ -3432,12 +3432,27 @@ type ExtractArgs<T extends number, U extends number> = ExtractMethod<
   U
 >["args"];
 
+function serializeChannelError(channel: number, args: ChannelClose) {
+  return `Channel ${channel} closed by server - ${args.replyCode} ${args
+    .replyText || ""}`;
+}
+
+function serializeConnectionError(args: ConnectionClose) {
+  return `Connection closed by server - ${args.replyCode} ${args
+    .replyText || ""}`;
+}
+
 export class AmqpProtocol {
   private methodSubscribers: MethodSubscriber[] = [];
   private headerSubscribers: HeaderSubscriber[] = [];
 
   constructor(private socket: Socket) {
     this.socket.subscribe((err, channel, type, payload) => {
+      if (err) {
+        this.emitConnectionError(err);
+        return;
+      }
+
       if (type === 1) {
         this.emitMethod(channel, decodeMethod(payload));
       } else if (type === 2) {
@@ -3448,23 +3463,28 @@ export class AmqpProtocol {
 
   private emitMethod(channel: number, method: ReceiveMethod) {
     this.methodSubscribers.forEach(sub => {
-      if (sub.channel === channel) {
-        sub.handler(method);
+      if (sub.channel === channel || method.classId === CONNECTION) {
+        sub.handler(null, method);
       }
     });
+  }
+
+  private emitConnectionError(error: Error) {
+    this.methodSubscribers.forEach(sub => sub.handler(error, null as any));
+    this.headerSubscribers.forEach(sub => sub.handler(error, null as any));
   }
 
   private emitHeader(channel: number, header: Header) {
     this.headerSubscribers.forEach(sub => {
       if (sub.channel === channel) {
-        sub.handler(header);
+        sub.handler(null, header);
       }
     });
   }
 
   private subscribeMethod(
     channel: number,
-    handler: (m: ReceiveMethod) => void
+    handler: (e: Error | null, m: ReceiveMethod) => void
   ) {
     const sub = { channel, handler };
     this.methodSubscribers.push(sub);
@@ -3478,7 +3498,7 @@ export class AmqpProtocol {
 
   private subscribeHeader(
     channel: number,
-    handler: (m: Header) => void
+    handler: (e: Error | null, m: Header) => void
   ) {
     const sub = { channel, handler };
     this.headerSubscribers.push(sub);
@@ -3497,23 +3517,55 @@ export class AmqpProtocol {
   ): Promise<ExtractArgs<T, U>> {
     return new Promise(
       (resolve, reject) => {
-        const cancel = this.subscribeMethod(channel, method => {
+        const cancel = this.subscribeMethod(channel, (e, method) => {
+          if (e) {
+            cancel();
+            return reject(e);
+          }
+
           if (method.classId === classId && method.methodId === methodId) {
             cancel();
             return resolve(method.args as any);
+          }
+
+          if (
+            method.classId === CHANNEL && method.methodId === CHANNEL_CLOSE
+          ) {
+            cancel();
+            return reject(
+              new Error(serializeChannelError(channel, method.args))
+            );
+          }
+
+          if (
+            method.classId === CONNECTION &&
+            method.methodId === CONNECTION_CLOSE
+          ) {
+            cancel();
+            return reject(serializeConnectionError(method.args));
           }
         });
       }
     );
   }
 
-  private async receiveHeader(channel: number) {
-    return new Promise<Header>((resolve, reject) => {
+  private async receiveHeader<T extends number>(
+    channel: number,
+    classId: T
+  ): Promise<Extract<Header, { classId: T }>> {
+    return new Promise((resolve, reject) => {
       const cancel = this.subscribeHeader(
         channel,
-        header => {
-          cancel();
-          resolve(header);
+        (e, header) => {
+          if (e) {
+            cancel();
+            return reject(e);
+          }
+
+          if (header.classId === classId) {
+            cancel();
+            return resolve(header as Extract<Header, { classId: T }>);
+          }
         }
       );
     });
@@ -3523,6 +3575,11 @@ export class AmqpProtocol {
     const buffer = new Deno.Buffer();
     return new Promise<Uint8Array>((resolve, reject) => {
       const cancel = this.socket.subscribe((err, ch, type, data) => {
+        if (err) {
+          cancel();
+          return reject(err);
+        }
+
         if (channel !== ch) {
           return;
         }
@@ -3775,7 +3832,12 @@ export class AmqpProtocol {
   > {
     await this.socket.write(channel, 1, encodeBasicGet(args));
     return new Promise<BasicGetOk | BasicGetEmpty>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
+      const cancel = this.subscribeMethod(channel, (e, reply) => {
+        if (e) {
+          cancel();
+          return reject(e);
+        }
+
         if (reply.classId === 60 && reply.methodId === 71) {
           cancel();
           return resolve(reply.args);
@@ -3880,7 +3942,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionStart) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 10 && method.methodId === 10) {
         return handler(method.args);
       }
@@ -3892,7 +3959,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionSecure) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 10 && method.methodId === 20) {
         return handler(method.args);
       }
@@ -3904,7 +3976,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionTune) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 10 && method.methodId === 30) {
         return handler(method.args);
       }
@@ -3916,7 +3993,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionClose) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 10 && method.methodId === 50) {
         return handler(method.args);
       }
@@ -3928,7 +4010,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelFlow) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 20 && method.methodId === 20) {
         return handler(method.args);
       }
@@ -3940,7 +4027,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ChannelClose) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 20 && method.methodId === 40) {
         return handler(method.args);
       }
@@ -3953,9 +4045,14 @@ export class AmqpProtocol {
     handler: (args: BasicReturn, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 60 && method.methodId === 50) {
-        const header = await this.receiveHeader(channel);
+        const header = await this.receiveHeader(channel, method.classId);
         const content = await this.receiveContent(channel, header.size);
         return handler(method.args, header.props, content);
       }
@@ -3968,9 +4065,14 @@ export class AmqpProtocol {
     handler: (args: BasicDeliver, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 60 && method.methodId === 60) {
-        const header = await this.receiveHeader(channel);
+        const header = await this.receiveHeader(channel, method.classId);
         const content = await this.receiveContent(channel, header.size);
         return handler(method.args, header.props, content);
       }
@@ -3980,7 +4082,12 @@ export class AmqpProtocol {
 
   subscribeBasicAck(channel: number, handler: (args: BasicAck) => void): () =>
     void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 60 && method.methodId === 80) {
         return handler(method.args);
       }
@@ -3992,7 +4099,12 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: BasicNack) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
+    const cancel = this.subscribeMethod(channel, async (e, method) => {
+      if (e) {
+        cancel();
+        return;
+      }
+
       if (method.classId === 60 && method.methodId === 120) {
         return handler(method.args);
       }
