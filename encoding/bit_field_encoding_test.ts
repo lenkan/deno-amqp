@@ -20,7 +20,7 @@ test("encode bit field - full byte", () => {
     false,
     true,
     true,
-    true
+    true,
   ]);
   assertEquals(result, arrayOf(0b11101001));
 });
@@ -41,7 +41,7 @@ test("encode bit field - longer than one byte", () => {
     true,
     true,
     false,
-    true
+    true,
   ]);
 
   assertEquals(result, arrayOf(0b11101001, 0b00000010));
@@ -57,7 +57,7 @@ test("decode bit field - full byte", () => {
     true,
     false,
     false,
-    true
+    true,
   ];
   assertEquals(enc.decodeBits(data, 8), expected);
 });
@@ -78,7 +78,7 @@ test("decode bit field - more than a byte", () => {
     true,
     false,
     false,
-    true
+    true,
   ];
   assertEquals(enc.decodeBits(data, 13), expected);
 });

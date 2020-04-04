@@ -15,7 +15,7 @@ export interface Frame {
 
 async function readBytes(
   r: Deno.Reader,
-  length: number
+  length: number,
 ): Promise<Uint8Array | null> {
   const data = new Uint8Array(length);
   const n = await r.read(data);
@@ -64,6 +64,6 @@ export async function readFrame(r: Deno.Reader): Promise<Frame | null> {
   return {
     type: type,
     channel: channel,
-    payload: rest.slice(0, rest.length - 1)
+    payload: rest.slice(0, rest.length - 1),
   };
 }

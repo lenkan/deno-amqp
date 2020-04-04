@@ -12,12 +12,12 @@ test("encode fields", () => {
     { type: "shortstr", value: "abc" },
     { type: "bit", value: true },
     { type: "bit", value: false },
-    { type: "bit", value: true }
+    { type: "bit", value: true },
   ];
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(123, 3, 97, 98, 99, 0b10100000)
+    arrayOf(123, 3, 97, 98, 99, 0b10100000),
   );
 });
 
@@ -33,12 +33,12 @@ test("encode fields - large bit array at end", () => {
     { type: "bit", value: true },
     { type: "bit", value: false },
     { type: "bit", value: true },
-    { type: "bit", value: false }
+    { type: "bit", value: false },
   ];
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(123, 0b10110110, 0b10000000)
+    arrayOf(123, 0b10110110, 0b10000000),
   );
 });
 
@@ -54,12 +54,12 @@ test("encode fields - large bit array at start", () => {
     { type: "bit", value: false },
     { type: "bit", value: true },
     { type: "bit", value: false },
-    { type: "octet", value: 123 }
+    { type: "octet", value: 123 },
   ];
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(0b10110110, 0b10000000, 123)
+    arrayOf(0b10110110, 0b10000000, 123),
   );
 });
 
@@ -70,7 +70,7 @@ test("decode fields", () => {
     "shortstr",
     "bit",
     "bit",
-    "bit"
+    "bit",
   ];
 
   const expected: enc.AmqpFieldValue[] = [123, "abc", true, false, true];
@@ -91,7 +91,7 @@ test("decode fields - large bit array at end", () => {
     "bit",
     "bit",
     "bit",
-    "bit"
+    "bit",
   ];
 
   const expected: enc.AmqpFieldValue[] = [
@@ -105,7 +105,7 @@ test("decode fields - large bit array at end", () => {
     true,
     false,
     true,
-    false
+    false,
   ];
 
   assertEquals(enc.decodeFields(data, types), expected);
@@ -124,7 +124,7 @@ test("decode fields - large bit array at start", () => {
     "bit",
     "bit",
     "bit",
-    "octet"
+    "octet",
   ];
 
   const expected: enc.AmqpFieldValue[] = [
@@ -138,7 +138,7 @@ test("decode fields - large bit array at start", () => {
     false,
     true,
     false,
-    123
+    123,
   ];
 
   assertEquals(enc.decodeFields(data, types), expected);

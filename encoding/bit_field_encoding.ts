@@ -33,10 +33,10 @@ function readBitField(num: number) {
 }
 
 export function encodeBits(
-  bits: boolean[]
+  bits: boolean[],
 ): Uint8Array {
   const bytes = splitArray(bits, 8)
-    .map(s => padArray(s, 8, false))
+    .map((s) => padArray(s, 8, false))
     .flatMap(writeBitField);
 
   return new Uint8Array(bytes);

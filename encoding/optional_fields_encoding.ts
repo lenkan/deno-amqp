@@ -83,7 +83,8 @@ export interface AmqpOptionalTableField {
   value: Record<string, unknown> | undefined;
 }
 
-export type AmqpOptionalField = AmqpOptionalNumberField
+export type AmqpOptionalField =
+  | AmqpOptionalNumberField
   | AmqpOptionalBigintField
   | AmqpOptionalStringField
   | AmqpOptionalBitField
@@ -117,14 +118,13 @@ export function decodeFlags(r: Deno.SyncReader) {
 export function encodeOptionalFields(fields: AmqpOptionalField[]): Uint8Array {
   const payload = new Deno.Buffer();
 
-  const flags = fields.map(field =>
+  const flags = fields.map((field) =>
     field.type === "bit" ? !!field.value : field.value !== undefined
   );
 
   const definedFields = fields.filter((
-    field: AmqpOptionalField
-  ): field is AmqpField => field.type !== "bit" && field.value !== undefined
-  );
+    field: AmqpOptionalField,
+  ): field is AmqpField => field.type !== "bit" && field.value !== undefined);
 
   payload.writeSync(encodeFlags(flags));
   payload.writeSync(encodeFields(definedFields));
@@ -134,7 +134,7 @@ export function encodeOptionalFields(fields: AmqpOptionalField[]): Uint8Array {
 
 export function decodeOptionalFields(
   r: Deno.SyncReader,
-  types: AmqpFieldType[]
+  types: AmqpFieldType[],
 ): AmqpOptionalFieldValue[] {
   const fields: AmqpOptionalFieldValue[] = [];
   const flags = decodeFlags(r);

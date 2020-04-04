@@ -42,8 +42,12 @@ export interface AmqpTableField {
   value: Record<string, unknown>;
 }
 
-export type AmqpField = AmqpNumberField | AmqpBigintField | AmqpStringField
-  | AmqpBitField | AmqpTableField;
+export type AmqpField =
+  | AmqpNumberField
+  | AmqpBigintField
+  | AmqpStringField
+  | AmqpBitField
+  | AmqpTableField;
 
 export type AmqpFieldType = AmqpField["type"];
 export type AmqpFieldValue = AmqpField["value"];
@@ -53,7 +57,7 @@ function assertUnreachable(_x: never): never {
 }
 
 function encodeField(
-  field: Exclude<AmqpField, Extract<AmqpField, { type: "bit" }>>
+  field: Exclude<AmqpField, Extract<AmqpField, { type: "bit" }>>,
 ) {
   switch (field.type) {
     case "short":
@@ -103,7 +107,7 @@ export function encodeFields(fields: AmqpField[]): Uint8Array {
 
 export function decodeField(
   r: Deno.SyncReader,
-  type: Exclude<AmqpFieldType, "bit">
+  type: Exclude<AmqpFieldType, "bit">,
 ) {
   switch (type) {
     case "short":
@@ -129,7 +133,7 @@ export function decodeField(
 
 export function decodeFields(
   reader: Deno.SyncReader,
-  types: AmqpFieldType[]
+  types: AmqpFieldType[],
 ): AmqpFieldValue[] {
   const values: AmqpFieldValue[] = [];
   let bitField: number | null = null;

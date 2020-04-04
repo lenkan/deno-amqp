@@ -10,7 +10,7 @@ import { padArray } from "./utils.ts";
 test("encode flags - less than one byte", () => {
   assertEquals(enc.encodeFlags([true, false, true]), arrayOf(
     0b10100000,
-    0b00000000
+    0b00000000,
   ));
 });
 
@@ -26,10 +26,10 @@ test("encode flags - more than one byte", () => {
     true,
     false,
     // Second byte
-    true
+    true,
   ]), arrayOf(
     0b10110110,
-    0b10000000
+    0b10000000,
   ));
 });
 
@@ -51,19 +51,19 @@ test("encode flags - more than 15 flags", () => {
     true,
     true, // flag 15
     false, // flag 16
-    true // flag 17
+    true, // flag 17
   ]), arrayOf(
     0b10110110,
     0b10110111, // The last bit is set to indicate additional flags
     0b01000000,
-    0b00000000
+    0b00000000,
   ));
 });
 
 test("decode flags - less than one byte", () => {
   const data = bufferOf(
     0b10100000,
-    0b00000000
+    0b00000000,
   );
 
   const expected = padArray([true, false, true, false], 15, false);
@@ -75,7 +75,7 @@ test("decode flags - more than two bytes", () => {
     0b10110110,
     0b10110111, // The last bit is set to indicate additional flags
     0b01000000,
-    0b00000000
+    0b00000000,
   );
 
   const expected = padArray([
@@ -95,7 +95,7 @@ test("decode flags - more than two bytes", () => {
     true,
     true, // flag 15
     false, // flag 16
-    true // flag 17
+    true, // flag 17
   ], 30, false);
 
   assertEquals(enc.decodeFlags(data), expected);
@@ -108,11 +108,11 @@ test("encode header props - without properties", () => {
 test("encode header props - with all properties defined", () => {
   const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
-    { type: "short", value: 19 }
+    { type: "short", value: 19 },
   ];
   assertEquals(
     enc.encodeOptionalFields(fields),
-    arrayOf(0b11000000, 0b000000, 13, 0, 19)
+    arrayOf(0b11000000, 0b000000, 13, 0, 19),
   );
 });
 
@@ -120,12 +120,12 @@ test("encode header props - with missing property", () => {
   const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
     { type: "short", value: undefined },
-    { type: "short", value: 19 }
+    { type: "short", value: 19 },
   ];
 
   assertEquals(
     enc.encodeOptionalFields(fields),
-    arrayOf(0b10100000, 0b000000, 13, 0, 19)
+    arrayOf(0b10100000, 0b000000, 13, 0, 19),
   );
 });
 
@@ -133,12 +133,12 @@ test("encode header props - with bit property", () => {
   const fields: enc.AmqpOptionalField[] = [
     { type: "octet", value: 13 },
     { type: "bit", value: true },
-    { type: "short", value: 19 }
+    { type: "short", value: 19 },
   ];
 
   assertEquals(
     enc.encodeOptionalFields(fields),
-    arrayOf(0b11100000, 0b000000, 13, 0, 19)
+    arrayOf(0b11100000, 0b000000, 13, 0, 19),
   );
 });
 

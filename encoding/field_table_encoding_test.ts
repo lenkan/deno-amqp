@@ -8,7 +8,7 @@ import * as enc from "./field_table_encoding.ts";
 
 test("encode table - with array", () => {
   const table = {
-    a: [123, true, "abc"]
+    a: [123, true, "abc"],
   };
 
   const encoded = enc.encodeTable(table);
@@ -18,13 +18,13 @@ test("encode table - with array", () => {
     ...[65, 0, 0, 0, 12],
     ...[105, 0, 0, 0, 123],
     ...[116, 1],
-    ...[115, 3, 97, 98, 99]
+    ...[115, 3, 97, 98, 99],
   ));
 });
 
 test("decode table - with array", () => {
   const table = {
-    a: [123, true, "abc"]
+    a: [123, true, "abc"],
   };
   const data = bufferOf(
     ...[0, 0, 0, 19],
@@ -32,7 +32,7 @@ test("decode table - with array", () => {
     ...[65, 0, 0, 0, 12],
     ...[105, 0, 0, 0, 123],
     ...[116, 1],
-    ...[115, 3, 97, 98, 99]
+    ...[115, 3, 97, 98, 99],
   );
 
   const encoded = enc.decodeTable(data);
@@ -44,15 +44,15 @@ test("encode decode table", () => {
     shortString: "abc",
     numberValue: 123,
     nestedTable: {
-      nestedValue: 123
+      nestedValue: 123,
     },
     booleanTrueValue: true,
     booleanFalseValue: true,
     arrayField: [
       123,
       true,
-      "abc"
-    ]
+      "abc",
+    ],
   };
 
   const encoded = enc.encodeTable(table);

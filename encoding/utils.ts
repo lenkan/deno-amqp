@@ -23,7 +23,7 @@ export function assertLength(arr: Uint8Array, length: number) {
 
 export async function readBytes(
   r: Deno.Reader,
-  length: number
+  length: number,
 ): Promise<Uint8Array | null> {
   const data = new Uint8Array(length);
   const n = await r.read(data);

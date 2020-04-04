@@ -30,7 +30,7 @@ enum TableFieldType {
   Timestamp = 84, // T
   FieldTable = 70, // F
   ByteArray = 120, // x
-  NoValue = 86 // V
+  NoValue = 86, // V
 }
 
 const { Buffer } = Deno;
@@ -40,7 +40,7 @@ function encodeTableField(value: unknown): Uint8Array {
   if (typeof value === "number") {
     return new Uint8Array([
       TableFieldType.LongUInt,
-      ...encodeLongUint(value)
+      ...encodeLongUint(value),
     ]);
   }
 
@@ -50,44 +50,44 @@ function encodeTableField(value: unknown): Uint8Array {
       return new Uint8Array([
         TableFieldType.ShortStr,
         ...encodeOctet(encodedString.length),
-        ...encodedString
+        ...encodedString,
       ]);
     } else {
       return new Uint8Array([
         TableFieldType.LongStr,
         ...encodeLongUint(encodedString.length),
-        ...encodedString
+        ...encodedString,
       ]);
     }
   }
 
   if (Array.isArray(value)) {
     const buf = new Deno.Buffer();
-    value.forEach(v => buf.writeSync(encodeTableField(v)));
+    value.forEach((v) => buf.writeSync(encodeTableField(v)));
 
     return new Uint8Array([
       TableFieldType.FieldArray,
       ...encodeLongUint(buf.length),
-      ...buf.bytes()
+      ...buf.bytes(),
     ]);
   }
 
   if (typeof value === "object") {
     return new Uint8Array([
       TableFieldType.FieldTable,
-      ...encodeTable(value as Record<string, unknown>)
+      ...encodeTable(value as Record<string, unknown>),
     ]);
   }
 
   if (typeof value === "boolean") {
     return new Uint8Array([
       TableFieldType.Boolean,
-      ...encodeOctet(1)
+      ...encodeOctet(1),
     ]);
   }
 
   throw new Error(
-    `Don't know how to encode field of type ${typeof value} yet`
+    `Don't know how to encode field of type ${typeof value} yet`,
   );
 }
 
