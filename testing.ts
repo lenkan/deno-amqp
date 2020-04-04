@@ -2,7 +2,7 @@ export {
   assertEquals,
   assertThrows,
   assertThrowsAsync
-} from "https://deno.land/std@v0.36.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.39.0/testing/asserts.ts";
 export const { test } = Deno;
 
 export type MockImplementation = (...args: any[]) => any;
@@ -38,7 +38,7 @@ export function createMock(impl?: MockImplementation): Mock {
 
   const mock = Object.assign(
     fn,
-    { mockCalls, mockReset, mockImplementation }
+    { mockCalls, mockReset, mockImplementation },
   );
 
   return mock;
