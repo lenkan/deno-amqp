@@ -16,7 +16,9 @@ import {
   printEncodeHeaderFunction,
   printDecodeHeaderFunction,
   printHeaderDecoder,
-  constantName
+  constantName,
+  isClientMethod,
+  isServerMethod
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
@@ -50,7 +52,16 @@ function printSendMethodFunction(
           ]);
       }
     `;
-  } else if (method.synchronous) {
+  } else if (method.synchronous && responses.length === 1) {
+    const response = responses[0];
+    const returnType = `${pascalCase(clazz.name)}${pascalCase(response.name)}`;
+    return `
+      async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
+        await this.socket.write(channel, 1, ${encodeName}(args));
+        return this.receiveMethod(channel, ${clazz.id}, ${response.id});
+      }
+    `;
+  } else if (method.synchronous && responses.length > 1) {
     const returnType = responses.map(m =>
       `${pascalCase(clazz.name)}${pascalCase(m.name)}`
     ).join(" | ");
@@ -91,8 +102,7 @@ function printReceiveMethodFunction(
     )}`;
     return `
       async ${name}(channel: number): Promise<${returnType}> {
-        const method = await this.assertMethod(channel, ${clazz.id}, ${method.id});
-        return method.args;
+        return this.receiveMethod(channel, ${clazz.id}, ${method.id});
       }
     `;
   }
@@ -158,6 +168,9 @@ interface HeaderSubscriber {
   handler: (h: Header) => void;
 }
 
+type ExtractMethod<T extends number, U extends number> = Extract<ReceiveMethod, { classId: T, methodId: U }>
+type ExtractArgs<T extends number, U extends number> = ExtractMethod<T, U>["args"]
+
 export class AmqpProtocol {
   private methodSubscribers: MethodSubscriber[] = [];
   private headerSubscribers: HeaderSubscriber[] = [];
@@ -216,28 +229,21 @@ export class AmqpProtocol {
     };
   }
 
-  private async assertMethod<T extends number, U extends number>(
+  private async receiveMethod<T extends number, U extends number>(
     channel: number,
     classId: T,
     methodId: U
-  ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>> {
-    const method = await this.receiveMethod(channel);
-    if (method.classId === classId && method.methodId === methodId) {
-      return method as Extract<ReceiveMethod, { classId: T; methodId: U }>;
-    }
-
-    throw new Error(
-      \`Expected \${classId}/\${methodId}, got \${method.classId}\${method.methodId}\`
+  ): Promise<ExtractArgs<T, U>> {
+    return new Promise(
+      (resolve, reject) => {
+        const cancel = this.subscribeMethod(channel, method => {
+          if (method.classId === classId && method.methodId === methodId) {
+            cancel();
+            return resolve(method.args as any);
+          }
+        });
+      }
     );
-  }
-
-  private async receiveMethod(channel: number) {
-    return new Promise<ReceiveMethod>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, method => {
-        cancel();
-        return resolve(method);
-      });
-    });
   }
 
   private async receiveHeader(channel: number) {
@@ -275,13 +281,19 @@ export class AmqpProtocol {
   }
 
   ${spec.classes.flatMap(c =>
-    c.methods.map(m => printSendMethodFunction(c, m))
+    c.methods.filter(m => isClientMethod(c, m)).map(m =>
+      printSendMethodFunction(c, m)
+    )
   ).join("\n")}
   ${spec.classes.flatMap(c =>
-    c.methods.map(m => printReceiveMethodFunction(c, m))
+    c.methods.filter(m => isServerMethod(c, m)).map(m =>
+      printReceiveMethodFunction(c, m)
+    )
   ).join("\n")}
   ${spec.classes.flatMap(c =>
-    c.methods.map(m => printSubscribeMethodFunction(c, m))
+    c.methods.filter(m => isServerMethod(c, m)).map(m =>
+      printSubscribeMethodFunction(c, m)
+    )
   ).join("\n")}
 }
   `;

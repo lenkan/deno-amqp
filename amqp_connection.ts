@@ -42,11 +42,6 @@ export function openConnection(
     socket.close();
   });
 
-  protocol.subscribeConnectionCloseOk(
-    0,
-    _ => socket.close()
-  );
-
   async function open() {
     await socket.start();
 
@@ -85,6 +80,7 @@ export function openConnection(
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
       replyText: args?.replyText
     });
+    socket.close();
   }
 
   function removeChannel(channelNumber: number) {

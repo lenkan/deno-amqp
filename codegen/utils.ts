@@ -192,7 +192,7 @@ export function printEncodeMethodFunction(
   const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
   return `
-export function ${name}(args: ${argsName}): Uint8Array {
+function ${name}(args: ${argsName}): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(${method.id}));
@@ -243,7 +243,7 @@ function ${name}(r: Deno.SyncReader): ${returnName} {
 
 export function printMethodDecoder(spec: Spec) {
   return `
-export function decodeMethod(data: Uint8Array): ReceiveMethod {
+function decodeMethod(data: Uint8Array): ReceiveMethod {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
@@ -275,7 +275,7 @@ export function printEncodeHeaderFunction(
   const name = `encode${pascalCase(clazz.name)}Header`;
   const argName = `${pascalCase(clazz.name)}Properties`;
   return `
-export function ${name}(size: bigint, props: ${argName}): Uint8Array {
+function ${name}(size: bigint, props: ${argName}): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(0));
@@ -316,7 +316,7 @@ function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
 
 export function printHeaderDecoder(spec: Spec) {
   return `
-export function decodeHeader(data: Uint8Array) : Header {
+function decodeHeader(data: Uint8Array) : Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch(classId) {
@@ -337,3 +337,83 @@ export const disclaimer = `
  * This is a generated file
  */
 `;
+
+export function isServerMethod(
+  clazz: ClassDefinition,
+  method: MethodDefinition
+) {
+  // https://www.rabbitmq.com/amqp-0-9-1-reference.html
+  switch (clazz.name) {
+    case "connection":
+      return [
+        "start",
+        "tune",
+        "secure",
+        "close"
+      ].includes(method.name);
+    case "channel":
+      return ["close", "flow"].includes(method.name);
+    case "basic":
+      return [
+        "return",
+        "deliver",
+        "ack",
+        "nack"
+      ].includes(method.name);
+    default:
+      return false;
+  }
+}
+
+export function isClientMethod(
+  clazz: ClassDefinition,
+  method: MethodDefinition
+) {
+  // https://www.rabbitmq.com/amqp-0-9-1-reference.html
+  switch (clazz.name) {
+    case "connection":
+      return [
+        "open",
+        "start-ok",
+        "tune-ok",
+        "secure-ok",
+        "close",
+        "close-ok"
+      ].includes(method.name);
+    case "channel":
+      return [
+        "open",
+        "close",
+        "close-ok",
+        "flow"
+      ].includes(method.name);
+    case "exchange":
+    case "queue":
+      return true;
+    case "basic":
+      return [
+        "qos",
+        "consume",
+        "cancel",
+        "publish",
+        "get",
+        "ack",
+        "reject",
+        "nack",
+        "recover-async",
+        "recover"
+      ].includes(method.name);
+    case "tx":
+      return [
+        "select",
+        "commit",
+        "rollback"
+      ].includes(method.name);
+    case "confirm":
+      return [
+        "select"
+      ].includes(method.name);
+    default:
+      return false;
+  }
+}

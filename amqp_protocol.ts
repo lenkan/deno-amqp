@@ -1300,7 +1300,7 @@ export type ReceiveMethod = ReceiveConnectionStart | ReceiveConnectionStartOk
 export type Header = ConnectionHeader | ChannelHeader | AccessHeader
   | ExchangeHeader | QueueHeader | BasicHeader | TxHeader | ConfirmHeader;
 
-export function encodeConnectionStart(args: ConnectionStartArgs): Uint8Array {
+function encodeConnectionStart(args: ConnectionStartArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(10));
@@ -1326,9 +1326,7 @@ export function encodeConnectionStart(args: ConnectionStartArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConnectionStartOk(
-  args: ConnectionStartOkArgs
-): Uint8Array {
+function encodeConnectionStartOk(args: ConnectionStartOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(11));
@@ -1347,9 +1345,7 @@ export function encodeConnectionStartOk(
   return w.bytes();
 }
 
-export function encodeConnectionSecure(
-  args: ConnectionSecureArgs
-): Uint8Array {
+function encodeConnectionSecure(args: ConnectionSecureArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(20));
@@ -1359,9 +1355,7 @@ export function encodeConnectionSecure(
   return w.bytes();
 }
 
-export function encodeConnectionSecureOk(
-  args: ConnectionSecureOkArgs
-): Uint8Array {
+function encodeConnectionSecureOk(args: ConnectionSecureOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(21));
@@ -1371,7 +1365,7 @@ export function encodeConnectionSecureOk(
   return w.bytes();
 }
 
-export function encodeConnectionTune(args: ConnectionTuneArgs): Uint8Array {
+function encodeConnectionTune(args: ConnectionTuneArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(30));
@@ -1392,9 +1386,7 @@ export function encodeConnectionTune(args: ConnectionTuneArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConnectionTuneOk(
-  args: ConnectionTuneOkArgs
-): Uint8Array {
+function encodeConnectionTuneOk(args: ConnectionTuneOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(31));
@@ -1415,7 +1407,7 @@ export function encodeConnectionTuneOk(
   return w.bytes();
 }
 
-export function encodeConnectionOpen(args: ConnectionOpenArgs): Uint8Array {
+function encodeConnectionOpen(args: ConnectionOpenArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(40));
@@ -1436,9 +1428,7 @@ export function encodeConnectionOpen(args: ConnectionOpenArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConnectionOpenOk(
-  args: ConnectionOpenOkArgs
-): Uint8Array {
+function encodeConnectionOpenOk(args: ConnectionOpenOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(41));
@@ -1451,7 +1441,7 @@ export function encodeConnectionOpenOk(
   return w.bytes();
 }
 
-export function encodeConnectionClose(args: ConnectionCloseArgs): Uint8Array {
+function encodeConnectionClose(args: ConnectionCloseArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(50));
@@ -1467,9 +1457,7 @@ export function encodeConnectionClose(args: ConnectionCloseArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConnectionCloseOk(
-  args: ConnectionCloseOkArgs
-): Uint8Array {
+function encodeConnectionCloseOk(args: ConnectionCloseOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(51));
@@ -1477,9 +1465,7 @@ export function encodeConnectionCloseOk(
   return w.bytes();
 }
 
-export function encodeConnectionBlocked(
-  args: ConnectionBlockedArgs
-): Uint8Array {
+function encodeConnectionBlocked(args: ConnectionBlockedArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(60));
@@ -1492,9 +1478,7 @@ export function encodeConnectionBlocked(
   return w.bytes();
 }
 
-export function encodeConnectionUnblocked(
-  args: ConnectionUnblockedArgs
-): Uint8Array {
+function encodeConnectionUnblocked(args: ConnectionUnblockedArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(61));
@@ -1502,7 +1486,7 @@ export function encodeConnectionUnblocked(
   return w.bytes();
 }
 
-export function encodeConnectionUpdateSecret(
+function encodeConnectionUpdateSecret(
   args: ConnectionUpdateSecretArgs
 ): Uint8Array {
   const w = new Deno.Buffer();
@@ -1515,7 +1499,7 @@ export function encodeConnectionUpdateSecret(
   return w.bytes();
 }
 
-export function encodeConnectionUpdateSecretOk(
+function encodeConnectionUpdateSecretOk(
   args: ConnectionUpdateSecretOkArgs
 ): Uint8Array {
   const w = new Deno.Buffer();
@@ -1525,7 +1509,7 @@ export function encodeConnectionUpdateSecretOk(
   return w.bytes();
 }
 
-export function encodeChannelOpen(args: ChannelOpenArgs): Uint8Array {
+function encodeChannelOpen(args: ChannelOpenArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(10));
@@ -1538,7 +1522,7 @@ export function encodeChannelOpen(args: ChannelOpenArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeChannelOpenOk(args: ChannelOpenOkArgs): Uint8Array {
+function encodeChannelOpenOk(args: ChannelOpenOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(11));
@@ -1551,7 +1535,7 @@ export function encodeChannelOpenOk(args: ChannelOpenOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeChannelFlow(args: ChannelFlowArgs): Uint8Array {
+function encodeChannelFlow(args: ChannelFlowArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(20));
@@ -1561,7 +1545,7 @@ export function encodeChannelFlow(args: ChannelFlowArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeChannelFlowOk(args: ChannelFlowOkArgs): Uint8Array {
+function encodeChannelFlowOk(args: ChannelFlowOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(21));
@@ -1571,7 +1555,7 @@ export function encodeChannelFlowOk(args: ChannelFlowOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeChannelClose(args: ChannelCloseArgs): Uint8Array {
+function encodeChannelClose(args: ChannelCloseArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(40));
@@ -1587,7 +1571,7 @@ export function encodeChannelClose(args: ChannelCloseArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeChannelCloseOk(args: ChannelCloseOkArgs): Uint8Array {
+function encodeChannelCloseOk(args: ChannelCloseOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(41));
@@ -1595,7 +1579,7 @@ export function encodeChannelCloseOk(args: ChannelCloseOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeAccessRequest(args: AccessRequestArgs): Uint8Array {
+function encodeAccessRequest(args: AccessRequestArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(30));
   w.writeSync(enc.encodeShortUint(10));
@@ -1625,7 +1609,7 @@ export function encodeAccessRequest(args: AccessRequestArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeAccessRequestOk(args: AccessRequestOkArgs): Uint8Array {
+function encodeAccessRequestOk(args: AccessRequestOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(30));
   w.writeSync(enc.encodeShortUint(11));
@@ -1638,7 +1622,7 @@ export function encodeAccessRequestOk(args: AccessRequestOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeDeclare(args: ExchangeDeclareArgs): Uint8Array {
+function encodeExchangeDeclare(args: ExchangeDeclareArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(10));
@@ -1680,9 +1664,7 @@ export function encodeExchangeDeclare(args: ExchangeDeclareArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeDeclareOk(
-  args: ExchangeDeclareOkArgs
-): Uint8Array {
+function encodeExchangeDeclareOk(args: ExchangeDeclareOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(11));
@@ -1690,7 +1672,7 @@ export function encodeExchangeDeclareOk(
   return w.bytes();
 }
 
-export function encodeExchangeDelete(args: ExchangeDeleteArgs): Uint8Array {
+function encodeExchangeDelete(args: ExchangeDeleteArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(20));
@@ -1712,9 +1694,7 @@ export function encodeExchangeDelete(args: ExchangeDeleteArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeDeleteOk(
-  args: ExchangeDeleteOkArgs
-): Uint8Array {
+function encodeExchangeDeleteOk(args: ExchangeDeleteOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(21));
@@ -1722,7 +1702,7 @@ export function encodeExchangeDeleteOk(
   return w.bytes();
 }
 
-export function encodeExchangeBind(args: ExchangeBindArgs): Uint8Array {
+function encodeExchangeBind(args: ExchangeBindArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(30));
@@ -1749,7 +1729,7 @@ export function encodeExchangeBind(args: ExchangeBindArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeBindOk(args: ExchangeBindOkArgs): Uint8Array {
+function encodeExchangeBindOk(args: ExchangeBindOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(31));
@@ -1757,7 +1737,7 @@ export function encodeExchangeBindOk(args: ExchangeBindOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeUnbind(args: ExchangeUnbindArgs): Uint8Array {
+function encodeExchangeUnbind(args: ExchangeUnbindArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(40));
@@ -1784,9 +1764,7 @@ export function encodeExchangeUnbind(args: ExchangeUnbindArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeExchangeUnbindOk(
-  args: ExchangeUnbindOkArgs
-): Uint8Array {
+function encodeExchangeUnbindOk(args: ExchangeUnbindOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(51));
@@ -1794,7 +1772,7 @@ export function encodeExchangeUnbindOk(
   return w.bytes();
 }
 
-export function encodeQueueDeclare(args: QueueDeclareArgs): Uint8Array {
+function encodeQueueDeclare(args: QueueDeclareArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(10));
@@ -1835,7 +1813,7 @@ export function encodeQueueDeclare(args: QueueDeclareArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueDeclareOk(args: QueueDeclareOkArgs): Uint8Array {
+function encodeQueueDeclareOk(args: QueueDeclareOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(11));
@@ -1847,7 +1825,7 @@ export function encodeQueueDeclareOk(args: QueueDeclareOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueBind(args: QueueBindArgs): Uint8Array {
+function encodeQueueBind(args: QueueBindArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(20));
@@ -1877,7 +1855,7 @@ export function encodeQueueBind(args: QueueBindArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueBindOk(args: QueueBindOkArgs): Uint8Array {
+function encodeQueueBindOk(args: QueueBindOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(21));
@@ -1885,7 +1863,7 @@ export function encodeQueueBindOk(args: QueueBindOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueuePurge(args: QueuePurgeArgs): Uint8Array {
+function encodeQueuePurge(args: QueuePurgeArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(30));
@@ -1906,7 +1884,7 @@ export function encodeQueuePurge(args: QueuePurgeArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueuePurgeOk(args: QueuePurgeOkArgs): Uint8Array {
+function encodeQueuePurgeOk(args: QueuePurgeOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(31));
@@ -1916,7 +1894,7 @@ export function encodeQueuePurgeOk(args: QueuePurgeOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueDelete(args: QueueDeleteArgs): Uint8Array {
+function encodeQueueDelete(args: QueueDeleteArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(40));
@@ -1945,7 +1923,7 @@ export function encodeQueueDelete(args: QueueDeleteArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueDeleteOk(args: QueueDeleteOkArgs): Uint8Array {
+function encodeQueueDeleteOk(args: QueueDeleteOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(41));
@@ -1955,7 +1933,7 @@ export function encodeQueueDeleteOk(args: QueueDeleteOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueUnbind(args: QueueUnbindArgs): Uint8Array {
+function encodeQueueUnbind(args: QueueUnbindArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(50));
@@ -1981,7 +1959,7 @@ export function encodeQueueUnbind(args: QueueUnbindArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeQueueUnbindOk(args: QueueUnbindOkArgs): Uint8Array {
+function encodeQueueUnbindOk(args: QueueUnbindOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(51));
@@ -1989,7 +1967,7 @@ export function encodeQueueUnbindOk(args: QueueUnbindOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicQos(args: BasicQosArgs): Uint8Array {
+function encodeBasicQos(args: BasicQosArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(10));
@@ -2010,7 +1988,7 @@ export function encodeBasicQos(args: BasicQosArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicQosOk(args: BasicQosOkArgs): Uint8Array {
+function encodeBasicQosOk(args: BasicQosOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(11));
@@ -2018,7 +1996,7 @@ export function encodeBasicQosOk(args: BasicQosOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicConsume(args: BasicConsumeArgs): Uint8Array {
+function encodeBasicConsume(args: BasicConsumeArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(20));
@@ -2056,11 +2034,10 @@ export function encodeBasicConsume(args: BasicConsumeArgs): Uint8Array {
       value: args.arguments !== undefined ? args.arguments : {}
     }
   ]));
-
   return w.bytes();
 }
 
-export function encodeBasicConsumeOk(args: BasicConsumeOkArgs): Uint8Array {
+function encodeBasicConsumeOk(args: BasicConsumeOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(21));
@@ -2070,7 +2047,7 @@ export function encodeBasicConsumeOk(args: BasicConsumeOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicCancel(args: BasicCancelArgs): Uint8Array {
+function encodeBasicCancel(args: BasicCancelArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(30));
@@ -2084,7 +2061,7 @@ export function encodeBasicCancel(args: BasicCancelArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicCancelOk(args: BasicCancelOkArgs): Uint8Array {
+function encodeBasicCancelOk(args: BasicCancelOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(31));
@@ -2094,7 +2071,7 @@ export function encodeBasicCancelOk(args: BasicCancelOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicPublish(args: BasicPublishArgs): Uint8Array {
+function encodeBasicPublish(args: BasicPublishArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(40));
@@ -2123,7 +2100,7 @@ export function encodeBasicPublish(args: BasicPublishArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicReturn(args: BasicReturnArgs): Uint8Array {
+function encodeBasicReturn(args: BasicReturnArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(50));
@@ -2139,7 +2116,7 @@ export function encodeBasicReturn(args: BasicReturnArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicDeliver(args: BasicDeliverArgs): Uint8Array {
+function encodeBasicDeliver(args: BasicDeliverArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(60));
@@ -2156,7 +2133,7 @@ export function encodeBasicDeliver(args: BasicDeliverArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicGet(args: BasicGetArgs): Uint8Array {
+function encodeBasicGet(args: BasicGetArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(70));
@@ -2177,7 +2154,7 @@ export function encodeBasicGet(args: BasicGetArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicGetOk(args: BasicGetOkArgs): Uint8Array {
+function encodeBasicGetOk(args: BasicGetOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(71));
@@ -2194,7 +2171,7 @@ export function encodeBasicGetOk(args: BasicGetOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicGetEmpty(args: BasicGetEmptyArgs): Uint8Array {
+function encodeBasicGetEmpty(args: BasicGetEmptyArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(72));
@@ -2207,7 +2184,7 @@ export function encodeBasicGetEmpty(args: BasicGetEmptyArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicAck(args: BasicAckArgs): Uint8Array {
+function encodeBasicAck(args: BasicAckArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(80));
@@ -2224,7 +2201,7 @@ export function encodeBasicAck(args: BasicAckArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicReject(args: BasicRejectArgs): Uint8Array {
+function encodeBasicReject(args: BasicRejectArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(90));
@@ -2238,9 +2215,7 @@ export function encodeBasicReject(args: BasicRejectArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicRecoverAsync(
-  args: BasicRecoverAsyncArgs
-): Uint8Array {
+function encodeBasicRecoverAsync(args: BasicRecoverAsyncArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(100));
@@ -2253,7 +2228,7 @@ export function encodeBasicRecoverAsync(
   return w.bytes();
 }
 
-export function encodeBasicRecover(args: BasicRecoverArgs): Uint8Array {
+function encodeBasicRecover(args: BasicRecoverArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(110));
@@ -2266,7 +2241,7 @@ export function encodeBasicRecover(args: BasicRecoverArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicRecoverOk(args: BasicRecoverOkArgs): Uint8Array {
+function encodeBasicRecoverOk(args: BasicRecoverOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(111));
@@ -2274,7 +2249,7 @@ export function encodeBasicRecoverOk(args: BasicRecoverOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeBasicNack(args: BasicNackArgs): Uint8Array {
+function encodeBasicNack(args: BasicNackArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(120));
@@ -2295,7 +2270,7 @@ export function encodeBasicNack(args: BasicNackArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxSelect(args: TxSelectArgs): Uint8Array {
+function encodeTxSelect(args: TxSelectArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(10));
@@ -2303,7 +2278,7 @@ export function encodeTxSelect(args: TxSelectArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxSelectOk(args: TxSelectOkArgs): Uint8Array {
+function encodeTxSelectOk(args: TxSelectOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(11));
@@ -2311,7 +2286,7 @@ export function encodeTxSelectOk(args: TxSelectOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxCommit(args: TxCommitArgs): Uint8Array {
+function encodeTxCommit(args: TxCommitArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(20));
@@ -2319,7 +2294,7 @@ export function encodeTxCommit(args: TxCommitArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxCommitOk(args: TxCommitOkArgs): Uint8Array {
+function encodeTxCommitOk(args: TxCommitOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(21));
@@ -2327,7 +2302,7 @@ export function encodeTxCommitOk(args: TxCommitOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxRollback(args: TxRollbackArgs): Uint8Array {
+function encodeTxRollback(args: TxRollbackArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(30));
@@ -2335,7 +2310,7 @@ export function encodeTxRollback(args: TxRollbackArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeTxRollbackOk(args: TxRollbackOkArgs): Uint8Array {
+function encodeTxRollbackOk(args: TxRollbackOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(31));
@@ -2343,7 +2318,7 @@ export function encodeTxRollbackOk(args: TxRollbackOkArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConfirmSelect(args: ConfirmSelectArgs): Uint8Array {
+function encodeConfirmSelect(args: ConfirmSelectArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(85));
   w.writeSync(enc.encodeShortUint(10));
@@ -2356,7 +2331,7 @@ export function encodeConfirmSelect(args: ConfirmSelectArgs): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConfirmSelectOk(args: ConfirmSelectOkArgs): Uint8Array {
+function encodeConfirmSelectOk(args: ConfirmSelectOkArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(85));
   w.writeSync(enc.encodeShortUint(11));
@@ -2977,7 +2952,7 @@ function decodeConfirmSelectOk(r: Deno.SyncReader): ConfirmSelectOk {
   return args;
 }
 
-export function decodeMethod(data: Uint8Array): ReceiveMethod {
+function decodeMethod(data: Uint8Array): ReceiveMethod {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
@@ -3189,7 +3164,7 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
   }
 }
 
-export function encodeConnectionHeader(
+function encodeConnectionHeader(
   size: bigint,
   props: ConnectionProperties
 ): Uint8Array {
@@ -3201,7 +3176,7 @@ export function encodeConnectionHeader(
   return w.bytes();
 }
 
-export function encodeChannelHeader(
+function encodeChannelHeader(
   size: bigint,
   props: ChannelProperties
 ): Uint8Array {
@@ -3213,7 +3188,7 @@ export function encodeChannelHeader(
   return w.bytes();
 }
 
-export function encodeAccessHeader(
+function encodeAccessHeader(
   size: bigint,
   props: AccessProperties
 ): Uint8Array {
@@ -3225,7 +3200,7 @@ export function encodeAccessHeader(
   return w.bytes();
 }
 
-export function encodeExchangeHeader(
+function encodeExchangeHeader(
   size: bigint,
   props: ExchangeProperties
 ): Uint8Array {
@@ -3237,10 +3212,7 @@ export function encodeExchangeHeader(
   return w.bytes();
 }
 
-export function encodeQueueHeader(
-  size: bigint,
-  props: QueueProperties
-): Uint8Array {
+function encodeQueueHeader(size: bigint, props: QueueProperties): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(0));
@@ -3249,10 +3221,7 @@ export function encodeQueueHeader(
   return w.bytes();
 }
 
-export function encodeBasicHeader(
-  size: bigint,
-  props: BasicProperties
-): Uint8Array {
+function encodeBasicHeader(size: bigint, props: BasicProperties): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(0));
@@ -3281,7 +3250,7 @@ export function encodeBasicHeader(
   return w.bytes();
 }
 
-export function encodeTxHeader(size: bigint, props: TxProperties): Uint8Array {
+function encodeTxHeader(size: bigint, props: TxProperties): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(0));
@@ -3290,7 +3259,7 @@ export function encodeTxHeader(size: bigint, props: TxProperties): Uint8Array {
   return w.bytes();
 }
 
-export function encodeConfirmHeader(
+function encodeConfirmHeader(
   size: bigint,
   props: ConfirmProperties
 ): Uint8Array {
@@ -3407,7 +3376,7 @@ function decodeConfirmHeader(r: Deno.SyncReader): ConfirmHeader {
   return { classId: 85, size, props };
 }
 
-export function decodeHeader(data: Uint8Array): Header {
+function decodeHeader(data: Uint8Array): Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch (classId) {
@@ -3453,6 +3422,15 @@ interface HeaderSubscriber {
   channel: number;
   handler: (h: Header) => void;
 }
+
+type ExtractMethod<T extends number, U extends number> = Extract<
+  ReceiveMethod,
+  { classId: T; methodId: U }
+>;
+type ExtractArgs<T extends number, U extends number> = ExtractMethod<
+  T,
+  U
+>["args"];
 
 export class AmqpProtocol {
   private methodSubscribers: MethodSubscriber[] = [];
@@ -3512,28 +3490,21 @@ export class AmqpProtocol {
     };
   }
 
-  private async assertMethod<T extends number, U extends number>(
+  private async receiveMethod<T extends number, U extends number>(
     channel: number,
     classId: T,
     methodId: U
-  ): Promise<Extract<ReceiveMethod, { classId: T; methodId: U }>> {
-    const method = await this.receiveMethod(channel);
-    if (method.classId === classId && method.methodId === methodId) {
-      return method as Extract<ReceiveMethod, { classId: T; methodId: U }>;
-    }
-
-    throw new Error(
-      `Expected ${classId}/${methodId}, got ${method.classId}${method.methodId}`
+  ): Promise<ExtractArgs<T, U>> {
+    return new Promise(
+      (resolve, reject) => {
+        const cancel = this.subscribeMethod(channel, method => {
+          if (method.classId === classId && method.methodId === methodId) {
+            cancel();
+            return resolve(method.args as any);
+          }
+        });
+      }
     );
-  }
-
-  private async receiveMethod(channel: number) {
-    return new Promise<ReceiveMethod>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, method => {
-        cancel();
-        return resolve(method);
-      });
-    });
   }
 
   private async receiveHeader(channel: number) {
@@ -3550,7 +3521,7 @@ export class AmqpProtocol {
 
   private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
-    return new Promise<Uint8Array>(resolve => {
+    return new Promise<Uint8Array>((resolve, reject) => {
       const cancel = this.socket.subscribe((err, ch, type, data) => {
         if (channel !== ch) {
           return;
@@ -3570,21 +3541,6 @@ export class AmqpProtocol {
     });
   }
 
-  async sendConnectionStart(
-    channel: number,
-    args: ConnectionStartArgs
-  ): Promise<ConnectionStartOk> {
-    await this.socket.write(channel, 1, encodeConnectionStart(args));
-    return new Promise<ConnectionStartOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
   async sendConnectionStartOk(
     channel: number,
     args: ConnectionStartOkArgs
@@ -3592,40 +3548,11 @@ export class AmqpProtocol {
     await this.socket.write(channel, 1, encodeConnectionStartOk(args));
   }
 
-  async sendConnectionSecure(
-    channel: number,
-    args: ConnectionSecureArgs
-  ): Promise<ConnectionSecureOk> {
-    await this.socket.write(channel, 1, encodeConnectionSecure(args));
-    return new Promise<ConnectionSecureOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
   async sendConnectionSecureOk(
     channel: number,
     args: ConnectionSecureOkArgs
   ): Promise<void> {
     await this.socket.write(channel, 1, encodeConnectionSecureOk(args));
-  }
-
-  async sendConnectionTune(channel: number, args: ConnectionTuneArgs): Promise<
-    ConnectionTuneOk
-  > {
-    await this.socket.write(channel, 1, encodeConnectionTune(args));
-    return new Promise<ConnectionTuneOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 31) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
   }
 
   async sendConnectionTuneOk(
@@ -3639,21 +3566,7 @@ export class AmqpProtocol {
     ConnectionOpenOk
   > {
     await this.socket.write(channel, 1, encodeConnectionOpen(args));
-    return new Promise<ConnectionOpenOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 41) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendConnectionOpenOk(
-    channel: number,
-    args: ConnectionOpenOkArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeConnectionOpenOk(args));
+    return this.receiveMethod(channel, 10, 41);
   }
 
   async sendConnectionClose(
@@ -3661,14 +3574,7 @@ export class AmqpProtocol {
     args: ConnectionCloseArgs
   ): Promise<ConnectionCloseOk> {
     await this.socket.write(channel, 1, encodeConnectionClose(args));
-    return new Promise<ConnectionCloseOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 51) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 10, 51);
   }
 
   async sendConnectionCloseOk(
@@ -3678,94 +3584,25 @@ export class AmqpProtocol {
     await this.socket.write(channel, 1, encodeConnectionCloseOk(args));
   }
 
-  async sendConnectionBlocked(
-    channel: number,
-    args: ConnectionBlockedArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeConnectionBlocked(args));
-  }
-
-  async sendConnectionUnblocked(
-    channel: number,
-    args: ConnectionUnblockedArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeConnectionUnblocked(args));
-  }
-
-  async sendConnectionUpdateSecret(
-    channel: number,
-    args: ConnectionUpdateSecretArgs
-  ): Promise<ConnectionUpdateSecretOk> {
-    await this.socket.write(channel, 1, encodeConnectionUpdateSecret(args));
-    return new Promise<ConnectionUpdateSecretOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 10 && reply.methodId === 71) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendConnectionUpdateSecretOk(
-    channel: number,
-    args: ConnectionUpdateSecretOkArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeConnectionUpdateSecretOk(args));
-  }
-
   async sendChannelOpen(channel: number, args: ChannelOpenArgs): Promise<
     ChannelOpenOk
   > {
     await this.socket.write(channel, 1, encodeChannelOpen(args));
-    return new Promise<ChannelOpenOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 20 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendChannelOpenOk(channel: number, args: ChannelOpenOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeChannelOpenOk(args));
+    return this.receiveMethod(channel, 20, 11);
   }
 
   async sendChannelFlow(channel: number, args: ChannelFlowArgs): Promise<
     ChannelFlowOk
   > {
     await this.socket.write(channel, 1, encodeChannelFlow(args));
-    return new Promise<ChannelFlowOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 20 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendChannelFlowOk(channel: number, args: ChannelFlowOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeChannelFlowOk(args));
+    return this.receiveMethod(channel, 20, 21);
   }
 
   async sendChannelClose(channel: number, args: ChannelCloseArgs): Promise<
     ChannelCloseOk
   > {
     await this.socket.write(channel, 1, encodeChannelClose(args));
-    return new Promise<ChannelCloseOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 20 && reply.methodId === 41) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 20, 41);
   }
 
   async sendChannelCloseOk(channel: number, args: ChannelCloseOkArgs): Promise<
@@ -3774,40 +3611,12 @@ export class AmqpProtocol {
     await this.socket.write(channel, 1, encodeChannelCloseOk(args));
   }
 
-  async sendAccessRequest(channel: number, args: AccessRequestArgs): Promise<
-    AccessRequestOk
-  > {
-    await this.socket.write(channel, 1, encodeAccessRequest(args));
-    return new Promise<AccessRequestOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 30 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendAccessRequestOk(
-    channel: number,
-    args: AccessRequestOkArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeAccessRequestOk(args));
-  }
-
   async sendExchangeDeclare(
     channel: number,
     args: ExchangeDeclareArgs
   ): Promise<ExchangeDeclareOk> {
     await this.socket.write(channel, 1, encodeExchangeDeclare(args));
-    return new Promise<ExchangeDeclareOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 40 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 40, 11);
   }
 
   async sendExchangeDeclareOk(
@@ -3821,14 +3630,7 @@ export class AmqpProtocol {
     ExchangeDeleteOk
   > {
     await this.socket.write(channel, 1, encodeExchangeDelete(args));
-    return new Promise<ExchangeDeleteOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 40 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 40, 21);
   }
 
   async sendExchangeDeleteOk(
@@ -3842,14 +3644,7 @@ export class AmqpProtocol {
     ExchangeBindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeBind(args));
-    return new Promise<ExchangeBindOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 40 && reply.methodId === 31) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 40, 31);
   }
 
   async sendExchangeBindOk(channel: number, args: ExchangeBindOkArgs): Promise<
@@ -3862,14 +3657,7 @@ export class AmqpProtocol {
     ExchangeUnbindOk
   > {
     await this.socket.write(channel, 1, encodeExchangeUnbind(args));
-    return new Promise<ExchangeUnbindOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 40 && reply.methodId === 51) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 40, 51);
   }
 
   async sendExchangeUnbindOk(
@@ -3883,14 +3671,7 @@ export class AmqpProtocol {
     QueueDeclareOk
   > {
     await this.socket.write(channel, 1, encodeQueueDeclare(args));
-    return new Promise<QueueDeclareOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 50 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 50, 11);
   }
 
   async sendQueueDeclareOk(channel: number, args: QueueDeclareOkArgs): Promise<
@@ -3903,14 +3684,7 @@ export class AmqpProtocol {
     QueueBindOk
   > {
     await this.socket.write(channel, 1, encodeQueueBind(args));
-    return new Promise<QueueBindOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 50 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 50, 21);
   }
 
   async sendQueueBindOk(channel: number, args: QueueBindOkArgs): Promise<
@@ -3923,14 +3697,7 @@ export class AmqpProtocol {
     QueuePurgeOk
   > {
     await this.socket.write(channel, 1, encodeQueuePurge(args));
-    return new Promise<QueuePurgeOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 50 && reply.methodId === 31) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 50, 31);
   }
 
   async sendQueuePurgeOk(channel: number, args: QueuePurgeOkArgs): Promise<
@@ -3943,14 +3710,7 @@ export class AmqpProtocol {
     QueueDeleteOk
   > {
     await this.socket.write(channel, 1, encodeQueueDelete(args));
-    return new Promise<QueueDeleteOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 50 && reply.methodId === 41) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 50, 41);
   }
 
   async sendQueueDeleteOk(channel: number, args: QueueDeleteOkArgs): Promise<
@@ -3963,14 +3723,7 @@ export class AmqpProtocol {
     QueueUnbindOk
   > {
     await this.socket.write(channel, 1, encodeQueueUnbind(args));
-    return new Promise<QueueUnbindOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 50 && reply.methodId === 51) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return this.receiveMethod(channel, 50, 51);
   }
 
   async sendQueueUnbindOk(channel: number, args: QueueUnbindOkArgs): Promise<
@@ -3983,58 +3736,21 @@ export class AmqpProtocol {
     BasicQosOk
   > {
     await this.socket.write(channel, 1, encodeBasicQos(args));
-    return new Promise<BasicQosOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 60 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendBasicQosOk(channel: number, args: BasicQosOkArgs): Promise<void> {
-    await this.socket.write(channel, 1, encodeBasicQosOk(args));
+    return this.receiveMethod(channel, 60, 11);
   }
 
   async sendBasicConsume(channel: number, args: BasicConsumeArgs): Promise<
     BasicConsumeOk
   > {
     await this.socket.write(channel, 1, encodeBasicConsume(args));
-    return new Promise<BasicConsumeOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 60 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendBasicConsumeOk(channel: number, args: BasicConsumeOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeBasicConsumeOk(args));
+    return this.receiveMethod(channel, 60, 21);
   }
 
   async sendBasicCancel(channel: number, args: BasicCancelArgs): Promise<
     BasicCancelOk
   > {
     await this.socket.write(channel, 1, encodeBasicCancel(args));
-    return new Promise<BasicCancelOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 60 && reply.methodId === 31) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendBasicCancelOk(channel: number, args: BasicCancelOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeBasicCancelOk(args));
+    return this.receiveMethod(channel, 60, 31);
   }
 
   async sendBasicPublish(
@@ -4045,40 +3761,6 @@ export class AmqpProtocol {
   ) {
     await Promise.all([
       this.socket.write(channel, 1, encodeBasicPublish(args)),
-      this.socket.write(
-        channel,
-        2,
-        encodeBasicHeader(BigInt(data.length), props)
-      ),
-      this.socket.write(channel, 3, data)
-    ]);
-  }
-
-  async sendBasicReturn(
-    channel: number,
-    args: BasicReturnArgs,
-    props: BasicProperties,
-    data: Uint8Array
-  ) {
-    await Promise.all([
-      this.socket.write(channel, 1, encodeBasicReturn(args)),
-      this.socket.write(
-        channel,
-        2,
-        encodeBasicHeader(BigInt(data.length), props)
-      ),
-      this.socket.write(channel, 3, data)
-    ]);
-  }
-
-  async sendBasicDeliver(
-    channel: number,
-    args: BasicDeliverArgs,
-    props: BasicProperties,
-    data: Uint8Array
-  ) {
-    await Promise.all([
-      this.socket.write(channel, 1, encodeBasicDeliver(args)),
       this.socket.write(
         channel,
         2,
@@ -4106,29 +3788,6 @@ export class AmqpProtocol {
     });
   }
 
-  async sendBasicGetOk(
-    channel: number,
-    args: BasicGetOkArgs,
-    props: BasicProperties,
-    data: Uint8Array
-  ) {
-    await Promise.all([
-      this.socket.write(channel, 1, encodeBasicGetOk(args)),
-      this.socket.write(
-        channel,
-        2,
-        encodeBasicHeader(BigInt(data.length), props)
-      ),
-      this.socket.write(channel, 3, data)
-    ]);
-  }
-
-  async sendBasicGetEmpty(channel: number, args: BasicGetEmptyArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeBasicGetEmpty(args));
-  }
-
   async sendBasicAck(channel: number, args: BasicAckArgs): Promise<void> {
     await this.socket.write(channel, 1, encodeBasicAck(args));
   }
@@ -4150,20 +3809,7 @@ export class AmqpProtocol {
     BasicRecoverOk
   > {
     await this.socket.write(channel, 1, encodeBasicRecover(args));
-    return new Promise<BasicRecoverOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 60 && reply.methodId === 111) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendBasicRecoverOk(channel: number, args: BasicRecoverOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeBasicRecoverOk(args));
+    return this.receiveMethod(channel, 60, 111);
   }
 
   async sendBasicNack(channel: number, args: BasicNackArgs): Promise<void> {
@@ -4174,395 +3820,60 @@ export class AmqpProtocol {
     TxSelectOk
   > {
     await this.socket.write(channel, 1, encodeTxSelect(args));
-    return new Promise<TxSelectOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 90 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendTxSelectOk(channel: number, args: TxSelectOkArgs): Promise<void> {
-    await this.socket.write(channel, 1, encodeTxSelectOk(args));
+    return this.receiveMethod(channel, 90, 11);
   }
 
   async sendTxCommit(channel: number, args: TxCommitArgs): Promise<
     TxCommitOk
   > {
     await this.socket.write(channel, 1, encodeTxCommit(args));
-    return new Promise<TxCommitOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 90 && reply.methodId === 21) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendTxCommitOk(channel: number, args: TxCommitOkArgs): Promise<void> {
-    await this.socket.write(channel, 1, encodeTxCommitOk(args));
+    return this.receiveMethod(channel, 90, 21);
   }
 
   async sendTxRollback(channel: number, args: TxRollbackArgs): Promise<
     TxRollbackOk
   > {
     await this.socket.write(channel, 1, encodeTxRollback(args));
-    return new Promise<TxRollbackOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 90 && reply.methodId === 31) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendTxRollbackOk(channel: number, args: TxRollbackOkArgs): Promise<
-    void
-  > {
-    await this.socket.write(channel, 1, encodeTxRollbackOk(args));
+    return this.receiveMethod(channel, 90, 31);
   }
 
   async sendConfirmSelect(channel: number, args: ConfirmSelectArgs): Promise<
     ConfirmSelectOk
   > {
     await this.socket.write(channel, 1, encodeConfirmSelect(args));
-    return new Promise<ConfirmSelectOk>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, reply => {
-        if (reply.classId === 85 && reply.methodId === 11) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
-  }
-
-  async sendConfirmSelectOk(
-    channel: number,
-    args: ConfirmSelectOkArgs
-  ): Promise<void> {
-    await this.socket.write(channel, 1, encodeConfirmSelectOk(args));
+    return this.receiveMethod(channel, 85, 11);
   }
 
   async receiveConnectionStart(channel: number): Promise<ConnectionStart> {
-    const method = await this.assertMethod(channel, 10, 10);
-    return method.args;
-  }
-
-  async receiveConnectionStartOk(channel: number): Promise<ConnectionStartOk> {
-    const method = await this.assertMethod(channel, 10, 11);
-    return method.args;
+    return this.receiveMethod(channel, 10, 10);
   }
 
   async receiveConnectionSecure(channel: number): Promise<ConnectionSecure> {
-    const method = await this.assertMethod(channel, 10, 20);
-    return method.args;
-  }
-
-  async receiveConnectionSecureOk(channel: number): Promise<
-    ConnectionSecureOk
-  > {
-    const method = await this.assertMethod(channel, 10, 21);
-    return method.args;
+    return this.receiveMethod(channel, 10, 20);
   }
 
   async receiveConnectionTune(channel: number): Promise<ConnectionTune> {
-    const method = await this.assertMethod(channel, 10, 30);
-    return method.args;
-  }
-
-  async receiveConnectionTuneOk(channel: number): Promise<ConnectionTuneOk> {
-    const method = await this.assertMethod(channel, 10, 31);
-    return method.args;
-  }
-
-  async receiveConnectionOpen(channel: number): Promise<ConnectionOpen> {
-    const method = await this.assertMethod(channel, 10, 40);
-    return method.args;
-  }
-
-  async receiveConnectionOpenOk(channel: number): Promise<ConnectionOpenOk> {
-    const method = await this.assertMethod(channel, 10, 41);
-    return method.args;
+    return this.receiveMethod(channel, 10, 30);
   }
 
   async receiveConnectionClose(channel: number): Promise<ConnectionClose> {
-    const method = await this.assertMethod(channel, 10, 50);
-    return method.args;
-  }
-
-  async receiveConnectionCloseOk(channel: number): Promise<ConnectionCloseOk> {
-    const method = await this.assertMethod(channel, 10, 51);
-    return method.args;
-  }
-
-  async receiveConnectionBlocked(channel: number): Promise<ConnectionBlocked> {
-    const method = await this.assertMethod(channel, 10, 60);
-    return method.args;
-  }
-
-  async receiveConnectionUnblocked(channel: number): Promise<
-    ConnectionUnblocked
-  > {
-    const method = await this.assertMethod(channel, 10, 61);
-    return method.args;
-  }
-
-  async receiveConnectionUpdateSecret(channel: number): Promise<
-    ConnectionUpdateSecret
-  > {
-    const method = await this.assertMethod(channel, 10, 70);
-    return method.args;
-  }
-
-  async receiveConnectionUpdateSecretOk(channel: number): Promise<
-    ConnectionUpdateSecretOk
-  > {
-    const method = await this.assertMethod(channel, 10, 71);
-    return method.args;
-  }
-
-  async receiveChannelOpen(channel: number): Promise<ChannelOpen> {
-    const method = await this.assertMethod(channel, 20, 10);
-    return method.args;
-  }
-
-  async receiveChannelOpenOk(channel: number): Promise<ChannelOpenOk> {
-    const method = await this.assertMethod(channel, 20, 11);
-    return method.args;
+    return this.receiveMethod(channel, 10, 50);
   }
 
   async receiveChannelFlow(channel: number): Promise<ChannelFlow> {
-    const method = await this.assertMethod(channel, 20, 20);
-    return method.args;
-  }
-
-  async receiveChannelFlowOk(channel: number): Promise<ChannelFlowOk> {
-    const method = await this.assertMethod(channel, 20, 21);
-    return method.args;
+    return this.receiveMethod(channel, 20, 20);
   }
 
   async receiveChannelClose(channel: number): Promise<ChannelClose> {
-    const method = await this.assertMethod(channel, 20, 40);
-    return method.args;
-  }
-
-  async receiveChannelCloseOk(channel: number): Promise<ChannelCloseOk> {
-    const method = await this.assertMethod(channel, 20, 41);
-    return method.args;
-  }
-
-  async receiveAccessRequest(channel: number): Promise<AccessRequest> {
-    const method = await this.assertMethod(channel, 30, 10);
-    return method.args;
-  }
-
-  async receiveAccessRequestOk(channel: number): Promise<AccessRequestOk> {
-    const method = await this.assertMethod(channel, 30, 11);
-    return method.args;
-  }
-
-  async receiveExchangeDeclare(channel: number): Promise<ExchangeDeclare> {
-    const method = await this.assertMethod(channel, 40, 10);
-    return method.args;
-  }
-
-  async receiveExchangeDeclareOk(channel: number): Promise<ExchangeDeclareOk> {
-    const method = await this.assertMethod(channel, 40, 11);
-    return method.args;
-  }
-
-  async receiveExchangeDelete(channel: number): Promise<ExchangeDelete> {
-    const method = await this.assertMethod(channel, 40, 20);
-    return method.args;
-  }
-
-  async receiveExchangeDeleteOk(channel: number): Promise<ExchangeDeleteOk> {
-    const method = await this.assertMethod(channel, 40, 21);
-    return method.args;
-  }
-
-  async receiveExchangeBind(channel: number): Promise<ExchangeBind> {
-    const method = await this.assertMethod(channel, 40, 30);
-    return method.args;
-  }
-
-  async receiveExchangeBindOk(channel: number): Promise<ExchangeBindOk> {
-    const method = await this.assertMethod(channel, 40, 31);
-    return method.args;
-  }
-
-  async receiveExchangeUnbind(channel: number): Promise<ExchangeUnbind> {
-    const method = await this.assertMethod(channel, 40, 40);
-    return method.args;
-  }
-
-  async receiveExchangeUnbindOk(channel: number): Promise<ExchangeUnbindOk> {
-    const method = await this.assertMethod(channel, 40, 51);
-    return method.args;
-  }
-
-  async receiveQueueDeclare(channel: number): Promise<QueueDeclare> {
-    const method = await this.assertMethod(channel, 50, 10);
-    return method.args;
-  }
-
-  async receiveQueueDeclareOk(channel: number): Promise<QueueDeclareOk> {
-    const method = await this.assertMethod(channel, 50, 11);
-    return method.args;
-  }
-
-  async receiveQueueBind(channel: number): Promise<QueueBind> {
-    const method = await this.assertMethod(channel, 50, 20);
-    return method.args;
-  }
-
-  async receiveQueueBindOk(channel: number): Promise<QueueBindOk> {
-    const method = await this.assertMethod(channel, 50, 21);
-    return method.args;
-  }
-
-  async receiveQueuePurge(channel: number): Promise<QueuePurge> {
-    const method = await this.assertMethod(channel, 50, 30);
-    return method.args;
-  }
-
-  async receiveQueuePurgeOk(channel: number): Promise<QueuePurgeOk> {
-    const method = await this.assertMethod(channel, 50, 31);
-    return method.args;
-  }
-
-  async receiveQueueDelete(channel: number): Promise<QueueDelete> {
-    const method = await this.assertMethod(channel, 50, 40);
-    return method.args;
-  }
-
-  async receiveQueueDeleteOk(channel: number): Promise<QueueDeleteOk> {
-    const method = await this.assertMethod(channel, 50, 41);
-    return method.args;
-  }
-
-  async receiveQueueUnbind(channel: number): Promise<QueueUnbind> {
-    const method = await this.assertMethod(channel, 50, 50);
-    return method.args;
-  }
-
-  async receiveQueueUnbindOk(channel: number): Promise<QueueUnbindOk> {
-    const method = await this.assertMethod(channel, 50, 51);
-    return method.args;
-  }
-
-  async receiveBasicQos(channel: number): Promise<BasicQos> {
-    const method = await this.assertMethod(channel, 60, 10);
-    return method.args;
-  }
-
-  async receiveBasicQosOk(channel: number): Promise<BasicQosOk> {
-    const method = await this.assertMethod(channel, 60, 11);
-    return method.args;
-  }
-
-  async receiveBasicConsume(channel: number): Promise<BasicConsume> {
-    const method = await this.assertMethod(channel, 60, 20);
-    return method.args;
-  }
-
-  async receiveBasicConsumeOk(channel: number): Promise<BasicConsumeOk> {
-    const method = await this.assertMethod(channel, 60, 21);
-    return method.args;
-  }
-
-  async receiveBasicCancel(channel: number): Promise<BasicCancel> {
-    const method = await this.assertMethod(channel, 60, 30);
-    return method.args;
-  }
-
-  async receiveBasicCancelOk(channel: number): Promise<BasicCancelOk> {
-    const method = await this.assertMethod(channel, 60, 31);
-    return method.args;
-  }
-
-  async receiveBasicGet(channel: number): Promise<BasicGet> {
-    const method = await this.assertMethod(channel, 60, 70);
-    return method.args;
-  }
-
-  async receiveBasicGetEmpty(channel: number): Promise<BasicGetEmpty> {
-    const method = await this.assertMethod(channel, 60, 72);
-    return method.args;
+    return this.receiveMethod(channel, 20, 40);
   }
 
   async receiveBasicAck(channel: number): Promise<BasicAck> {
-    const method = await this.assertMethod(channel, 60, 80);
-    return method.args;
-  }
-
-  async receiveBasicReject(channel: number): Promise<BasicReject> {
-    const method = await this.assertMethod(channel, 60, 90);
-    return method.args;
-  }
-
-  async receiveBasicRecoverAsync(channel: number): Promise<BasicRecoverAsync> {
-    const method = await this.assertMethod(channel, 60, 100);
-    return method.args;
-  }
-
-  async receiveBasicRecover(channel: number): Promise<BasicRecover> {
-    const method = await this.assertMethod(channel, 60, 110);
-    return method.args;
-  }
-
-  async receiveBasicRecoverOk(channel: number): Promise<BasicRecoverOk> {
-    const method = await this.assertMethod(channel, 60, 111);
-    return method.args;
+    return this.receiveMethod(channel, 60, 80);
   }
 
   async receiveBasicNack(channel: number): Promise<BasicNack> {
-    const method = await this.assertMethod(channel, 60, 120);
-    return method.args;
-  }
-
-  async receiveTxSelect(channel: number): Promise<TxSelect> {
-    const method = await this.assertMethod(channel, 90, 10);
-    return method.args;
-  }
-
-  async receiveTxSelectOk(channel: number): Promise<TxSelectOk> {
-    const method = await this.assertMethod(channel, 90, 11);
-    return method.args;
-  }
-
-  async receiveTxCommit(channel: number): Promise<TxCommit> {
-    const method = await this.assertMethod(channel, 90, 20);
-    return method.args;
-  }
-
-  async receiveTxCommitOk(channel: number): Promise<TxCommitOk> {
-    const method = await this.assertMethod(channel, 90, 21);
-    return method.args;
-  }
-
-  async receiveTxRollback(channel: number): Promise<TxRollback> {
-    const method = await this.assertMethod(channel, 90, 30);
-    return method.args;
-  }
-
-  async receiveTxRollbackOk(channel: number): Promise<TxRollbackOk> {
-    const method = await this.assertMethod(channel, 90, 31);
-    return method.args;
-  }
-
-  async receiveConfirmSelect(channel: number): Promise<ConfirmSelect> {
-    const method = await this.assertMethod(channel, 85, 10);
-    return method.args;
-  }
-
-  async receiveConfirmSelectOk(channel: number): Promise<ConfirmSelectOk> {
-    const method = await this.assertMethod(channel, 85, 11);
-    return method.args;
+    return this.receiveMethod(channel, 60, 120);
   }
 
   subscribeConnectionStart(
@@ -4571,18 +3882,6 @@ export class AmqpProtocol {
   ): () => void {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 10 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionStartOk(
-    channel: number,
-    handler: (args: ConnectionStartOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 11) {
         return handler(method.args);
       }
     });
@@ -4601,60 +3900,12 @@ export class AmqpProtocol {
     return cancel;
   }
 
-  subscribeConnectionSecureOk(
-    channel: number,
-    handler: (args: ConnectionSecureOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 21) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
   subscribeConnectionTune(
     channel: number,
     handler: (args: ConnectionTune) => void
   ): () => void {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 10 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionTuneOk(
-    channel: number,
-    handler: (args: ConnectionTuneOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 31) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionOpen(
-    channel: number,
-    handler: (args: ConnectionOpen) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 40) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionOpenOk(
-    channel: number,
-    handler: (args: ConnectionOpenOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 41) {
         return handler(method.args);
       }
     });
@@ -4673,108 +3924,12 @@ export class AmqpProtocol {
     return cancel;
   }
 
-  subscribeConnectionCloseOk(
-    channel: number,
-    handler: (args: ConnectionCloseOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 51) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionBlocked(
-    channel: number,
-    handler: (args: ConnectionBlocked) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 60) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionUnblocked(
-    channel: number,
-    handler: (args: ConnectionUnblocked) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 61) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionUpdateSecret(
-    channel: number,
-    handler: (args: ConnectionUpdateSecret) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 70) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConnectionUpdateSecretOk(
-    channel: number,
-    handler: (args: ConnectionUpdateSecretOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 10 && method.methodId === 71) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeChannelOpen(
-    channel: number,
-    handler: (args: ChannelOpen) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 20 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeChannelOpenOk(
-    channel: number,
-    handler: (args: ChannelOpenOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 20 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
   subscribeChannelFlow(
     channel: number,
     handler: (args: ChannelFlow) => void
   ): () => void {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 20 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeChannelFlowOk(
-    channel: number,
-    handler: (args: ChannelFlowOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 20 && method.methodId === 21) {
         return handler(method.args);
       }
     });
@@ -4788,343 +3943,6 @@ export class AmqpProtocol {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 20 && method.methodId === 40) {
         return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeChannelCloseOk(
-    channel: number,
-    handler: (args: ChannelCloseOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 20 && method.methodId === 41) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeAccessRequest(
-    channel: number,
-    handler: (args: AccessRequest) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 30 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeAccessRequestOk(
-    channel: number,
-    handler: (args: AccessRequestOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 30 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeDeclare(
-    channel: number,
-    handler: (args: ExchangeDeclare) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeDeclareOk(
-    channel: number,
-    handler: (args: ExchangeDeclareOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeDelete(
-    channel: number,
-    handler: (args: ExchangeDelete) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeDeleteOk(
-    channel: number,
-    handler: (args: ExchangeDeleteOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 21) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeBind(
-    channel: number,
-    handler: (args: ExchangeBind) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeBindOk(
-    channel: number,
-    handler: (args: ExchangeBindOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 31) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeUnbind(
-    channel: number,
-    handler: (args: ExchangeUnbind) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 40) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeExchangeUnbindOk(
-    channel: number,
-    handler: (args: ExchangeUnbindOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 40 && method.methodId === 51) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueDeclare(
-    channel: number,
-    handler: (args: QueueDeclare) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueDeclareOk(
-    channel: number,
-    handler: (args: QueueDeclareOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueBind(
-    channel: number,
-    handler: (args: QueueBind) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueBindOk(
-    channel: number,
-    handler: (args: QueueBindOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 21) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueuePurge(
-    channel: number,
-    handler: (args: QueuePurge) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueuePurgeOk(
-    channel: number,
-    handler: (args: QueuePurgeOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 31) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueDelete(
-    channel: number,
-    handler: (args: QueueDelete) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 40) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueDeleteOk(
-    channel: number,
-    handler: (args: QueueDeleteOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 41) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueUnbind(
-    channel: number,
-    handler: (args: QueueUnbind) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 50) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeQueueUnbindOk(
-    channel: number,
-    handler: (args: QueueUnbindOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 50 && method.methodId === 51) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicQos(channel: number, handler: (args: BasicQos) => void): () =>
-    void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicQosOk(
-    channel: number,
-    handler: (args: BasicQosOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicConsume(
-    channel: number,
-    handler: (args: BasicConsume) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicConsumeOk(
-    channel: number,
-    handler: (args: BasicConsumeOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 21) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicCancel(
-    channel: number,
-    handler: (args: BasicCancel) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicCancelOk(
-    channel: number,
-    handler: (args: BasicCancelOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 31) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicPublish(
-    channel: number,
-    handler: (args: BasicPublish, props: BasicProperties, data: Uint8Array) =>
-      void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 40) {
-        const header = await this.receiveHeader(channel);
-        const content = await this.receiveContent(channel, header.size);
-        return handler(method.args, header.props, content);
       }
     });
     return cancel;
@@ -5160,95 +3978,10 @@ export class AmqpProtocol {
     return cancel;
   }
 
-  subscribeBasicGet(channel: number, handler: (args: BasicGet) => void): () =>
-    void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 70) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicGetOk(
-    channel: number,
-    handler: (args: BasicGetOk, props: BasicProperties, data: Uint8Array) =>
-      void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 71) {
-        const header = await this.receiveHeader(channel);
-        const content = await this.receiveContent(channel, header.size);
-        return handler(method.args, header.props, content);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicGetEmpty(
-    channel: number,
-    handler: (args: BasicGetEmpty) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 72) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
   subscribeBasicAck(channel: number, handler: (args: BasicAck) => void): () =>
     void {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 60 && method.methodId === 80) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicReject(
-    channel: number,
-    handler: (args: BasicReject) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 90) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicRecoverAsync(
-    channel: number,
-    handler: (args: BasicRecoverAsync) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 100) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicRecover(
-    channel: number,
-    handler: (args: BasicRecover) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 110) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeBasicRecoverOk(
-    channel: number,
-    handler: (args: BasicRecoverOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 60 && method.methodId === 111) {
         return handler(method.args);
       }
     });
@@ -5261,98 +3994,6 @@ export class AmqpProtocol {
   ): () => void {
     const cancel = this.subscribeMethod(channel, async method => {
       if (method.classId === 60 && method.methodId === 120) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxSelect(channel: number, handler: (args: TxSelect) => void): () =>
-    void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxSelectOk(
-    channel: number,
-    handler: (args: TxSelectOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 11) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxCommit(channel: number, handler: (args: TxCommit) => void): () =>
-    void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxCommitOk(
-    channel: number,
-    handler: (args: TxCommitOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 21) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxRollback(
-    channel: number,
-    handler: (args: TxRollback) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeTxRollbackOk(
-    channel: number,
-    handler: (args: TxRollbackOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 90 && method.methodId === 31) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConfirmSelect(
-    channel: number,
-    handler: (args: ConfirmSelect) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 85 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
-  }
-
-  subscribeConfirmSelectOk(
-    channel: number,
-    handler: (args: ConfirmSelectOk) => void
-  ): () => void {
-    const cancel = this.subscribeMethod(channel, async method => {
-      if (method.classId === 85 && method.methodId === 11) {
         return handler(method.args);
       }
     });

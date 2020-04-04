@@ -18,11 +18,12 @@ import {
   QueueDeclareOk,
   ExchangeDeclareArgs,
   ExchangeDeclareOk,
-  ChannelClose
+  ChannelClose,
+  BasicDeliver
 } from "./amqp_protocol.ts";
 
 export interface BasicDeliverHandler {
-  (args: BasicDeliverArgs, props: BasicProperties, data: Uint8Array): void;
+  (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
 }
 
 export interface AmqpChannel {
