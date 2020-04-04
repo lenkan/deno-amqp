@@ -27,7 +27,7 @@ const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
 
 function printSendMethodFunction(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const pascalName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const name = `send${pascalName}`;
@@ -35,7 +35,7 @@ function printSendMethodFunction(
   const argsName = `${pascalName}Args`;
   const propsName = `${pascalCase(clazz.name)}Properties`;
   const responses = method.synchronous
-    ? clazz.methods.filter(m =>
+    ? clazz.methods.filter((m) =>
       m.id > method.id && m.name.startsWith(`${method.name}-`)
     )
     : [];
@@ -44,11 +44,11 @@ function printSendMethodFunction(
     return `
       async ${name}(channel: number, args: ${argsName}, props: ${propsName}, data: Uint8Array) {
         await Promise.all([
-          this.socket.write(channel, 1, ${encodeName}(args)),
-          this.socket.write(channel, 2, encode${pascalCase(
-      clazz.name
-    )}Header(BigInt(data.length), props)),
-        this.socket.write(channel, 3, data)
+          this.socket.write({ channel, type: 1, payload: ${encodeName}(args) }),
+          this.socket.write({ channel, type: 2, payload: encode${pascalCase(
+      clazz.name,
+    )}Header(BigInt(data.length), props) }),
+        this.socket.write({ channel, type: 3, payload: data })
           ]);
       }
     `;
@@ -57,19 +57,19 @@ function printSendMethodFunction(
     const returnType = `${pascalCase(clazz.name)}${pascalCase(response.name)}`;
     return `
       async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
-        await this.socket.write(channel, 1, ${encodeName}(args));
+        await this.socket.write({ channel, type: 1, payload: ${encodeName}(args) });
         return this.receiveMethod(channel, ${clazz.id}, ${response.id});
       }
     `;
   } else if (method.synchronous && responses.length > 1) {
-    const returnType = responses.map(m =>
+    const returnType = responses.map((m) =>
       `${pascalCase(clazz.name)}${pascalCase(m.name)}`
     ).join(" | ");
     return `
       async ${name}(channel: number, args: ${argsName}): Promise<${returnType}> {
-        await this.socket.write(channel, 1, ${encodeName}(args));
+        await this.socket.write({ channel, type: 1, payload: ${encodeName}(args) });
         return Promise.race([
-          ${responses.map(res => {
+          ${responses.map((res) => {
       return `this.receiveMethod(channel, ${clazz.id}, ${res.id})`;
     }).join(",")}
         ])
@@ -78,7 +78,7 @@ function printSendMethodFunction(
   } else {
     return `
       async ${name}(channel: number, args: ${argsName}) : Promise<void> {
-        await this.socket.write(channel, 1, ${encodeName}(args));
+        await this.socket.write({ channel, type: 1, payload: ${encodeName}(args) });
       }
     `;
   }
@@ -86,14 +86,14 @@ function printSendMethodFunction(
 
 function printReceiveMethodFunction(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const pascalName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const name = `receive${pascalName}`;
 
   if (!method.content) {
     const returnType = `${pascalCase(clazz.name)}${pascalCase(
-      method.name
+      method.name,
     )}`;
     return `
       async ${name}(channel: number): Promise<${returnType}> {
@@ -106,7 +106,7 @@ function printReceiveMethodFunction(
 
 function printSubscribeMethodFunction(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const pascalName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const propsName = `${pascalCase(clazz.name)}Properties`;
@@ -133,16 +133,15 @@ function printSubscribeMethodFunction(
 
 function printAmqpProtocolClass() {
   return `
+interface Frame {
+  channel: number;
+  type: number;
+  payload: Uint8Array;
+}
+
 interface Socket {
-  write(channel: number, type: number, payload: Uint8Array): Promise<void>;
-  subscribe(
-    handler: (
-      err: Error | null,
-      channel: number,
-      type: number,
-      payload: Uint8Array
-    ) => void
-  ): () => void;
+  write(frame: Frame): Promise<void>;
+  read(): Promise<Frame>;
 }
 
 interface MethodSubscriber<T extends number, U extends number> {
@@ -159,6 +158,12 @@ interface HeaderReceiver<T extends number> {
   channel: number;
   classId: T;
   handler: (h: Extract<Header, { classId: T }>) => void;
+  error: (e: Error) => void;
+}
+
+interface ContentSubscriber {
+  channel: number;
+  handler: (data: Uint8Array) => void;
   error: (e: Error) => void;
 }
 
@@ -183,21 +188,29 @@ function serializeConnectionError(args: ConnectionClose) {
 
 export class AmqpProtocol {
   private methodSubscribers: MethodSubscriber<any, any>[] = [];
+  private contentSubscribers: ContentSubscriber[] = [];
   private headerReceivers: HeaderReceiver<any>[] = [];
 
   constructor(private socket: Socket) {
-    this.socket.subscribe((err, channel, type, payload) => {
-      if (err) {
+    this.listen();
+  }
+
+  private async listen() {
+    while(true) {
+      try {
+        const frame = await this.socket.read()
+        if(frame.type === 1) {
+          this.emitMethod(frame.channel, decodeMethod(frame.payload));
+        } else if (frame.type === 2) {
+          this.emitHeader(frame.channel, decodeHeader(frame.payload));
+        } else if (frame.type === 3) {
+          this.emitContent(frame.channel, frame.payload);
+        }
+      } catch(err) {
         this.emitConnectionError(err);
         return;
       }
-
-      if (type === 1) {
-        this.emitMethod(channel, decodeMethod(payload));
-      } else if (type === 2) {
-        this.emitHeader(channel, decodeHeader(payload));
-      }
-    });
+    }
   }
 
   private unsubscribeMethod(sub: MethodSubscriber<any, any>) {
@@ -264,6 +277,28 @@ export class AmqpProtocol {
     });
   }
 
+  private emitContent(channel: number, data: Uint8Array) {
+    const subscribers = [...this.contentSubscribers];
+    subscribers.forEach(sub => {
+      if (sub.channel === channel) {
+        sub.handler(data);
+      }
+    });
+  }
+
+  private subscribeContent(channel: number, handler: (data: Uint8Array) => void, onError: (error: Error) => void) {
+    const sub: ContentSubscriber = { channel, handler, error: onError };
+    this.contentSubscribers.push(sub);
+    return () => this.unsubscribeContent(sub);
+  }
+
+  private unsubscribeContent(sub: ContentSubscriber) {
+    const index = this.contentSubscribers.indexOf(sub);
+    if(index !== -1) {
+      this.contentSubscribers.splice(index, index + 1);
+    }
+  }
+
   private subscribeMethod<T extends number, U extends number>(
     channel: number,
     classId: T,
@@ -323,42 +358,28 @@ export class AmqpProtocol {
   private async receiveContent(channel: number, size: number) {
     const buffer = new Deno.Buffer();
     return new Promise<Uint8Array>((resolve, reject) => {
-      const cancel = this.socket.subscribe((err, ch, type, data) => {
-        if (err) {
-          cancel();
-          return reject(err);
-        }
-
-        if (channel !== ch) {
-          return;
-        }
-
-        if (type !== 3) {
-          cancel();
-          return resolve(buffer.bytes());
-        }
-
+      const cancel = this.subscribeContent(channel, data => {
         buffer.writeSync(data);
         if (buffer.length >= size) {
           cancel();
           return resolve(buffer.bytes());
         }
-      });
+      }, reject);
     });
   }
 
-  ${spec.classes.flatMap(c =>
-    c.methods.filter(m => isClientMethod(c, m)).map(m =>
+  ${spec.classes.flatMap((c) =>
+    c.methods.filter((m) => isClientMethod(c, m)).map((m) =>
       printSendMethodFunction(c, m)
     )
   ).join("\n")}
-  ${spec.classes.flatMap(c =>
-    c.methods.filter(m => isServerMethod(c, m)).map(m =>
+  ${spec.classes.flatMap((c) =>
+    c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
       printReceiveMethodFunction(c, m)
     )
   ).join("\n")}
-  ${spec.classes.flatMap(c =>
-    c.methods.filter(m => isServerMethod(c, m)).map(m =>
+  ${spec.classes.flatMap((c) =>
+    c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
       printSubscribeMethodFunction(c, m)
     )
   ).join("\n")}
@@ -369,44 +390,44 @@ export class AmqpProtocol {
 function generateConnection() {
   return [
     'import * as enc from "./encoding/mod.ts"',
-    ...spec.constants.map(c => {
+    ...spec.constants.map((c) => {
       const name = c.class
         ? constantName(c.class + "-" + c.name)
         : constantName(c.name);
       return `export const ${name} = ${JSON.stringify(c.value)}`;
     }),
-    ...spec.classes.flatMap(c => {
+    ...spec.classes.flatMap((c) => {
       return [
         `export const ${constantName(c.name)} = ${c.id}`,
-        ...c.methods.map(m =>
+        ...c.methods.map((m) =>
           `export const ${constantName(c.name + "_" + m.name)} = ${m.id}`
-        )
+        ),
       ];
     }),
     ...spec.classes.map(printClassPropertyInterface),
-    ...spec.classes.flatMap(clazz =>
-      clazz.methods.map(m => printMethodArgsInterface(spec, clazz, m))
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))
     ),
-    ...spec.classes.flatMap(clazz =>
-      clazz.methods.map(m => printMethodValueInterface(spec, clazz, m))
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printMethodValueInterface(spec, clazz, m))
     ),
-    ...spec.classes.flatMap(clazz =>
-      clazz.methods.map(m => printReceiveMethodDefinition(clazz, m))
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printReceiveMethodDefinition(clazz, m))
     ),
     ...spec.classes.map(printHeaderDefinition),
     printReceiveMethodUnion(spec),
     printHeaderUnion(spec),
-    ...spec.classes.flatMap(clazz =>
-      clazz.methods.map(m => printEncodeMethodFunction(spec, clazz, m))
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printEncodeMethodFunction(spec, clazz, m))
     ),
-    ...spec.classes.flatMap(clazz =>
-      clazz.methods.map(m => printDecodeMethodFunction(spec, clazz, m))
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printDecodeMethodFunction(spec, clazz, m))
     ),
     printMethodDecoder(spec),
     ...spec.classes.flatMap(printEncodeHeaderFunction),
     ...spec.classes.flatMap(printDecodeHeaderFunction),
     printHeaderDecoder(spec),
-    printAmqpProtocolClass()
+    printAmqpProtocolClass(),
   ].join("\n");
 }
 

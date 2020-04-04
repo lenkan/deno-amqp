@@ -12,7 +12,7 @@ const decoder = new TextDecoder();
 async function testPubSub(
   args: Omit<BasicPublishArgs, "routingKey">,
   props: BasicProperties,
-  data: Uint8Array
+  data: Uint8Array,
 ) {
   const publisherConn = await connect({ loglevel: "debug" });
   const subscriberConn = await connect({ loglevel: "debug" });
@@ -29,15 +29,15 @@ async function testPubSub(
         (args, props, data) => {
           subscriber.cancel({ consumerTag });
           resolve([args, props, data]);
-        }
+        },
       );
-    }
+    },
   );
 
   await publisher.publish(
     { ...args, routingKey: queue },
     props,
-    data
+    data,
   );
 
   const result = await promise;
@@ -87,13 +87,13 @@ test(
       const chan1 = await conn1.openChannel();
 
       // Should cause an error due to reserved queue name
-      await chan1.declareQueue({ queue: "amq.help" }).catch(_ => {});
+      await chan1.declareQueue({ queue: "amq.help" }).catch((_) => {});
 
       await assertThrowsAsync(async () => {
         await chan1.declareQueue({});
       });
     } finally {
-      await conn1.close().catch(_ => {});
+      await conn1.close().catch((_) => {});
     }
-  }
+  },
 );

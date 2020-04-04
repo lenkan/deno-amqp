@@ -1,4 +1,4 @@
-import { splitArray, padArray, readBytesSync } from "./utils.ts";
+import { splitArray, padArray } from "./utils.ts";
 import { decodeShortUint, encodeShortUint } from "./number_encoding.ts";
 import {
   encodeFields,

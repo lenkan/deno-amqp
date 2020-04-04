@@ -5,7 +5,7 @@ export interface TimeoutSignal {
 export function withTimeout<T>(
   action: (signal: TimeoutSignal) => Promise<T>,
   ms: number,
-  message?: string
+  message?: string,
 ) {
   if (ms <= 0) {
     return action({ timedOut: false });
@@ -13,7 +13,7 @@ export function withTimeout<T>(
 
   return new Promise<T>(async (resolve, reject) => {
     const signal = {
-      timedOut: false
+      timedOut: false,
     };
 
     const timer = setTimeout(() => {
@@ -21,10 +21,10 @@ export function withTimeout<T>(
       reject(new Error(message || `Timeout occured after ${ms}ms`));
     }, ms);
 
-    action(signal).then(result => {
+    action(signal).then((result) => {
       clearTimeout(timer);
       resolve(result);
-    }).catch(error => {
+    }).catch((error) => {
       clearTimeout(timer);
       reject(error);
     });

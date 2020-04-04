@@ -21,24 +21,6 @@ export function assertLength(arr: Uint8Array, length: number) {
   }
 }
 
-export async function readBytes(
-  r: Deno.Reader,
-  length: number
-): Promise<Uint8Array | null> {
-  const data = new Uint8Array(length);
-  const n = await r.read(data);
-
-  if (n === 0) {
-    return readBytes(r, length);
-  }
-
-  if (n !== length) {
-    return null;
-  }
-
-  return data;
-}
-
 export function readBytesSync(r: Deno.SyncReader, length: number): Uint8Array {
   const data = new Uint8Array(length);
   const result = r.readSync(data);

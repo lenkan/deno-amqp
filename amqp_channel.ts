@@ -38,7 +38,7 @@ export interface AmqpChannel {
   publish(
     args: BasicPublishArgs,
     props: BasicProperties,
-    data: Uint8Array
+    data: Uint8Array,
   ): Promise<void>;
   declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk>;
   declareExchange(args: ExchangeDeclareArgs): Promise<
@@ -55,21 +55,21 @@ export type ChannelCloseHandler = (args: ChannelClose) => void;
 
 export async function openChannel(
   channelNumber: number,
-  protocol: AmqpProtocol
+  protocol: AmqpProtocol,
 ) {
   const consumers: Consumer[] = [];
   const cancelDelivery = protocol.subscribeBasicDeliver(
     channelNumber,
     (args, props, data) => {
-      consumers.forEach(consumer => {
+      consumers.forEach((consumer) => {
         if (consumer.tag === args.consumerTag) {
           consumer.handler(args, props, data);
         }
       });
-    }
+    },
   );
 
-  protocol.subscribeChannelClose(channelNumber, args => {
+  protocol.subscribeChannelClose(channelNumber, (args) => {
     return protocol.sendChannelCloseOk(channelNumber, {});
   });
 
@@ -84,7 +84,7 @@ export async function openChannel(
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
-      replyText: args?.replyText || ""
+      replyText: args?.replyText || "",
     });
 
     return result;
@@ -104,13 +104,13 @@ export async function openChannel(
 
   async function consume(
     args: BasicConsumeArgs,
-    handler: BasicDeliverHandler
+    handler: BasicDeliverHandler,
   ): Promise<
     BasicConsumeOk
   > {
     const response = await protocol.sendBasicConsume(
       channelNumber,
-      args
+      args,
     );
     consumers.push({ tag: response.consumerTag, handler });
     return response;
@@ -119,10 +119,10 @@ export async function openChannel(
   async function cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
     const response = await protocol.sendBasicCancel(
       channelNumber,
-      args
+      args,
     );
 
-    const index = consumers.findIndex(c => c.tag === args.consumerTag);
+    const index = consumers.findIndex((c) => c.tag === args.consumerTag);
     if (index !== -1) {
       consumers.splice(index, index + 1);
     }
@@ -133,13 +133,13 @@ export async function openChannel(
   async function publish(
     args: BasicPublishArgs,
     props: BasicProperties,
-    data: Uint8Array
+    data: Uint8Array,
   ): Promise<void> {
     await protocol.sendBasicPublish(
       channelNumber,
       args,
       props,
-      data
+      data,
     );
   }
 
@@ -164,10 +164,10 @@ export async function openChannel(
     cancel,
     consume,
     publish,
-    qos
+    qos,
   };
 
-  return new Promise<AmqpChannel>(async resolve => {
+  return new Promise<AmqpChannel>(async (resolve) => {
     await protocol.sendChannelOpen(channelNumber, {});
     return resolve(channel);
   });

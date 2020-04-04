@@ -1,5 +1,4 @@
 import { AmqpConnection, openConnection } from "./amqp_connection.ts";
-import { createSocket } from "./framing/socket.ts";
 
 export interface AmqpOptions {
   hostname?: string;
@@ -19,14 +18,14 @@ export async function connect(options: AmqpOptions = {}): Promise<
     username = "guest",
     password = "guest",
     heartbeatInterval,
-    loglevel = "none"
+    loglevel = "none",
   } = options;
 
   const conn = await Deno.connect({ port, hostname });
-  const socket = createSocket(conn, { loglevel });
+
   const connection = await openConnection(
-    socket,
-    { username, password, heartbeatInterval }
+    conn,
+    { username, password, heartbeatInterval, loglevel },
   );
 
   return connection;

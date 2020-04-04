@@ -37,7 +37,7 @@ export function resolveType(spec: Spec, arg: ArgumentDefinition) {
     return arg.type;
   }
   if (arg.domain !== undefined) {
-    const domain = spec.domains.find(d => d[0] === arg.domain);
+    const domain = spec.domains.find((d) => d[0] === arg.domain);
     return domain![1];
   }
   throw new Error(`Cannot determine type ${arg}`);
@@ -90,7 +90,7 @@ export function constantName(name: string) {
 export function printClassPropertyInterface(clazz: ClassDefinition) {
   return `
   export interface ${pascalCase(clazz.name)}Properties {
-    ${(clazz.properties || []).map(prop => {
+    ${(clazz.properties || []).map((prop) => {
     return `${camelCase(prop.name)}?: ${resolveTypescriptType(prop.type)}`;
   }).join("\n")}
   }
@@ -100,14 +100,14 @@ export function printClassPropertyInterface(clazz: ClassDefinition) {
 export function printMethodArgsInterface(
   spec: Spec,
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const name = `${pascalCase(clazz.name)}${pascalCase(
-    method.name
+    method.name,
   )}Args`;
   return `
 export interface ${name} {
-    ${method.arguments.map(arg => {
+    ${method.arguments.map((arg) => {
     const isOptional = arg["default-value"] !== undefined;
     const comment = isOptional
       ? `/** Default ${JSON.stringify(arg["default-value"])} */`
@@ -124,12 +124,12 @@ export interface ${name} {
 export function printMethodValueInterface(
   spec: Spec,
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const name = `${pascalCase(clazz.name)}${pascalCase(method.name)}`;
   return `
 export interface ${name} extends ${name}Args {
-    ${method.arguments.map(arg => {
+    ${method.arguments.map((arg) => {
     const type = resolveTypescriptType(resolveType(spec, arg));
     return `${camelCase(arg.name)}: ${type};`;
   }).join("\n")}
@@ -139,11 +139,11 @@ export interface ${name} extends ${name}Args {
 
 export function printReceiveMethodDefinition(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   return `
   export interface Receive${pascalCase(clazz.name)}${pascalCase(
-    method.name
+    method.name,
   )} {
     classId: ${clazz.id};
     methodId: ${method.id};
@@ -153,13 +153,13 @@ export function printReceiveMethodDefinition(
 }
 
 export function printReceiveMethodUnion(spec: Spec) {
-  return `export type ReceiveMethod = ${spec.classes.flatMap(c =>
-    c.methods.map(m => `Receive${pascalCase(c.name)}${pascalCase(m.name)}`)
+  return `export type ReceiveMethod = ${spec.classes.flatMap((c) =>
+    c.methods.map((m) => `Receive${pascalCase(c.name)}${pascalCase(m.name)}`)
   ).join(" | ")}`;
 }
 
 export function printHeaderDefinition(
-  clazz: ClassDefinition
+  clazz: ClassDefinition,
 ) {
   return `
   export interface ${pascalCase(clazz.name)}Header {
@@ -171,7 +171,7 @@ export function printHeaderDefinition(
 }
 
 export function printHeaderUnion(spec: Spec) {
-  return `export type Header = ${spec.classes.map(c =>
+  return `export type Header = ${spec.classes.map((c) =>
     `${pascalCase(c.name)}Header`
   ).join(" | ")}`;
 }
@@ -187,7 +187,7 @@ export function getDefaultValue(a: ArgumentDefinition) {
 export function printEncodeMethodFunction(
   spec: Spec,
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
@@ -197,7 +197,7 @@ function ${name}(args: ${argsName}): Uint8Array {
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(${method.id}));
   w.writeSync(enc.encodeFields([
-    ${method.arguments.map(arg => {
+    ${method.arguments.map((arg) => {
     const type = resolveType(spec, arg);
     const name = camelCase(arg.name);
     const defaultValue = getDefaultValue(arg);
@@ -219,13 +219,13 @@ function ${name}(args: ${argsName}): Uint8Array {
 export function printDecodeMethodFunction(
   spec: Spec,
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   const name = `decode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const returnName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
   return `
 function ${name}(r: Deno.SyncReader): ${returnName} {
-  const fields = enc.decodeFields(r, [${method.arguments.map(a =>
+  const fields = enc.decodeFields(r, [${method.arguments.map((a) =>
     '"' + resolveType(spec, a) + '"'
   ).join(",")}]);
   const args = { ${method.arguments.map((a, i) => {
@@ -234,7 +234,7 @@ function ${name}(r: Deno.SyncReader): ${returnName} {
       return `${camelCase(a.name)}: Number(fields[${i}])`;
     }
     return `${camelCase(a.name)}: fields[${i}] as ${resolveTypescriptType(
-      type
+      type,
     )}`;
   }).join(",")}}
   return args;
@@ -248,11 +248,11 @@ function decodeMethod(data: Uint8Array): ReceiveMethod {
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
   switch(classId) {
-    ${spec.classes.map(clazz => {
+    ${spec.classes.map((clazz) => {
     return `
       case ${clazz.id}: { 
         switch(methodId) {
-          ${clazz.methods.map(method => {
+          ${clazz.methods.map((method) => {
       const name = `decode${pascalCase(clazz.name) + pascalCase(method.name)}`;
       return `case ${method.id}: return { classId, methodId, args: ${name}(r) };`;
     }).join("\n")}
@@ -270,7 +270,7 @@ function decodeMethod(data: Uint8Array): ReceiveMethod {
 }
 
 export function printEncodeHeaderFunction(
-  clazz: ClassDefinition
+  clazz: ClassDefinition,
 ) {
   const name = `encode${pascalCase(clazz.name)}Header`;
   const argName = `${pascalCase(clazz.name)}Properties`;
@@ -281,7 +281,7 @@ function ${name}(size: bigint, props: ${argName}): Uint8Array {
   w.writeSync(enc.encodeShortUint(0));
   w.writeSync(enc.encodeLongLongUint(size));
   w.writeSync(enc.encodeOptionalFields([
-    ${(clazz.properties || []).map(prop => {
+    ${(clazz.properties || []).map((prop) => {
     const name = camelCase(prop.name);
     if (prop.type === "longlong" || prop.type === "timestamp") {
       return `{ type: "${prop.type}", value: props.${name} !== undefined ? BigInt(props.${name}) : undefined }`;
@@ -295,7 +295,7 @@ function ${name}(size: bigint, props: ${argName}): Uint8Array {
 }
 
 export function printDecodeHeaderFunction(
-  clazz: ClassDefinition
+  clazz: ClassDefinition,
 ) {
   const name = `decode${pascalCase(clazz.name)}Header`;
   return `
@@ -303,7 +303,7 @@ function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r)); 
   const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
-    p => '"' + p.type + '"'
+    (p) => '"' + p.type + '"',
   ).join(",")}]);
   const props = { ${(clazz.properties || []).map((p, i) =>
     `${camelCase(p.name)}: fields[${i}] as ${resolveTypescriptType(p.type)}`
@@ -320,9 +320,9 @@ function decodeHeader(data: Uint8Array) : Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch(classId) {
-    ${spec.classes.map(clazz => {
+    ${spec.classes.map((clazz) => {
     return `case ${clazz.id}: return decode${pascalCase(
-      clazz.name
+      clazz.name,
     )}Header(r);`;
   }).join("\n")}
     default:
@@ -340,7 +340,7 @@ export const disclaimer = `
 
 export function isServerMethod(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   // https://www.rabbitmq.com/amqp-0-9-1-reference.html
   switch (clazz.name) {
@@ -349,7 +349,7 @@ export function isServerMethod(
         "start",
         "tune",
         "secure",
-        "close"
+        "close",
       ].includes(method.name);
     case "channel":
       return ["close", "flow"].includes(method.name);
@@ -358,7 +358,7 @@ export function isServerMethod(
         "return",
         "deliver",
         "ack",
-        "nack"
+        "nack",
       ].includes(method.name);
     default:
       return false;
@@ -367,7 +367,7 @@ export function isServerMethod(
 
 export function isClientMethod(
   clazz: ClassDefinition,
-  method: MethodDefinition
+  method: MethodDefinition,
 ) {
   // https://www.rabbitmq.com/amqp-0-9-1-reference.html
   switch (clazz.name) {
@@ -378,14 +378,14 @@ export function isClientMethod(
         "tune-ok",
         "secure-ok",
         "close",
-        "close-ok"
+        "close-ok",
       ].includes(method.name);
     case "channel":
       return [
         "open",
         "close",
         "close-ok",
-        "flow"
+        "flow",
       ].includes(method.name);
     case "exchange":
     case "queue":
@@ -401,17 +401,17 @@ export function isClientMethod(
         "reject",
         "nack",
         "recover-async",
-        "recover"
+        "recover",
       ].includes(method.name);
     case "tx":
       return [
         "select",
         "commit",
-        "rollback"
+        "rollback",
       ].includes(method.name);
     case "confirm":
       return [
-        "select"
+        "select",
       ].includes(method.name);
     default:
       return false;

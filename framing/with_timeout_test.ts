@@ -6,7 +6,7 @@ import {
 } from "../testing.ts";
 
 function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function sleeper(ms: number) {
@@ -37,7 +37,7 @@ test(
 
     const result = await withTimeout(getValue, 20);
     assertEquals(result, "the value");
-  }
+  },
 );
 
 test(
@@ -57,5 +57,5 @@ test(
     });
     await sleep(5);
     assertEquals(signal.timedOut, true);
-  }
+  },
 );
