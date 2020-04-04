@@ -70,12 +70,19 @@ export function createSocket(
 
     listen().catch(error => {
       subscribers.forEach(sub => sub.handler(error, 0, 0, new Uint8Array([])));
-      close(error.message);
+      subscribers.splice(0, subscribers.length);
+      running = false;
+
+      // TODO(lenkan): Handle connection read errors more gracefully
+      try {
+        (conn as any).closeWrite();
+      } catch (e) {
+        console.error(e);
+      }
     });
   }
 
-  function close(reason?: string) {
-    console.log("Closing connection: " + reason || "");
+  function close() {
     conn.close();
     subscribers.splice(0, subscribers.length);
     running = false;

@@ -28,17 +28,15 @@ export function openConnection(
 ): Promise<AmqpConnection> {
   const { username, password } = options;
   let heartbeatInterval: number | undefined = undefined;
-  const channels: { channelNumber: number }[] = [];
+  const channelNumbers: number[] = [];
   let channelMax: number = -1;
   let frameMax: number = -1;
+  let isOpen = false;
   const protocol: AmqpProtocol = new AmqpProtocol(socket);
 
   protocol.subscribeConnectionClose(0, async args => {
     await protocol.sendConnectionCloseOk(0, {});
-    console.error(
-      "Connection closed by server ",
-      JSON.stringify(args)
-    );
+    isOpen = false;
     socket.close();
   });
 
@@ -83,24 +81,12 @@ export function openConnection(
     socket.close();
   }
 
-  function removeChannel(channelNumber: number) {
-    const index = channels.findIndex(x => x.channelNumber === channelNumber);
-    if (index !== -1) {
-      channels.splice(index, index + 1);
-    }
-  }
-
   async function createChannel(): Promise<AmqpChannel> {
-    for (let i = 1; i < channelMax; ++i) {
-      if (!channels.find(c => c.channelNumber === i)) {
-        channels.push({ channelNumber: i });
+    for (let channelNumber = 1; channelNumber < channelMax; ++channelNumber) {
+      if (!channelNumbers.find(num => num === channelNumber)) {
+        channelNumbers.push(channelNumber);
 
-        const channel = await openChannel(i, protocol, closeArgs => {
-          console.log(
-            `Channel ${i} closed by server ${JSON.stringify(closeArgs)}`
-          );
-          removeChannel(i);
-        });
+        const channel = await openChannel(channelNumber, protocol);
 
         return channel;
       }
@@ -113,6 +99,7 @@ export function openConnection(
 
   return new Promise<AmqpConnection>(async resolve => {
     await open();
+    isOpen = true;
     return resolve(connection);
   });
 }

@@ -55,11 +55,9 @@ export type ChannelCloseHandler = (args: ChannelClose) => void;
 
 export async function openChannel(
   channelNumber: number,
-  protocol: AmqpProtocol,
-  onClose: ChannelCloseHandler
+  protocol: AmqpProtocol
 ) {
   const consumers: Consumer[] = [];
-  let isOpen: boolean = false;
   const cancelDelivery = protocol.subscribeBasicDeliver(
     channelNumber,
     (args, props, data) => {
@@ -72,46 +70,35 @@ export async function openChannel(
   );
 
   protocol.subscribeChannelClose(channelNumber, args => {
-    handleClose(args);
     return protocol.sendChannelCloseOk(channelNumber, {});
   });
 
-  function assertOpen() {
-    if (!isOpen) {
-      throw new Error(`Cannot use closed channel ${channelNumber}`);
-    }
-  }
-
-  function handleClose(args?: ChannelClose) {
-    isOpen = false;
-    args && onClose(args);
+  function handleClose() {
     cancelDelivery();
     consumers.splice(0, consumers.length);
   }
 
   async function close(args?: ChannelCloseArgs): Promise<ChannelCloseOk> {
-    assertOpen();
     handleClose();
-    return protocol.sendChannelClose(channelNumber, {
+    const result = await protocol.sendChannelClose(channelNumber, {
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
       replyText: args?.replyText || ""
     });
+
+    return result;
   }
 
   async function qos(args: BasicQosArgs): Promise<BasicQosOk> {
-    assertOpen();
     return protocol.sendBasicQos(channelNumber, args);
   }
 
   async function ack(args: BasicAckArgs) {
-    assertOpen();
     await protocol.sendBasicAck(channelNumber, args);
   }
 
   async function nack(args: BasicNackArgs) {
-    assertOpen();
     await protocol.sendBasicNack(channelNumber, args);
   }
 
@@ -121,7 +108,6 @@ export async function openChannel(
   ): Promise<
     BasicConsumeOk
   > {
-    assertOpen();
     const response = await protocol.sendBasicConsume(
       channelNumber,
       args
@@ -131,7 +117,6 @@ export async function openChannel(
   }
 
   async function cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
-    assertOpen();
     const response = await protocol.sendBasicCancel(
       channelNumber,
       args
@@ -150,7 +135,6 @@ export async function openChannel(
     props: BasicProperties,
     data: Uint8Array
   ): Promise<void> {
-    assertOpen();
     await protocol.sendBasicPublish(
       channelNumber,
       args,
@@ -162,14 +146,12 @@ export async function openChannel(
   async function declareQueue(args: QueueDeclareArgs): Promise<
     QueueDeclareOk
   > {
-    assertOpen();
     return protocol.sendQueueDeclare(channelNumber, args);
   }
 
   async function declareExchange(args: ExchangeDeclareArgs): Promise<
     ExchangeDeclareOk
   > {
-    assertOpen();
     return protocol.sendExchangeDeclare(channelNumber, args);
   }
 
@@ -185,9 +167,8 @@ export async function openChannel(
     qos
   };
 
-  return new Promise<AmqpChannel>(async (resolve, reject) => {
+  return new Promise<AmqpChannel>(async resolve => {
     await protocol.sendChannelOpen(channelNumber, {});
-    isOpen = true;
     return resolve(channel);
   });
 }

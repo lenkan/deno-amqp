@@ -155,9 +155,11 @@ interface MethodSubscriber<T extends number, U extends number> {
   error: (e: Error) => void;
 }
 
-interface HeaderSubscriber {
+interface HeaderReceiver<T extends number> {
   channel: number;
-  handler: (e: Error | null, h: Header) => void;
+  classId: T;
+  handler: (h: Extract<Header, { classId: T }>) => void;
+  error: (e: Error) => void;
 }
 
 type ExtractMethod<T extends number, U extends number> = Extract<
@@ -181,7 +183,7 @@ function serializeConnectionError(args: ConnectionClose) {
 
 export class AmqpProtocol {
   private methodSubscribers: MethodSubscriber<any, any>[] = [];
-  private headerSubscribers: HeaderSubscriber[] = [];
+  private headerReceivers: HeaderReceiver<any>[] = [];
 
   constructor(private socket: Socket) {
     this.socket.subscribe((err, channel, type, payload) => {
@@ -198,22 +200,30 @@ export class AmqpProtocol {
     });
   }
 
-  private unsubscribe(sub: MethodSubscriber<any, any>) {
+  private unsubscribeMethod(sub: MethodSubscriber<any, any>) {
     const index = this.methodSubscribers.indexOf(sub);
     if (index !== -1) {
       this.methodSubscribers.splice(index, index + 1);
     }
   }
 
+  private unsubscribeHeader(sub: HeaderReceiver<any>) {
+    const index = this.headerReceivers.indexOf(sub);
+    if (index !== -1) {
+      this.headerReceivers.splice(index, index + 1);
+    }
+  }
+
   private emitMethod(channel: number, method: ReceiveMethod) {
-    this.methodSubscribers.forEach((sub) => {
+    const subscribers = [...this.methodSubscribers];
+    subscribers.forEach((sub, index, self) => {
       if (
         channel === sub.channel && method.classId === sub.classId &&
         method.methodId === sub.methodId
       ) {
         sub.count++;
         if (sub.maxCount > 0 && sub.count >= sub.maxCount) {
-          this.unsubscribe(sub);
+          this.unsubscribeMethod(sub);
         }
         return sub.handler(method.args);
       }
@@ -221,7 +231,7 @@ export class AmqpProtocol {
       if (
         method.classId === CONNECTION && method.methodId === CONNECTION_CLOSE
       ) {
-        this.unsubscribe(sub);
+        this.unsubscribeMethod(sub);
         return sub.error(
           new Error(serializeConnectionError(method.args))
         );
@@ -231,8 +241,8 @@ export class AmqpProtocol {
         channel === sub.channel && method.classId === CHANNEL &&
         method.methodId === CHANNEL_CLOSE
       ) {
-        this.unsubscribe(sub);
-        return sub.error(
+        this.unsubscribeMethod(sub);
+        sub.error(
           new Error(serializeChannelError(channel, method.args))
         );
       }
@@ -241,13 +251,15 @@ export class AmqpProtocol {
 
   private emitConnectionError(error: Error) {
     this.methodSubscribers.forEach(sub => sub.error(error));
-    this.headerSubscribers.forEach(sub => sub.handler(error, null as any));
+    this.headerReceivers.forEach(sub => sub.error(error));
   }
 
   private emitHeader(channel: number, header: Header) {
-    this.headerSubscribers.forEach(sub => {
-      if (sub.channel === channel) {
-        sub.handler(null, header);
+    const receivers = [...this.headerReceivers];
+    receivers.forEach(sub => {
+      if (sub.channel === channel && sub.classId === header.classId) {
+        this.unsubscribeHeader(sub);
+        sub.handler(header);
       }
     });
   }
@@ -273,26 +285,22 @@ export class AmqpProtocol {
       any
     >;
     this.methodSubscribers.push(sub);
-    return () => {
-      const index = this.methodSubscribers.indexOf(sub);
-      if (index !== -1) {
-        this.methodSubscribers.splice(index, index + 1);
-      }
-    };
+    return () => this.unsubscribeMethod(sub);
   }
 
-  private subscribeHeader(
+  private receiveHeader<T extends number>(
     channel: number,
-    handler: (e: Error | null, m: Header) => void
-  ) {
-    const sub = { channel, handler };
-    this.headerSubscribers.push(sub);
-    return () => {
-      const index = this.headerSubscribers.indexOf(sub);
-      if (index !== -1) {
-        this.headerSubscribers.splice(index, index + 1);
-      }
-    };
+    classId: T
+  ): Promise<Extract<Header, { classId: T }>> {
+    return new Promise<any>((resolve, reject) => {
+      const receiver: HeaderReceiver<any> = {
+        channel,
+        classId,
+        handler: resolve,
+        error: reject
+      };
+      this.headerReceivers.push(receiver);
+    });
   }
 
   private async receiveMethod<T extends number, U extends number>(
@@ -300,36 +308,14 @@ export class AmqpProtocol {
     classId: T,
     methodId: U
   ): Promise<ExtractArgs<T, U>> {
-    return new Promise<any>((resolve, reject) =>
+    return new Promise<any>((resolve, reject) => {
       this.subscribeMethod<T, U>(
         channel,
         classId,
         methodId,
-        resolve,
+        resolve, 
         reject,
         1
-      )
-    );
-  }
-
-  private async receiveHeader<T extends number>(
-    channel: number,
-    classId: T
-  ): Promise<Extract<Header, { classId: T }>> {
-    return new Promise((resolve, reject) => {
-      const cancel = this.subscribeHeader(
-        channel,
-        (e, header) => {
-          if (e) {
-            cancel();
-            return reject(e);
-          }
-
-          if (header.classId === classId) {
-            cancel();
-            return resolve(header as Extract<Header, { classId: T }>);
-          }
-        }
       );
     });
   }

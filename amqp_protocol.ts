@@ -3413,14 +3413,21 @@ interface Socket {
   ): () => void;
 }
 
-interface MethodSubscriber {
+interface MethodSubscriber<T extends number, U extends number> {
   channel: number;
-  handler: (e: Error | null, m: ReceiveMethod) => void;
+  classId: T;
+  methodId: U;
+  maxCount: number;
+  count: number;
+  handler: (m: ExtractArgs<T, U>) => void;
+  error: (e: Error) => void;
 }
 
-interface HeaderSubscriber {
+interface HeaderReceiver<T extends number> {
   channel: number;
-  handler: (e: Error | null, h: Header) => void;
+  classId: T;
+  handler: (h: Extract<Header, { classId: T }>) => void;
+  error: (e: Error) => void;
 }
 
 type ExtractMethod<T extends number, U extends number> = Extract<
@@ -3443,8 +3450,8 @@ function serializeConnectionError(args: ConnectionClose) {
 }
 
 export class AmqpProtocol {
-  private methodSubscribers: MethodSubscriber[] = [];
-  private headerSubscribers: HeaderSubscriber[] = [];
+  private methodSubscribers: MethodSubscriber<any, any>[] = [];
+  private headerReceivers: HeaderReceiver<any>[] = [];
 
   constructor(private socket: Socket) {
     this.socket.subscribe((err, channel, type, payload) => {
@@ -3461,53 +3468,107 @@ export class AmqpProtocol {
     });
   }
 
+  private unsubscribeMethod(sub: MethodSubscriber<any, any>) {
+    const index = this.methodSubscribers.indexOf(sub);
+    if (index !== -1) {
+      this.methodSubscribers.splice(index, index + 1);
+    }
+  }
+
+  private unsubscribeHeader(sub: HeaderReceiver<any>) {
+    const index = this.headerReceivers.indexOf(sub);
+    if (index !== -1) {
+      this.headerReceivers.splice(index, index + 1);
+    }
+  }
+
   private emitMethod(channel: number, method: ReceiveMethod) {
-    this.methodSubscribers.forEach(sub => {
-      if (sub.channel === channel || method.classId === CONNECTION) {
-        sub.handler(null, method);
+    const subscribers = [...this.methodSubscribers];
+    subscribers.forEach((sub, index, self) => {
+      if (
+        channel === sub.channel && method.classId === sub.classId &&
+        method.methodId === sub.methodId
+      ) {
+        sub.count++;
+        if (sub.maxCount > 0 && sub.count >= sub.maxCount) {
+          this.unsubscribeMethod(sub);
+        }
+        return sub.handler(method.args);
+      }
+
+      if (
+        method.classId === CONNECTION && method.methodId === CONNECTION_CLOSE
+      ) {
+        this.unsubscribeMethod(sub);
+        return sub.error(
+          new Error(serializeConnectionError(method.args))
+        );
+      }
+
+      if (
+        channel === sub.channel && method.classId === CHANNEL &&
+        method.methodId === CHANNEL_CLOSE
+      ) {
+        this.unsubscribeMethod(sub);
+        sub.error(
+          new Error(serializeChannelError(channel, method.args))
+        );
       }
     });
   }
 
   private emitConnectionError(error: Error) {
-    this.methodSubscribers.forEach(sub => sub.handler(error, null as any));
-    this.headerSubscribers.forEach(sub => sub.handler(error, null as any));
+    this.methodSubscribers.forEach(sub => sub.error(error));
+    this.headerReceivers.forEach(sub => sub.error(error));
   }
 
   private emitHeader(channel: number, header: Header) {
-    this.headerSubscribers.forEach(sub => {
-      if (sub.channel === channel) {
-        sub.handler(null, header);
+    const receivers = [...this.headerReceivers];
+    receivers.forEach(sub => {
+      if (sub.channel === channel && sub.classId === header.classId) {
+        this.unsubscribeHeader(sub);
+        sub.handler(header);
       }
     });
   }
 
-  private subscribeMethod(
+  private subscribeMethod<T extends number, U extends number>(
     channel: number,
-    handler: (e: Error | null, m: ReceiveMethod) => void
+    classId: T,
+    methodId: U,
+    handler: (m: ExtractArgs<T, U>) => void,
+    onError: (e: Error) => void = () => {},
+    maxCount: number = 0
   ) {
-    const sub = { channel, handler };
+    const sub = {
+      channel,
+      classId,
+      methodId,
+      handler,
+      error: onError,
+      maxCount,
+      count: 0
+    } as MethodSubscriber<
+      any,
+      any
+    >;
     this.methodSubscribers.push(sub);
-    return () => {
-      const index = this.methodSubscribers.indexOf(sub);
-      if (index !== -1) {
-        this.methodSubscribers.splice(index, index + 1);
-      }
-    };
+    return () => this.unsubscribeMethod(sub);
   }
 
-  private subscribeHeader(
+  private receiveHeader<T extends number>(
     channel: number,
-    handler: (e: Error | null, m: Header) => void
-  ) {
-    const sub = { channel, handler };
-    this.headerSubscribers.push(sub);
-    return () => {
-      const index = this.headerSubscribers.indexOf(sub);
-      if (index !== -1) {
-        this.headerSubscribers.splice(index, index + 1);
-      }
-    };
+    classId: T
+  ): Promise<Extract<Header, { classId: T }>> {
+    return new Promise<any>((resolve, reject) => {
+      const receiver: HeaderReceiver<any> = {
+        channel,
+        classId,
+        handler: resolve,
+        error: reject
+      };
+      this.headerReceivers.push(receiver);
+    });
   }
 
   private async receiveMethod<T extends number, U extends number>(
@@ -3515,58 +3576,14 @@ export class AmqpProtocol {
     classId: T,
     methodId: U
   ): Promise<ExtractArgs<T, U>> {
-    return new Promise(
-      (resolve, reject) => {
-        const cancel = this.subscribeMethod(channel, (e, method) => {
-          if (e) {
-            cancel();
-            return reject(e);
-          }
-
-          if (method.classId === classId && method.methodId === methodId) {
-            cancel();
-            return resolve(method.args as any);
-          }
-
-          if (
-            method.classId === CHANNEL && method.methodId === CHANNEL_CLOSE
-          ) {
-            cancel();
-            return reject(
-              new Error(serializeChannelError(channel, method.args))
-            );
-          }
-
-          if (
-            method.classId === CONNECTION &&
-            method.methodId === CONNECTION_CLOSE
-          ) {
-            cancel();
-            return reject(serializeConnectionError(method.args));
-          }
-        });
-      }
-    );
-  }
-
-  private async receiveHeader<T extends number>(
-    channel: number,
-    classId: T
-  ): Promise<Extract<Header, { classId: T }>> {
-    return new Promise((resolve, reject) => {
-      const cancel = this.subscribeHeader(
+    return new Promise<any>((resolve, reject) => {
+      this.subscribeMethod<T, U>(
         channel,
-        (e, header) => {
-          if (e) {
-            cancel();
-            return reject(e);
-          }
-
-          if (header.classId === classId) {
-            cancel();
-            return resolve(header as Extract<Header, { classId: T }>);
-          }
-        }
+        classId,
+        methodId,
+        resolve,
+        reject,
+        1
       );
     });
   }
@@ -3831,23 +3848,10 @@ export class AmqpProtocol {
     BasicGetOk | BasicGetEmpty
   > {
     await this.socket.write(channel, 1, encodeBasicGet(args));
-    return new Promise<BasicGetOk | BasicGetEmpty>((resolve, reject) => {
-      const cancel = this.subscribeMethod(channel, (e, reply) => {
-        if (e) {
-          cancel();
-          return reject(e);
-        }
-
-        if (reply.classId === 60 && reply.methodId === 71) {
-          cancel();
-          return resolve(reply.args);
-        }
-        if (reply.classId === 60 && reply.methodId === 72) {
-          cancel();
-          return resolve(reply.args);
-        }
-      });
-    });
+    return Promise.race([
+      this.receiveMethod(channel, 60, 71),
+      this.receiveMethod(channel, 60, 72)
+    ]);
   }
 
   async sendBasicAck(channel: number, args: BasicAckArgs): Promise<void> {
@@ -3942,102 +3946,42 @@ export class AmqpProtocol {
     channel: number,
     handler: (args: ConnectionStart) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 10 && method.methodId === 10) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 10, 10, handler);
   }
 
   subscribeConnectionSecure(
     channel: number,
     handler: (args: ConnectionSecure) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 10 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 10, 20, handler);
   }
 
   subscribeConnectionTune(
     channel: number,
     handler: (args: ConnectionTune) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 10 && method.methodId === 30) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 10, 30, handler);
   }
 
   subscribeConnectionClose(
     channel: number,
     handler: (args: ConnectionClose) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 10 && method.methodId === 50) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 10, 50, handler);
   }
 
   subscribeChannelFlow(
     channel: number,
     handler: (args: ChannelFlow) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 20 && method.methodId === 20) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 20, 20, handler);
   }
 
   subscribeChannelClose(
     channel: number,
     handler: (args: ChannelClose) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 20 && method.methodId === 40) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 20, 40, handler);
   }
 
   subscribeBasicReturn(
@@ -4045,19 +3989,11 @@ export class AmqpProtocol {
     handler: (args: BasicReturn, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 60 && method.methodId === 50) {
-        const header = await this.receiveHeader(channel, method.classId);
-        const content = await this.receiveContent(channel, header.size);
-        return handler(method.args, header.props, content);
-      }
+    return this.subscribeMethod(channel, 60, 50, async method => {
+      const header = await this.receiveHeader(channel, 60);
+      const content = await this.receiveContent(channel, header.size);
+      return handler(method, header.props, content);
     });
-    return cancel;
   }
 
   subscribeBasicDeliver(
@@ -4065,50 +4001,22 @@ export class AmqpProtocol {
     handler: (args: BasicDeliver, props: BasicProperties, data: Uint8Array) =>
       void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 60 && method.methodId === 60) {
-        const header = await this.receiveHeader(channel, method.classId);
-        const content = await this.receiveContent(channel, header.size);
-        return handler(method.args, header.props, content);
-      }
+    return this.subscribeMethod(channel, 60, 60, async method => {
+      const header = await this.receiveHeader(channel, 60);
+      const content = await this.receiveContent(channel, header.size);
+      return handler(method, header.props, content);
     });
-    return cancel;
   }
 
   subscribeBasicAck(channel: number, handler: (args: BasicAck) => void): () =>
     void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 60 && method.methodId === 80) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 60, 80, handler);
   }
 
   subscribeBasicNack(
     channel: number,
     handler: (args: BasicNack) => void
   ): () => void {
-    const cancel = this.subscribeMethod(channel, async (e, method) => {
-      if (e) {
-        cancel();
-        return;
-      }
-
-      if (method.classId === 60 && method.methodId === 120) {
-        return handler(method.args);
-      }
-    });
-    return cancel;
+    return this.subscribeMethod(channel, 60, 120, handler);
   }
 }
