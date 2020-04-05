@@ -138,7 +138,7 @@ export class AmqpProtocol {
 function generateConnection() {
   return [
     'import { AmqpMultiplexer } from "./connection/mod.ts"',
-    'import * as t from "./amqp_types"',
+    'import * as t from "./amqp_types.ts"',
     printAmqpProtocolClass(),
   ].join("\n");
 }

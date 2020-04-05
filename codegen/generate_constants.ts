@@ -393,13 +393,15 @@ function generateConnection() {
       const name = c.class
         ? constantName(c.class + "-" + c.name)
         : constantName(c.name);
-      return `export const ${name} = ${JSON.stringify(c.value)}`;
+      return `export const ${name} = ${JSON.stringify(c.value)} as const`;
     }),
     ...spec.classes.flatMap((c) => {
       return [
-        `export const ${constantName(c.name)} = ${c.id}`,
+        `export const ${constantName(c.name)} = ${c.id} as const`,
         ...c.methods.map((m) =>
-          `export const ${constantName(c.name + "_" + m.name)} = ${m.id}`
+          `export const ${constantName(
+            c.name + "_" + m.name,
+          )} = ${m.id} as const`
         ),
       ];
     }),

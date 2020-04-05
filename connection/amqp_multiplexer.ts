@@ -105,13 +105,17 @@ function serializeConnectionError(args: ConnectionClose) {
 
 export interface AmqpMultiplexer extends AmqpSource, AmqpSink {}
 
-export class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
+class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
   private methodReceivers: MethodReceiver<any, any>[] = [];
   private headerReceivers: HeaderReceiver<any>[] = [];
   private contentReceivers: ContentReceiver[] = [];
 
-  constructor(private socket: AmqpSocket) {
-    this.listen();
+  constructor(private socket: AmqpSocket) {}
+
+  public start() {
+    this.listen().catch((error) => {
+      this.handleError(error);
+    });
   }
 
   private async listen() {
@@ -124,6 +128,22 @@ export class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
       } else if (frame.type === "content") {
         this.emitContent(frame.channel, frame.payload);
       }
+    }
+  }
+
+  private handleError(error: Error) {
+    for (const receiver of [...this.contentReceivers]) {
+      this.removeContentReceiver(receiver);
+      receiver.reject(error);
+    }
+    for (const receiver of [...this.methodReceivers]) {
+      this.removeMethodReceiver(receiver);
+      receiver.reject(error);
+    }
+
+    for (const receiver of [...this.headerReceivers]) {
+      this.removeHeaderReceiver(receiver);
+      receiver.reject(error);
     }
   }
 
@@ -188,7 +208,6 @@ export class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
   }
 
   private emitContent(channel: number, data: Uint8Array) {
-    console.log(this.contentReceivers.length);
     for (const receiver of [...this.contentReceivers]) {
       if (receiver.channel === channel) {
         this.removeContentReceiver(receiver);
@@ -310,5 +329,7 @@ export class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
 }
 
 export function createAmqpMux(socket: AmqpSocket): AmqpMultiplexer {
-  return new AmqpSocketMultiplexer(socket);
+  const mux = new AmqpSocketMultiplexer(socket);
+  mux.start();
+  return mux;
 }
