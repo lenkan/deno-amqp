@@ -33,7 +33,10 @@ class AmqpHeartbeatSocket implements AmqpSocket {
         async () => this.socket.read(),
         timeout,
         timeoutMessage,
-      );
+      ).catch((error) => {
+        this.clear();
+        throw error;
+      });
 
       if (frame.type === "heartbeat") {
         continue;
