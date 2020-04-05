@@ -70,12 +70,11 @@ export function openConnection(
     await protocol.sendConnectionOpen(0, {});
   }
 
-  async function close(args?: Partial<ConnectionCloseArgs>) {
+  async function close() {
     await protocol.sendConnectionClose(0, {
-      classId: args?.classId || 0,
-      methodId: args?.methodId || 0,
-      replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
-      replyText: args?.replyText,
+      classId: 0,
+      methodId: 0,
+      replyCode: HARD_ERROR_CONNECTION_FORCED,
     });
     conn.close();
   }

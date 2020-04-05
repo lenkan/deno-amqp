@@ -39,10 +39,10 @@ class AmqpHeartbeatSocket implements AmqpSocket {
         continue;
       }
 
-      // close
+      // close-ok
       if (
         frame.type === "method" && frame.payload.classId === 10 &&
-        frame.payload.methodId === 50
+        frame.payload.methodId === 51
       ) {
         this.clear();
       }
@@ -68,13 +68,12 @@ class AmqpHeartbeatSocket implements AmqpSocket {
       this.monitorHeartbeats = true;
     }
 
-    // close
+    // close-ok
     if (
       frame.type === "method" && frame.payload.classId === 10 &&
-      frame.payload.methodId === 50
+      frame.payload.methodId === 51
     ) {
       this.clear();
-      return;
     }
 
     this.resetSendTimer();
