@@ -14,29 +14,35 @@ function sleeper(ms: number) {
 }
 
 test("should timeout after specified ms", async () => {
-  const fn = async () => {
-    await withTimeout(sleeper(20), 10);
-  };
-  await assertThrowsAsync(fn, Error, "Timeout occured after 10ms");
+  const promise = sleep(20);
+  await assertThrowsAsync(async () => {
+    await withTimeout(() => promise, 10);
+  }, Error, "Timeout occured after 10ms");
+  await promise;
 });
 
 test("should timeout with specified error message", async () => {
-  const fn = async () => {
-    await withTimeout(sleeper(20), 10, "the message");
-  };
-  await assertThrowsAsync(fn, Error, "the message");
+  const promise = sleep(20);
+
+  await assertThrowsAsync(async () => {
+    await withTimeout(() => promise, 10, "the message");
+  }, Error, "the message");
+
+  await promise;
 });
 
 test(
   "should return value from specified function if not timedout",
   async () => {
+    const promise = sleep(10);
     const getValue = async () => {
-      await sleep(10);
+      await promise;
       return "the value";
     };
 
     const result = await withTimeout(getValue, 20);
     assertEquals(result, "the value");
+    await promise;
   },
 );
 
@@ -44,9 +50,11 @@ test(
   "should signal the function if the function has been timed out",
   async () => {
     let signal: TimeoutSignal = { timedOut: false };
+
+    const sleeper = sleep(20);
     const fn = async (s: TimeoutSignal) => {
       signal = s;
-      await sleep(20);
+      await sleeper;
     };
 
     const promise = withTimeout(fn, 10);
@@ -57,5 +65,6 @@ test(
     });
     await sleep(5);
     assertEquals(signal.timedOut, true);
+    await sleeper;
   },
 );

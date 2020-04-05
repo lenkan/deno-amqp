@@ -9,10 +9,7 @@ import {
   BasicCancelArgs,
   BasicCancelOk,
   BasicPublishArgs,
-  BasicDeliverArgs,
-  AmqpProtocol,
   ChannelCloseArgs,
-  HARD_ERROR_CONNECTION_FORCED,
   ChannelCloseOk,
   QueueDeclareArgs,
   QueueDeclareOk,
@@ -20,7 +17,9 @@ import {
   ExchangeDeclareOk,
   ChannelClose,
   BasicDeliver
-} from "./amqp_protocol.ts";
+} from "./amqp_types.ts";
+import { AmqpProtocol } from "./amqp_protocol.ts";
+import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;

@@ -1,8 +1,4 @@
 import {
-  Frame,
-  AmqpReaderWriter
-} from "./types.ts";
-import {
   encodeOctet,
   encodeShortUint,
   encodeLongUint,
@@ -11,23 +7,35 @@ import {
   decodeLongUint
 } from "../encoding/mod.ts";
 
+export interface Frame {
+  channel: number;
+  type: number;
+  payload: Uint8Array;
+}
+
+export interface AmqpFrameReader {
+  read(): Promise<Frame>;
+}
+
+export interface AmqpFrameWriter {
+  write(frame: Frame): Promise<void>;
+}
+
+export interface AmqpFraming extends AmqpFrameReader, AmqpFrameWriter {}
+
 function verifyFrame(type: number) {
   if (![1, 2, 3, 8].includes(type)) {
     throw new Error(`Unknown frame type '${type}'`);
   }
 }
 
-export class AmqpFramingMiddleware implements AmqpReaderWriter {
-  constructor(
-    private socket: Deno.Reader & Deno.Writer,
-  ) {}
-
-  private async readBytes(length: number): Promise<Uint8Array> {
+function createReader(r: Deno.Reader) {
+  async function readBytes(length: number): Promise<Uint8Array> {
     const data = new Uint8Array(length);
-    const n = await this.socket.read(data);
+    const n = await r.read(data);
 
     if (n === 0) {
-      return this.readBytes(length);
+      return readBytes(length);
     }
 
     if (n !== length) {
@@ -37,8 +45,8 @@ export class AmqpFramingMiddleware implements AmqpReaderWriter {
     return data;
   }
 
-  async read(): Promise<Frame> {
-    const prefix = await this.readBytes(7);
+  return async function read(): Promise<Frame> {
+    const prefix = await readBytes(7);
     if (!prefix) {
       throw new Error(`EOF reached`);
     }
@@ -48,7 +56,7 @@ export class AmqpFramingMiddleware implements AmqpReaderWriter {
     const channel = decodeShortUint(prefixReader);
     const length = decodeLongUint(prefixReader);
 
-    const rest = await this.readBytes(length + 1);
+    const rest = await readBytes(length + 1);
 
     if (rest[rest.length - 1] !== 206) {
       throw new Error(`Unexpected end token ${rest[rest.length - 1]}`);
@@ -61,15 +69,23 @@ export class AmqpFramingMiddleware implements AmqpReaderWriter {
       channel: channel,
       payload: rest.slice(0, rest.length - 1),
     };
-  }
+  };
+}
 
-  async write(frame: Frame): Promise<void> {
+function createWriter(w: Deno.Writer) {
+  return async function write(frame: Frame): Promise<void> {
     const buffer = new Deno.Buffer();
     buffer.writeSync(encodeOctet(frame.type));
     buffer.writeSync(encodeShortUint(frame.channel));
     buffer.writeSync(encodeLongUint(frame.payload.length));
     buffer.writeSync(frame.payload);
     buffer.writeSync(encodeOctet(206));
-    await this.socket.write(buffer.bytes());
-  }
+    await w.write(buffer.bytes());
+  };
+}
+
+export function createFraming(conn: Deno.Reader & Deno.Writer) {
+  const read = createReader(conn);
+  const write = createWriter(conn);
+  return { read, write };
 }

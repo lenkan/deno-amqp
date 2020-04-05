@@ -1,4 +1,4 @@
-import { AmqpFramingMiddleware } from "./amqp_framing_middleware.ts";
+import { createFraming } from "./amqp_framing.ts";
 import {
   test,
   assertEquals,
@@ -6,6 +6,7 @@ import {
   arrayOf,
   assertThrowsAsync
 } from "../testing.ts";
+
 function createConn() {
   return {
     read: createMock(),
@@ -13,8 +14,8 @@ function createConn() {
   };
 }
 
-function createSocket(conn: Deno.Reader & Deno.Writer) {
-  return new AmqpFramingMiddleware(conn);
+function createMiddleware(conn: Deno.Reader & Deno.Writer) {
+  return createFraming(conn);
 }
 
 function createMockReader(data: Uint8Array) {
@@ -30,11 +31,11 @@ function createMockReader(data: Uint8Array) {
 
 test("write method frame", async () => {
   const conn = createConn();
-  const socket = createSocket(conn);
+  const middleware = createMiddleware(conn);
 
   conn.write.mockReset();
 
-  socket.write(
+  middleware.write(
     {
       type: 1,
       channel: 0,
@@ -56,7 +57,7 @@ test("write method frame", async () => {
 
 test("read method frame", async () => {
   const conn = createConn();
-  const socket = createSocket(conn);
+  const middleware = createMiddleware(conn);
 
   const data = arrayOf(
     ...[1],
@@ -69,7 +70,7 @@ test("read method frame", async () => {
   );
   conn.read.mockImplementation(createMockReader(data));
 
-  const frame = await socket.read();
+  const frame = await middleware.read();
   assertEquals(frame, {
     type: 1,
     channel: 0,
@@ -79,7 +80,7 @@ test("read method frame", async () => {
 
 test("read heartbeat frame", async () => {
   const conn = createConn();
-  const socket = createSocket(conn);
+  const middleware = createMiddleware(conn);
 
   const data = arrayOf(
     ...[8],
@@ -89,7 +90,7 @@ test("read heartbeat frame", async () => {
   );
   conn.read.mockImplementation(createMockReader(data));
 
-  const frame = await socket.read();
+  const frame = await middleware.read();
   assertEquals(frame, {
     type: 8,
     channel: 0,
@@ -99,7 +100,7 @@ test("read heartbeat frame", async () => {
 
 test("throws on unknown frame type", async () => {
   const conn = createConn();
-  const socket = createSocket(conn);
+  const middleware = createMiddleware(conn);
 
   const data = arrayOf(
     ...[4],
@@ -114,6 +115,6 @@ test("throws on unknown frame type", async () => {
   conn.read.mockImplementation(createMockReader(data));
 
   await assertThrowsAsync(async () => {
-    await socket.read();
+    await middleware.read();
   });
 });

@@ -115,6 +115,10 @@ export function decodeFlags(r: Deno.SyncReader) {
   return flags;
 }
 
+function isDefinedField(field: AmqpOptionalField): field is AmqpField {
+  return field.value !== undefined;
+}
+
 export function encodeOptionalFields(fields: AmqpOptionalField[]): Uint8Array {
   const payload = new Deno.Buffer();
 
@@ -122,9 +126,9 @@ export function encodeOptionalFields(fields: AmqpOptionalField[]): Uint8Array {
     field.type === "bit" ? !!field.value : field.value !== undefined
   );
 
-  const definedFields = fields.filter((
-    field: AmqpOptionalField,
-  ): field is AmqpField => field.type !== "bit" && field.value !== undefined);
+  const definedFields = fields.filter(isDefinedField).filter((f) =>
+    f.type !== "bit"
+  );
 
   payload.writeSync(encodeFlags(flags));
   payload.writeSync(encodeFields(definedFields));

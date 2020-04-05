@@ -1,13 +1,9 @@
-import { AmqpSocket } from "./framing/socket.ts";
 import { AmqpChannel, openChannel } from "./amqp_channel.ts";
-import {
-  AmqpProtocol,
-  ConnectionCloseArgs,
-  HARD_ERROR_CONNECTION_FORCED
-} from "./amqp_protocol.ts";
-import { AmqpFramingMiddleware } from "./framing/amqp_framing_middleware.ts";
-import { AmqpLoggingMiddleware } from "./framing/amqp_logging_middleware.ts";
-import { AmqpHeartbeatMiddleware } from "./framing/amqp_heartbeat_middleware.ts";
+import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
+import { createFraming } from "./framing/mod.ts";
+import { createMux } from "./connection/mod.ts";
+import { ConnectionCloseArgs } from "./amqp_types.ts";
+import { AmqpProtocol } from "./amqp_protocol.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -31,19 +27,13 @@ export function openConnection(
   options: AmqpConnectionOptions,
 ): Promise<AmqpConnection> {
   const { username, password, loglevel } = options;
-  let heartbeatInterval: number | undefined = options.heartbeatInterval;
   const channelNumbers: number[] = [];
   let channelMax: number = -1;
   let frameMax: number = -1;
 
-  const framingMiddleware = new AmqpFramingMiddleware(conn);
-  const loggingMiddleware = new AmqpLoggingMiddleware(
-    framingMiddleware,
-    { loglevel },
-  );
-  const socket = new AmqpHeartbeatMiddleware(loggingMiddleware);
-
-  const protocol: AmqpProtocol = new AmqpProtocol(socket);
+  const framing = createFraming(conn, { loglevel });
+  const mux = createMux(framing);
+  const protocol = new AmqpProtocol(mux);
 
   protocol.subscribeConnectionClose(0, async (args) => {
     await protocol.sendConnectionCloseOk(0, {});
@@ -62,21 +52,18 @@ export function openConnection(
 
     await protocol.receiveConnectionTune(0).then(
       async (args) => {
-        const interval = heartbeatInterval !== undefined
-          ? heartbeatInterval
+        const interval = options.heartbeatInterval !== undefined
+          ? options.heartbeatInterval
           : args.heartbeat;
 
         channelMax = args.channelMax;
         frameMax = args.frameMax;
 
-        console.log(interval);
         await protocol.sendConnectionTuneOk(0, {
           heartbeat: interval,
           channelMax: channelMax,
           frameMax: frameMax,
         });
-
-        socket.setHeartbeatInterval(interval);
       },
     );
 

@@ -1,15 +1,12 @@
-import {
-  Frame,
-  AmqpReaderWriter
-} from "./types.ts";
+import { AmqpFraming, Frame } from "./amqp_framing.ts";
 
 export interface AmqpLoggingOptions {
   loglevel: "debug" | "none";
 }
 
-export class AmqpLoggingMiddleware implements AmqpReaderWriter {
+class AmqpFramingLogger implements AmqpFraming {
   constructor(
-    private socket: AmqpReaderWriter,
+    private socket: AmqpFraming,
     private options: AmqpLoggingOptions,
   ) {}
 
@@ -31,4 +28,11 @@ export class AmqpLoggingMiddleware implements AmqpReaderWriter {
     }
     return this.socket.write(frame);
   }
+}
+
+export function createFramingLogger(
+  framing: AmqpFraming,
+  options: AmqpLoggingOptions,
+): AmqpFraming {
+  return new AmqpFramingLogger(framing, options);
 }

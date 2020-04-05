@@ -2,7 +2,7 @@ import { connect } from "../amqp.ts";
 
 const env = Deno.env();
 const connection = await connect(
-  { heartbeatInterval: 0, loglevel: env.DEBUG ? "debug" : "none" },
+  { heartbeatInterval: 10, loglevel: env.DEBUG ? "debug" : "none" },
 );
 
 const channel1 = await connection.openChannel();
@@ -21,8 +21,8 @@ const consumer = await channel1.consume(
     console.log("Properties", JSON.stringify(props));
     console.log("Message", new TextDecoder().decode(data));
     await channel1.ack({ deliveryTag: args.deliveryTag });
-    await channel1.close();
-    await connection.close();
+    // await channel1.close();
+    // await connection.close();
   },
 );
 
@@ -32,7 +32,7 @@ await channel2.publish(
   new TextEncoder().encode(JSON.stringify({ foo: "bar" })),
 );
 
-await channel2.close();
+// await channel2.close();
 
 // setTimeout(() => connection.close(), 2000);
 // await connection.close();

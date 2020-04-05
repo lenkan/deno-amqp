@@ -3,7 +3,7 @@ import {
   BasicPublishArgs,
   BasicProperties,
   BasicDeliver
-} from "../amqp_protocol.ts";
+} from "../amqp_codec.ts";
 import { assertThrowsAsync, assertEquals } from "../testing.ts";
 const { test } = Deno;
 const encoder = new TextEncoder();

@@ -152,6 +152,27 @@ export function printReceiveMethodDefinition(
   `;
 }
 
+export function printSendMethodDefinition(
+  clazz: ClassDefinition,
+  method: MethodDefinition,
+) {
+  return `
+  export interface Send${pascalCase(clazz.name)}${pascalCase(
+    method.name,
+  )} {
+    classId: ${clazz.id};
+    methodId: ${method.id};
+    args: ${pascalCase(clazz.name)}${pascalCase(method.name)}Args;
+  }
+  `;
+}
+
+export function printSendMethodUnion(spec: Spec) {
+  return `export type SendMethod = ${spec.classes.flatMap((c) =>
+    c.methods.map((m) => `Send${pascalCase(c.name)}${pascalCase(m.name)}`)
+  ).join(" | ")}`;
+}
+
 export function printReceiveMethodUnion(spec: Spec) {
   return `export type ReceiveMethod = ${spec.classes.flatMap((c) =>
     c.methods.map((m) => `Receive${pascalCase(c.name)}${pascalCase(m.name)}`)
@@ -192,7 +213,7 @@ export function printEncodeMethodFunction(
   const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
   return `
-function ${name}(args: ${argsName}): Uint8Array {
+function ${name}(args: t.${argsName}): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(${method.id}));
@@ -224,7 +245,7 @@ export function printDecodeMethodFunction(
   const name = `decode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const returnName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
   return `
-function ${name}(r: Deno.SyncReader): ${returnName} {
+function ${name}(r: Deno.SyncReader): t.${returnName} {
   const fields = enc.decodeFields(r, [${method.arguments.map((a) =>
     '"' + resolveType(spec, a) + '"'
   ).join(",")}]);
@@ -241,9 +262,34 @@ function ${name}(r: Deno.SyncReader): ${returnName} {
 }`;
 }
 
+export function printMethodEncoder(spec: Spec) {
+  return `
+function encodeMethod(method: t.SendMethod): Uint8Array {
+  switch(method.classId) {
+    ${spec.classes.map((clazz) => {
+    return `
+      case ${clazz.id}: { 
+        switch(method.methodId) {
+          ${clazz.methods.map((method) => {
+      const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
+      return `case ${method.id}: return ${name}(method.args);`;
+    }).join("\n")}
+          default:
+            throw new Error("Unknown method " + method!.methodId + " for class '${clazz.name}'")
+        }
+      }
+     `;
+  }).join("\n")}
+    default:
+      throw new Error("Unknown class " + method!.classId);
+  }
+}
+  `;
+}
+
 export function printMethodDecoder(spec: Spec) {
   return `
-function decodeMethod(data: Uint8Array): ReceiveMethod {
+function decodeMethod(data: Uint8Array): t.ReceiveMethod {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
@@ -273,20 +319,20 @@ export function printEncodeHeaderFunction(
   clazz: ClassDefinition,
 ) {
   const name = `encode${pascalCase(clazz.name)}Header`;
-  const argName = `${pascalCase(clazz.name)}Properties`;
+  const argName = `${pascalCase(clazz.name)}Header`;
   return `
-function ${name}(size: bigint, props: ${argName}): Uint8Array {
+function ${name}(header: t.${argName}): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(size));
+  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
   w.writeSync(enc.encodeOptionalFields([
     ${(clazz.properties || []).map((prop) => {
     const name = camelCase(prop.name);
     if (prop.type === "longlong" || prop.type === "timestamp") {
-      return `{ type: "${prop.type}", value: props.${name} !== undefined ? BigInt(props.${name}) : undefined }`;
+      return `{ type: "${prop.type}", value: header.props.${name} !== undefined ? BigInt(header.props.${name}) : undefined }`;
     }
-    return `{ type: "${prop.type}", value: props.${name} }`;
+    return `{ type: "${prop.type}", value: header.props.${name} }`;
   }).join(",")}
   ]));
   return w.bytes();
@@ -299,7 +345,7 @@ export function printDecodeHeaderFunction(
 ) {
   const name = `decode${pascalCase(clazz.name)}Header`;
   return `
-function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
+function ${name}(r: Deno.SyncReader): t.${pascalCase(clazz.name)}Header {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r)); 
   const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
@@ -314,9 +360,25 @@ function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
   `;
 }
 
+export function printHeaderEncoder(spec: Spec) {
+  return `
+function encodeHeader(header: t.Header) : Uint8Array {
+  switch(header.classId) {
+    ${spec.classes.map((clazz) => {
+    return `case ${clazz.id}: return encode${pascalCase(
+      clazz.name,
+    )}Header(header);`;
+  }).join("\n")}
+    default:
+      throw new Error("Unknown class " + header!.classId);
+  }
+}
+  `;
+}
+
 export function printHeaderDecoder(spec: Spec) {
   return `
-function decodeHeader(data: Uint8Array) : Header {
+function decodeHeader(data: Uint8Array) : t.Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch(classId) {
