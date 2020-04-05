@@ -17,7 +17,7 @@ test("encode fields", () => {
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(123, 3, 97, 98, 99, 0b10100000),
+    arrayOf(123, 3, 97, 98, 99, 0b00000101),
   );
 });
 
@@ -32,13 +32,14 @@ test("encode fields - large bit array at end", () => {
     { type: "bit", value: true },
     { type: "bit", value: true },
     { type: "bit", value: false },
+    //
     { type: "bit", value: true },
     { type: "bit", value: false },
   ];
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(123, 0b10110110, 0b10000000),
+    arrayOf(123, 0b01101101, 0b00000001),
   );
 });
 
@@ -52,6 +53,7 @@ test("encode fields - large bit array at start", () => {
     { type: "bit", value: true },
     { type: "bit", value: true },
     { type: "bit", value: false },
+    //
     { type: "bit", value: true },
     { type: "bit", value: false },
     { type: "octet", value: 123 },
@@ -59,7 +61,7 @@ test("encode fields - large bit array at start", () => {
 
   assertEquals(
     enc.encodeFields(fields),
-    arrayOf(0b10110110, 0b10000000, 123),
+    arrayOf(0b01101101, 0b00000001, 123),
   );
 });
 
