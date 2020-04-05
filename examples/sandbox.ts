@@ -21,8 +21,7 @@ const consumer = await channel1.consume(
     console.log("Properties", JSON.stringify(props));
     console.log("Message", new TextDecoder().decode(data));
     await channel1.ack({ deliveryTag: args.deliveryTag });
-    console.log("Closing this shizzle");
-    // await connection.close();
+    await channel1.close();
   },
 );
 
@@ -31,8 +30,3 @@ await channel2.publish(
   { contentType: "application/json" },
   new TextEncoder().encode(JSON.stringify({ foo: "bar" })),
 );
-
-// await channel2.close();
-
-setTimeout(() => connection.close(), 2000);
-// await connection.close();
