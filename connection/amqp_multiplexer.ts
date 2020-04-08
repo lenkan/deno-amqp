@@ -1,10 +1,5 @@
-import {
-  Header,
-  ReceiveMethod,
-  ConnectionClose,
-  ChannelClose,
-  SendMethod,
-} from "../amqp_types.ts";
+import { ConnectionClose, ChannelClose } from "../amqp_types.ts";
+import { Header, ReceiveMethod, SendMethod } from "../amqp_codec.ts";
 import { AmqpSocket } from "./amqp_socket.ts";
 import {
   CONNECTION_CLOSE,

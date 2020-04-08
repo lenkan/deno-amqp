@@ -147,7 +147,7 @@ export function printReceiveMethodDefinition(
   )} {
     classId: ${clazz.id};
     methodId: ${method.id};
-    args: ${pascalCase(clazz.name)}${pascalCase(method.name)};
+    args: t.${pascalCase(clazz.name)}${pascalCase(method.name)};
   }
   `;
 }
@@ -162,7 +162,7 @@ export function printSendMethodDefinition(
   )} {
     classId: ${clazz.id};
     methodId: ${method.id};
-    args: ${pascalCase(clazz.name)}${pascalCase(method.name)}Args;
+    args: t.${pascalCase(clazz.name)}${pascalCase(method.name)}Args;
   }
   `;
 }
@@ -185,7 +185,7 @@ export function printHeaderDefinition(
   return `
   export interface ${pascalCase(clazz.name)}Header {
     classId: ${clazz.id};
-    props: ${pascalCase(clazz.name)}Properties;
+    props: t.${pascalCase(clazz.name)}Properties;
     size: number;
   }
   `;
@@ -264,7 +264,7 @@ function ${name}(r: Deno.SyncReader): t.${returnName} {
 
 export function printMethodEncoder(spec: Spec) {
   return `
-function encodeMethod(method: t.SendMethod): Uint8Array {
+function encodeMethod(method: SendMethod): Uint8Array {
   switch(method.classId) {
     ${spec.classes.map((clazz) => {
     return `
@@ -289,7 +289,7 @@ function encodeMethod(method: t.SendMethod): Uint8Array {
 
 export function printMethodDecoder(spec: Spec) {
   return `
-function decodeMethod(data: Uint8Array): t.ReceiveMethod {
+function decodeMethod(data: Uint8Array): ReceiveMethod {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
@@ -321,7 +321,7 @@ export function printEncodeHeaderFunction(
   const name = `encode${pascalCase(clazz.name)}Header`;
   const argName = `${pascalCase(clazz.name)}Header`;
   return `
-function ${name}(header: t.${argName}): Uint8Array {
+function ${name}(header: ${argName}): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(${clazz.id}));
   w.writeSync(enc.encodeShortUint(0));
@@ -345,7 +345,7 @@ export function printDecodeHeaderFunction(
 ) {
   const name = `decode${pascalCase(clazz.name)}Header`;
   return `
-function ${name}(r: Deno.SyncReader): t.${pascalCase(clazz.name)}Header {
+function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r)); 
   const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
@@ -362,7 +362,7 @@ function ${name}(r: Deno.SyncReader): t.${pascalCase(clazz.name)}Header {
 
 export function printHeaderEncoder(spec: Spec) {
   return `
-function encodeHeader(header: t.Header) : Uint8Array {
+function encodeHeader(header: Header) : Uint8Array {
   switch(header.classId) {
     ${spec.classes.map((clazz) => {
     return `case ${clazz.id}: return encode${pascalCase(
@@ -378,7 +378,7 @@ function encodeHeader(header: t.Header) : Uint8Array {
 
 export function printHeaderDecoder(spec: Spec) {
   return `
-function decodeHeader(data: Uint8Array) : t.Header {
+function decodeHeader(data: Uint8Array) : Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch(classId) {

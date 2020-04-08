@@ -1,6 +1,990 @@
 import * as enc from "./encoding/mod.ts";
 import * as t from "./amqp_types.ts";
 
+export interface ReceiveConnectionStart {
+  classId: 10;
+  methodId: 10;
+  args: t.ConnectionStart;
+}
+
+export interface ReceiveConnectionStartOk {
+  classId: 10;
+  methodId: 11;
+  args: t.ConnectionStartOk;
+}
+
+export interface ReceiveConnectionSecure {
+  classId: 10;
+  methodId: 20;
+  args: t.ConnectionSecure;
+}
+
+export interface ReceiveConnectionSecureOk {
+  classId: 10;
+  methodId: 21;
+  args: t.ConnectionSecureOk;
+}
+
+export interface ReceiveConnectionTune {
+  classId: 10;
+  methodId: 30;
+  args: t.ConnectionTune;
+}
+
+export interface ReceiveConnectionTuneOk {
+  classId: 10;
+  methodId: 31;
+  args: t.ConnectionTuneOk;
+}
+
+export interface ReceiveConnectionOpen {
+  classId: 10;
+  methodId: 40;
+  args: t.ConnectionOpen;
+}
+
+export interface ReceiveConnectionOpenOk {
+  classId: 10;
+  methodId: 41;
+  args: t.ConnectionOpenOk;
+}
+
+export interface ReceiveConnectionClose {
+  classId: 10;
+  methodId: 50;
+  args: t.ConnectionClose;
+}
+
+export interface ReceiveConnectionCloseOk {
+  classId: 10;
+  methodId: 51;
+  args: t.ConnectionCloseOk;
+}
+
+export interface ReceiveConnectionBlocked {
+  classId: 10;
+  methodId: 60;
+  args: t.ConnectionBlocked;
+}
+
+export interface ReceiveConnectionUnblocked {
+  classId: 10;
+  methodId: 61;
+  args: t.ConnectionUnblocked;
+}
+
+export interface ReceiveConnectionUpdateSecret {
+  classId: 10;
+  methodId: 70;
+  args: t.ConnectionUpdateSecret;
+}
+
+export interface ReceiveConnectionUpdateSecretOk {
+  classId: 10;
+  methodId: 71;
+  args: t.ConnectionUpdateSecretOk;
+}
+
+export interface ReceiveChannelOpen {
+  classId: 20;
+  methodId: 10;
+  args: t.ChannelOpen;
+}
+
+export interface ReceiveChannelOpenOk {
+  classId: 20;
+  methodId: 11;
+  args: t.ChannelOpenOk;
+}
+
+export interface ReceiveChannelFlow {
+  classId: 20;
+  methodId: 20;
+  args: t.ChannelFlow;
+}
+
+export interface ReceiveChannelFlowOk {
+  classId: 20;
+  methodId: 21;
+  args: t.ChannelFlowOk;
+}
+
+export interface ReceiveChannelClose {
+  classId: 20;
+  methodId: 40;
+  args: t.ChannelClose;
+}
+
+export interface ReceiveChannelCloseOk {
+  classId: 20;
+  methodId: 41;
+  args: t.ChannelCloseOk;
+}
+
+export interface ReceiveAccessRequest {
+  classId: 30;
+  methodId: 10;
+  args: t.AccessRequest;
+}
+
+export interface ReceiveAccessRequestOk {
+  classId: 30;
+  methodId: 11;
+  args: t.AccessRequestOk;
+}
+
+export interface ReceiveExchangeDeclare {
+  classId: 40;
+  methodId: 10;
+  args: t.ExchangeDeclare;
+}
+
+export interface ReceiveExchangeDeclareOk {
+  classId: 40;
+  methodId: 11;
+  args: t.ExchangeDeclareOk;
+}
+
+export interface ReceiveExchangeDelete {
+  classId: 40;
+  methodId: 20;
+  args: t.ExchangeDelete;
+}
+
+export interface ReceiveExchangeDeleteOk {
+  classId: 40;
+  methodId: 21;
+  args: t.ExchangeDeleteOk;
+}
+
+export interface ReceiveExchangeBind {
+  classId: 40;
+  methodId: 30;
+  args: t.ExchangeBind;
+}
+
+export interface ReceiveExchangeBindOk {
+  classId: 40;
+  methodId: 31;
+  args: t.ExchangeBindOk;
+}
+
+export interface ReceiveExchangeUnbind {
+  classId: 40;
+  methodId: 40;
+  args: t.ExchangeUnbind;
+}
+
+export interface ReceiveExchangeUnbindOk {
+  classId: 40;
+  methodId: 51;
+  args: t.ExchangeUnbindOk;
+}
+
+export interface ReceiveQueueDeclare {
+  classId: 50;
+  methodId: 10;
+  args: t.QueueDeclare;
+}
+
+export interface ReceiveQueueDeclareOk {
+  classId: 50;
+  methodId: 11;
+  args: t.QueueDeclareOk;
+}
+
+export interface ReceiveQueueBind {
+  classId: 50;
+  methodId: 20;
+  args: t.QueueBind;
+}
+
+export interface ReceiveQueueBindOk {
+  classId: 50;
+  methodId: 21;
+  args: t.QueueBindOk;
+}
+
+export interface ReceiveQueuePurge {
+  classId: 50;
+  methodId: 30;
+  args: t.QueuePurge;
+}
+
+export interface ReceiveQueuePurgeOk {
+  classId: 50;
+  methodId: 31;
+  args: t.QueuePurgeOk;
+}
+
+export interface ReceiveQueueDelete {
+  classId: 50;
+  methodId: 40;
+  args: t.QueueDelete;
+}
+
+export interface ReceiveQueueDeleteOk {
+  classId: 50;
+  methodId: 41;
+  args: t.QueueDeleteOk;
+}
+
+export interface ReceiveQueueUnbind {
+  classId: 50;
+  methodId: 50;
+  args: t.QueueUnbind;
+}
+
+export interface ReceiveQueueUnbindOk {
+  classId: 50;
+  methodId: 51;
+  args: t.QueueUnbindOk;
+}
+
+export interface ReceiveBasicQos {
+  classId: 60;
+  methodId: 10;
+  args: t.BasicQos;
+}
+
+export interface ReceiveBasicQosOk {
+  classId: 60;
+  methodId: 11;
+  args: t.BasicQosOk;
+}
+
+export interface ReceiveBasicConsume {
+  classId: 60;
+  methodId: 20;
+  args: t.BasicConsume;
+}
+
+export interface ReceiveBasicConsumeOk {
+  classId: 60;
+  methodId: 21;
+  args: t.BasicConsumeOk;
+}
+
+export interface ReceiveBasicCancel {
+  classId: 60;
+  methodId: 30;
+  args: t.BasicCancel;
+}
+
+export interface ReceiveBasicCancelOk {
+  classId: 60;
+  methodId: 31;
+  args: t.BasicCancelOk;
+}
+
+export interface ReceiveBasicPublish {
+  classId: 60;
+  methodId: 40;
+  args: t.BasicPublish;
+}
+
+export interface ReceiveBasicReturn {
+  classId: 60;
+  methodId: 50;
+  args: t.BasicReturn;
+}
+
+export interface ReceiveBasicDeliver {
+  classId: 60;
+  methodId: 60;
+  args: t.BasicDeliver;
+}
+
+export interface ReceiveBasicGet {
+  classId: 60;
+  methodId: 70;
+  args: t.BasicGet;
+}
+
+export interface ReceiveBasicGetOk {
+  classId: 60;
+  methodId: 71;
+  args: t.BasicGetOk;
+}
+
+export interface ReceiveBasicGetEmpty {
+  classId: 60;
+  methodId: 72;
+  args: t.BasicGetEmpty;
+}
+
+export interface ReceiveBasicAck {
+  classId: 60;
+  methodId: 80;
+  args: t.BasicAck;
+}
+
+export interface ReceiveBasicReject {
+  classId: 60;
+  methodId: 90;
+  args: t.BasicReject;
+}
+
+export interface ReceiveBasicRecoverAsync {
+  classId: 60;
+  methodId: 100;
+  args: t.BasicRecoverAsync;
+}
+
+export interface ReceiveBasicRecover {
+  classId: 60;
+  methodId: 110;
+  args: t.BasicRecover;
+}
+
+export interface ReceiveBasicRecoverOk {
+  classId: 60;
+  methodId: 111;
+  args: t.BasicRecoverOk;
+}
+
+export interface ReceiveBasicNack {
+  classId: 60;
+  methodId: 120;
+  args: t.BasicNack;
+}
+
+export interface ReceiveTxSelect {
+  classId: 90;
+  methodId: 10;
+  args: t.TxSelect;
+}
+
+export interface ReceiveTxSelectOk {
+  classId: 90;
+  methodId: 11;
+  args: t.TxSelectOk;
+}
+
+export interface ReceiveTxCommit {
+  classId: 90;
+  methodId: 20;
+  args: t.TxCommit;
+}
+
+export interface ReceiveTxCommitOk {
+  classId: 90;
+  methodId: 21;
+  args: t.TxCommitOk;
+}
+
+export interface ReceiveTxRollback {
+  classId: 90;
+  methodId: 30;
+  args: t.TxRollback;
+}
+
+export interface ReceiveTxRollbackOk {
+  classId: 90;
+  methodId: 31;
+  args: t.TxRollbackOk;
+}
+
+export interface ReceiveConfirmSelect {
+  classId: 85;
+  methodId: 10;
+  args: t.ConfirmSelect;
+}
+
+export interface ReceiveConfirmSelectOk {
+  classId: 85;
+  methodId: 11;
+  args: t.ConfirmSelectOk;
+}
+
+export interface SendConnectionStart {
+  classId: 10;
+  methodId: 10;
+  args: t.ConnectionStartArgs;
+}
+
+export interface SendConnectionStartOk {
+  classId: 10;
+  methodId: 11;
+  args: t.ConnectionStartOkArgs;
+}
+
+export interface SendConnectionSecure {
+  classId: 10;
+  methodId: 20;
+  args: t.ConnectionSecureArgs;
+}
+
+export interface SendConnectionSecureOk {
+  classId: 10;
+  methodId: 21;
+  args: t.ConnectionSecureOkArgs;
+}
+
+export interface SendConnectionTune {
+  classId: 10;
+  methodId: 30;
+  args: t.ConnectionTuneArgs;
+}
+
+export interface SendConnectionTuneOk {
+  classId: 10;
+  methodId: 31;
+  args: t.ConnectionTuneOkArgs;
+}
+
+export interface SendConnectionOpen {
+  classId: 10;
+  methodId: 40;
+  args: t.ConnectionOpenArgs;
+}
+
+export interface SendConnectionOpenOk {
+  classId: 10;
+  methodId: 41;
+  args: t.ConnectionOpenOkArgs;
+}
+
+export interface SendConnectionClose {
+  classId: 10;
+  methodId: 50;
+  args: t.ConnectionCloseArgs;
+}
+
+export interface SendConnectionCloseOk {
+  classId: 10;
+  methodId: 51;
+  args: t.ConnectionCloseOkArgs;
+}
+
+export interface SendConnectionBlocked {
+  classId: 10;
+  methodId: 60;
+  args: t.ConnectionBlockedArgs;
+}
+
+export interface SendConnectionUnblocked {
+  classId: 10;
+  methodId: 61;
+  args: t.ConnectionUnblockedArgs;
+}
+
+export interface SendConnectionUpdateSecret {
+  classId: 10;
+  methodId: 70;
+  args: t.ConnectionUpdateSecretArgs;
+}
+
+export interface SendConnectionUpdateSecretOk {
+  classId: 10;
+  methodId: 71;
+  args: t.ConnectionUpdateSecretOkArgs;
+}
+
+export interface SendChannelOpen {
+  classId: 20;
+  methodId: 10;
+  args: t.ChannelOpenArgs;
+}
+
+export interface SendChannelOpenOk {
+  classId: 20;
+  methodId: 11;
+  args: t.ChannelOpenOkArgs;
+}
+
+export interface SendChannelFlow {
+  classId: 20;
+  methodId: 20;
+  args: t.ChannelFlowArgs;
+}
+
+export interface SendChannelFlowOk {
+  classId: 20;
+  methodId: 21;
+  args: t.ChannelFlowOkArgs;
+}
+
+export interface SendChannelClose {
+  classId: 20;
+  methodId: 40;
+  args: t.ChannelCloseArgs;
+}
+
+export interface SendChannelCloseOk {
+  classId: 20;
+  methodId: 41;
+  args: t.ChannelCloseOkArgs;
+}
+
+export interface SendAccessRequest {
+  classId: 30;
+  methodId: 10;
+  args: t.AccessRequestArgs;
+}
+
+export interface SendAccessRequestOk {
+  classId: 30;
+  methodId: 11;
+  args: t.AccessRequestOkArgs;
+}
+
+export interface SendExchangeDeclare {
+  classId: 40;
+  methodId: 10;
+  args: t.ExchangeDeclareArgs;
+}
+
+export interface SendExchangeDeclareOk {
+  classId: 40;
+  methodId: 11;
+  args: t.ExchangeDeclareOkArgs;
+}
+
+export interface SendExchangeDelete {
+  classId: 40;
+  methodId: 20;
+  args: t.ExchangeDeleteArgs;
+}
+
+export interface SendExchangeDeleteOk {
+  classId: 40;
+  methodId: 21;
+  args: t.ExchangeDeleteOkArgs;
+}
+
+export interface SendExchangeBind {
+  classId: 40;
+  methodId: 30;
+  args: t.ExchangeBindArgs;
+}
+
+export interface SendExchangeBindOk {
+  classId: 40;
+  methodId: 31;
+  args: t.ExchangeBindOkArgs;
+}
+
+export interface SendExchangeUnbind {
+  classId: 40;
+  methodId: 40;
+  args: t.ExchangeUnbindArgs;
+}
+
+export interface SendExchangeUnbindOk {
+  classId: 40;
+  methodId: 51;
+  args: t.ExchangeUnbindOkArgs;
+}
+
+export interface SendQueueDeclare {
+  classId: 50;
+  methodId: 10;
+  args: t.QueueDeclareArgs;
+}
+
+export interface SendQueueDeclareOk {
+  classId: 50;
+  methodId: 11;
+  args: t.QueueDeclareOkArgs;
+}
+
+export interface SendQueueBind {
+  classId: 50;
+  methodId: 20;
+  args: t.QueueBindArgs;
+}
+
+export interface SendQueueBindOk {
+  classId: 50;
+  methodId: 21;
+  args: t.QueueBindOkArgs;
+}
+
+export interface SendQueuePurge {
+  classId: 50;
+  methodId: 30;
+  args: t.QueuePurgeArgs;
+}
+
+export interface SendQueuePurgeOk {
+  classId: 50;
+  methodId: 31;
+  args: t.QueuePurgeOkArgs;
+}
+
+export interface SendQueueDelete {
+  classId: 50;
+  methodId: 40;
+  args: t.QueueDeleteArgs;
+}
+
+export interface SendQueueDeleteOk {
+  classId: 50;
+  methodId: 41;
+  args: t.QueueDeleteOkArgs;
+}
+
+export interface SendQueueUnbind {
+  classId: 50;
+  methodId: 50;
+  args: t.QueueUnbindArgs;
+}
+
+export interface SendQueueUnbindOk {
+  classId: 50;
+  methodId: 51;
+  args: t.QueueUnbindOkArgs;
+}
+
+export interface SendBasicQos {
+  classId: 60;
+  methodId: 10;
+  args: t.BasicQosArgs;
+}
+
+export interface SendBasicQosOk {
+  classId: 60;
+  methodId: 11;
+  args: t.BasicQosOkArgs;
+}
+
+export interface SendBasicConsume {
+  classId: 60;
+  methodId: 20;
+  args: t.BasicConsumeArgs;
+}
+
+export interface SendBasicConsumeOk {
+  classId: 60;
+  methodId: 21;
+  args: t.BasicConsumeOkArgs;
+}
+
+export interface SendBasicCancel {
+  classId: 60;
+  methodId: 30;
+  args: t.BasicCancelArgs;
+}
+
+export interface SendBasicCancelOk {
+  classId: 60;
+  methodId: 31;
+  args: t.BasicCancelOkArgs;
+}
+
+export interface SendBasicPublish {
+  classId: 60;
+  methodId: 40;
+  args: t.BasicPublishArgs;
+}
+
+export interface SendBasicReturn {
+  classId: 60;
+  methodId: 50;
+  args: t.BasicReturnArgs;
+}
+
+export interface SendBasicDeliver {
+  classId: 60;
+  methodId: 60;
+  args: t.BasicDeliverArgs;
+}
+
+export interface SendBasicGet {
+  classId: 60;
+  methodId: 70;
+  args: t.BasicGetArgs;
+}
+
+export interface SendBasicGetOk {
+  classId: 60;
+  methodId: 71;
+  args: t.BasicGetOkArgs;
+}
+
+export interface SendBasicGetEmpty {
+  classId: 60;
+  methodId: 72;
+  args: t.BasicGetEmptyArgs;
+}
+
+export interface SendBasicAck {
+  classId: 60;
+  methodId: 80;
+  args: t.BasicAckArgs;
+}
+
+export interface SendBasicReject {
+  classId: 60;
+  methodId: 90;
+  args: t.BasicRejectArgs;
+}
+
+export interface SendBasicRecoverAsync {
+  classId: 60;
+  methodId: 100;
+  args: t.BasicRecoverAsyncArgs;
+}
+
+export interface SendBasicRecover {
+  classId: 60;
+  methodId: 110;
+  args: t.BasicRecoverArgs;
+}
+
+export interface SendBasicRecoverOk {
+  classId: 60;
+  methodId: 111;
+  args: t.BasicRecoverOkArgs;
+}
+
+export interface SendBasicNack {
+  classId: 60;
+  methodId: 120;
+  args: t.BasicNackArgs;
+}
+
+export interface SendTxSelect {
+  classId: 90;
+  methodId: 10;
+  args: t.TxSelectArgs;
+}
+
+export interface SendTxSelectOk {
+  classId: 90;
+  methodId: 11;
+  args: t.TxSelectOkArgs;
+}
+
+export interface SendTxCommit {
+  classId: 90;
+  methodId: 20;
+  args: t.TxCommitArgs;
+}
+
+export interface SendTxCommitOk {
+  classId: 90;
+  methodId: 21;
+  args: t.TxCommitOkArgs;
+}
+
+export interface SendTxRollback {
+  classId: 90;
+  methodId: 30;
+  args: t.TxRollbackArgs;
+}
+
+export interface SendTxRollbackOk {
+  classId: 90;
+  methodId: 31;
+  args: t.TxRollbackOkArgs;
+}
+
+export interface SendConfirmSelect {
+  classId: 85;
+  methodId: 10;
+  args: t.ConfirmSelectArgs;
+}
+
+export interface SendConfirmSelectOk {
+  classId: 85;
+  methodId: 11;
+  args: t.ConfirmSelectOkArgs;
+}
+
+export interface ConnectionHeader {
+  classId: 10;
+  props: t.ConnectionProperties;
+  size: number;
+}
+
+export interface ChannelHeader {
+  classId: 20;
+  props: t.ChannelProperties;
+  size: number;
+}
+
+export interface AccessHeader {
+  classId: 30;
+  props: t.AccessProperties;
+  size: number;
+}
+
+export interface ExchangeHeader {
+  classId: 40;
+  props: t.ExchangeProperties;
+  size: number;
+}
+
+export interface QueueHeader {
+  classId: 50;
+  props: t.QueueProperties;
+  size: number;
+}
+
+export interface BasicHeader {
+  classId: 60;
+  props: t.BasicProperties;
+  size: number;
+}
+
+export interface TxHeader {
+  classId: 90;
+  props: t.TxProperties;
+  size: number;
+}
+
+export interface ConfirmHeader {
+  classId: 85;
+  props: t.ConfirmProperties;
+  size: number;
+}
+
+export type ReceiveMethod =
+  | ReceiveConnectionStart
+  | ReceiveConnectionStartOk
+  | ReceiveConnectionSecure
+  | ReceiveConnectionSecureOk
+  | ReceiveConnectionTune
+  | ReceiveConnectionTuneOk
+  | ReceiveConnectionOpen
+  | ReceiveConnectionOpenOk
+  | ReceiveConnectionClose
+  | ReceiveConnectionCloseOk
+  | ReceiveConnectionBlocked
+  | ReceiveConnectionUnblocked
+  | ReceiveConnectionUpdateSecret
+  | ReceiveConnectionUpdateSecretOk
+  | ReceiveChannelOpen
+  | ReceiveChannelOpenOk
+  | ReceiveChannelFlow
+  | ReceiveChannelFlowOk
+  | ReceiveChannelClose
+  | ReceiveChannelCloseOk
+  | ReceiveAccessRequest
+  | ReceiveAccessRequestOk
+  | ReceiveExchangeDeclare
+  | ReceiveExchangeDeclareOk
+  | ReceiveExchangeDelete
+  | ReceiveExchangeDeleteOk
+  | ReceiveExchangeBind
+  | ReceiveExchangeBindOk
+  | ReceiveExchangeUnbind
+  | ReceiveExchangeUnbindOk
+  | ReceiveQueueDeclare
+  | ReceiveQueueDeclareOk
+  | ReceiveQueueBind
+  | ReceiveQueueBindOk
+  | ReceiveQueuePurge
+  | ReceiveQueuePurgeOk
+  | ReceiveQueueDelete
+  | ReceiveQueueDeleteOk
+  | ReceiveQueueUnbind
+  | ReceiveQueueUnbindOk
+  | ReceiveBasicQos
+  | ReceiveBasicQosOk
+  | ReceiveBasicConsume
+  | ReceiveBasicConsumeOk
+  | ReceiveBasicCancel
+  | ReceiveBasicCancelOk
+  | ReceiveBasicPublish
+  | ReceiveBasicReturn
+  | ReceiveBasicDeliver
+  | ReceiveBasicGet
+  | ReceiveBasicGetOk
+  | ReceiveBasicGetEmpty
+  | ReceiveBasicAck
+  | ReceiveBasicReject
+  | ReceiveBasicRecoverAsync
+  | ReceiveBasicRecover
+  | ReceiveBasicRecoverOk
+  | ReceiveBasicNack
+  | ReceiveTxSelect
+  | ReceiveTxSelectOk
+  | ReceiveTxCommit
+  | ReceiveTxCommitOk
+  | ReceiveTxRollback
+  | ReceiveTxRollbackOk
+  | ReceiveConfirmSelect
+  | ReceiveConfirmSelectOk;
+export type SendMethod =
+  | SendConnectionStart
+  | SendConnectionStartOk
+  | SendConnectionSecure
+  | SendConnectionSecureOk
+  | SendConnectionTune
+  | SendConnectionTuneOk
+  | SendConnectionOpen
+  | SendConnectionOpenOk
+  | SendConnectionClose
+  | SendConnectionCloseOk
+  | SendConnectionBlocked
+  | SendConnectionUnblocked
+  | SendConnectionUpdateSecret
+  | SendConnectionUpdateSecretOk
+  | SendChannelOpen
+  | SendChannelOpenOk
+  | SendChannelFlow
+  | SendChannelFlowOk
+  | SendChannelClose
+  | SendChannelCloseOk
+  | SendAccessRequest
+  | SendAccessRequestOk
+  | SendExchangeDeclare
+  | SendExchangeDeclareOk
+  | SendExchangeDelete
+  | SendExchangeDeleteOk
+  | SendExchangeBind
+  | SendExchangeBindOk
+  | SendExchangeUnbind
+  | SendExchangeUnbindOk
+  | SendQueueDeclare
+  | SendQueueDeclareOk
+  | SendQueueBind
+  | SendQueueBindOk
+  | SendQueuePurge
+  | SendQueuePurgeOk
+  | SendQueueDelete
+  | SendQueueDeleteOk
+  | SendQueueUnbind
+  | SendQueueUnbindOk
+  | SendBasicQos
+  | SendBasicQosOk
+  | SendBasicConsume
+  | SendBasicConsumeOk
+  | SendBasicCancel
+  | SendBasicCancelOk
+  | SendBasicPublish
+  | SendBasicReturn
+  | SendBasicDeliver
+  | SendBasicGet
+  | SendBasicGetOk
+  | SendBasicGetEmpty
+  | SendBasicAck
+  | SendBasicReject
+  | SendBasicRecoverAsync
+  | SendBasicRecover
+  | SendBasicRecoverOk
+  | SendBasicNack
+  | SendTxSelect
+  | SendTxSelectOk
+  | SendTxCommit
+  | SendTxCommitOk
+  | SendTxRollback
+  | SendTxRollbackOk
+  | SendConfirmSelect
+  | SendConfirmSelectOk;
+export type Header =
+  | ConnectionHeader
+  | ChannelHeader
+  | AccessHeader
+  | ExchangeHeader
+  | QueueHeader
+  | BasicHeader
+  | TxHeader
+  | ConfirmHeader;
+
 function encodeConnectionStart(args: t.ConnectionStartArgs): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
@@ -1655,7 +2639,7 @@ function decodeConfirmSelectOk(r: Deno.SyncReader): t.ConfirmSelectOk {
   return args;
 }
 
-function encodeConnectionHeader(header: t.ConnectionHeader): Uint8Array {
+function encodeConnectionHeader(header: ConnectionHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(10));
   w.writeSync(enc.encodeShortUint(0));
@@ -1664,7 +2648,7 @@ function encodeConnectionHeader(header: t.ConnectionHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeChannelHeader(header: t.ChannelHeader): Uint8Array {
+function encodeChannelHeader(header: ChannelHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(20));
   w.writeSync(enc.encodeShortUint(0));
@@ -1673,7 +2657,7 @@ function encodeChannelHeader(header: t.ChannelHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeAccessHeader(header: t.AccessHeader): Uint8Array {
+function encodeAccessHeader(header: AccessHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(30));
   w.writeSync(enc.encodeShortUint(0));
@@ -1682,7 +2666,7 @@ function encodeAccessHeader(header: t.AccessHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeExchangeHeader(header: t.ExchangeHeader): Uint8Array {
+function encodeExchangeHeader(header: ExchangeHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(40));
   w.writeSync(enc.encodeShortUint(0));
@@ -1691,7 +2675,7 @@ function encodeExchangeHeader(header: t.ExchangeHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeQueueHeader(header: t.QueueHeader): Uint8Array {
+function encodeQueueHeader(header: QueueHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(50));
   w.writeSync(enc.encodeShortUint(0));
@@ -1700,7 +2684,7 @@ function encodeQueueHeader(header: t.QueueHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeBasicHeader(header: t.BasicHeader): Uint8Array {
+function encodeBasicHeader(header: BasicHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(60));
   w.writeSync(enc.encodeShortUint(0));
@@ -1729,7 +2713,7 @@ function encodeBasicHeader(header: t.BasicHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeTxHeader(header: t.TxHeader): Uint8Array {
+function encodeTxHeader(header: TxHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(90));
   w.writeSync(enc.encodeShortUint(0));
@@ -1738,7 +2722,7 @@ function encodeTxHeader(header: t.TxHeader): Uint8Array {
   return w.bytes();
 }
 
-function encodeConfirmHeader(header: t.ConfirmHeader): Uint8Array {
+function encodeConfirmHeader(header: ConfirmHeader): Uint8Array {
   const w = new Deno.Buffer();
   w.writeSync(enc.encodeShortUint(85));
   w.writeSync(enc.encodeShortUint(0));
@@ -1747,7 +2731,7 @@ function encodeConfirmHeader(header: t.ConfirmHeader): Uint8Array {
   return w.bytes();
 }
 
-function decodeConnectionHeader(r: Deno.SyncReader): t.ConnectionHeader {
+function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1756,7 +2740,7 @@ function decodeConnectionHeader(r: Deno.SyncReader): t.ConnectionHeader {
   return { classId: 10, size, props };
 }
 
-function decodeChannelHeader(r: Deno.SyncReader): t.ChannelHeader {
+function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1765,7 +2749,7 @@ function decodeChannelHeader(r: Deno.SyncReader): t.ChannelHeader {
   return { classId: 20, size, props };
 }
 
-function decodeAccessHeader(r: Deno.SyncReader): t.AccessHeader {
+function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1774,7 +2758,7 @@ function decodeAccessHeader(r: Deno.SyncReader): t.AccessHeader {
   return { classId: 30, size, props };
 }
 
-function decodeExchangeHeader(r: Deno.SyncReader): t.ExchangeHeader {
+function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1783,7 +2767,7 @@ function decodeExchangeHeader(r: Deno.SyncReader): t.ExchangeHeader {
   return { classId: 40, size, props };
 }
 
-function decodeQueueHeader(r: Deno.SyncReader): t.QueueHeader {
+function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1792,7 +2776,7 @@ function decodeQueueHeader(r: Deno.SyncReader): t.QueueHeader {
   return { classId: 50, size, props };
 }
 
-function decodeBasicHeader(r: Deno.SyncReader): t.BasicHeader {
+function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(
@@ -1834,7 +2818,7 @@ function decodeBasicHeader(r: Deno.SyncReader): t.BasicHeader {
   return { classId: 60, size, props };
 }
 
-function decodeTxHeader(r: Deno.SyncReader): t.TxHeader {
+function decodeTxHeader(r: Deno.SyncReader): TxHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1843,7 +2827,7 @@ function decodeTxHeader(r: Deno.SyncReader): t.TxHeader {
   return { classId: 90, size, props };
 }
 
-function decodeConfirmHeader(r: Deno.SyncReader): t.ConfirmHeader {
+function decodeConfirmHeader(r: Deno.SyncReader): ConfirmHeader {
   const weight = enc.decodeShortUint(r);
   const size = Number(enc.decodeLongLongUint(r));
   const fields = enc.decodeOptionalFields(r, []);
@@ -1852,7 +2836,7 @@ function decodeConfirmHeader(r: Deno.SyncReader): t.ConfirmHeader {
   return { classId: 85, size, props };
 }
 
-export function decodeMethod(data: Uint8Array): t.ReceiveMethod {
+export function decodeMethod(data: Uint8Array): ReceiveMethod {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   const methodId = enc.decodeShortUint(r);
@@ -2058,7 +3042,7 @@ export function decodeMethod(data: Uint8Array): t.ReceiveMethod {
   }
 }
 
-export function encodeMethod(method: t.SendMethod): Uint8Array {
+export function encodeMethod(method: SendMethod): Uint8Array {
   switch (method.classId) {
     case 10: {
       switch (method.methodId) {
@@ -2269,7 +3253,7 @@ export function encodeMethod(method: t.SendMethod): Uint8Array {
   }
 }
 
-export function decodeHeader(data: Uint8Array): t.Header {
+export function decodeHeader(data: Uint8Array): Header {
   const r = new Deno.Buffer(data);
   const classId = enc.decodeShortUint(r);
   switch (classId) {
@@ -2294,7 +3278,7 @@ export function decodeHeader(data: Uint8Array): t.Header {
   }
 }
 
-export function encodeHeader(header: t.Header): Uint8Array {
+export function encodeHeader(header: Header): Uint8Array {
   switch (header.classId) {
     case 10:
       return encodeConnectionHeader(header);

@@ -1,4 +1,4 @@
-import { connect } from "../amqp.ts";
+import { connect } from "../mod.ts";
 import { assertThrowsAsync } from "../testing.ts";
 const { test } = Deno;
 

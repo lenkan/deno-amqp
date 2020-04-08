@@ -1,6 +1,6 @@
 import { AmqpConnection, openConnection } from "./amqp_connection.ts";
 
-export interface AmqpOptions {
+export interface AmqpConnectOptions {
   hostname?: string;
   port?: number;
   username?: string;
@@ -9,7 +9,7 @@ export interface AmqpOptions {
   loglevel?: "debug" | "none";
 }
 
-export async function connect(options: AmqpOptions = {}): Promise<
+export async function connect(options: AmqpConnectOptions = {}): Promise<
   AmqpConnection
 > {
   const {

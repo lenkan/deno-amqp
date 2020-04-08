@@ -1,15 +1,12 @@
-import { connect } from "../amqp.ts";
+import { connect } from "../mod.ts";
 
-const env = Deno.env();
 const queueName = Deno.args[0];
 if (!queueName) {
   console.log(`No queue name specified`);
   Deno.exit(1);
 }
 
-const connection = await connect(
-  { heartbeatInterval: 10, loglevel: env.DEBUG ? "debug" : "none" },
-);
+const connection = await connect();
 
 const channel = await connection.openChannel();
 

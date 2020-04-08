@@ -3,12 +3,10 @@ import {
   decodeHeader,
   encodeMethod,
   encodeHeader,
-} from "../amqp_codec.ts";
-import {
   ReceiveMethod,
   SendMethod,
   Header,
-} from "../amqp_types.ts";
+} from "../amqp_codec.ts";
 import {
   AmqpFrameReader,
   AmqpFrameWriter,

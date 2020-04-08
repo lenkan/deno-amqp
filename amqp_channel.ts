@@ -15,7 +15,6 @@ import {
   QueueDeclareOk,
   ExchangeDeclareArgs,
   ExchangeDeclareOk,
-  ChannelClose,
   BasicDeliver,
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
@@ -49,8 +48,6 @@ interface Consumer {
   tag: string;
   handler: BasicDeliverHandler;
 }
-
-export type ChannelCloseHandler = (args: ChannelClose) => void;
 
 export async function openChannel(
   channelNumber: number,

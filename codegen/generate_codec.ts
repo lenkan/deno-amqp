@@ -1,8 +1,5 @@
 import {
   Spec,
-  printClassPropertyInterface,
-  printMethodArgsInterface,
-  printMethodValueInterface,
   printReceiveMethodDefinition,
   printReceiveMethodUnion,
   printHeaderUnion,
@@ -27,6 +24,16 @@ function generateConnection() {
   return [
     'import * as enc from "./encoding/mod.ts"',
     'import * as t from "./amqp_types.ts"',
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printReceiveMethodDefinition(clazz, m))
+    ),
+    ...spec.classes.flatMap((clazz) =>
+      clazz.methods.map((m) => printSendMethodDefinition(clazz, m))
+    ),
+    ...spec.classes.map(printHeaderDefinition),
+    printReceiveMethodUnion(spec),
+    printSendMethodUnion(spec),
+    printHeaderUnion(spec),
     ...spec.classes.flatMap((clazz) =>
       clazz.methods.map((m) => printEncodeMethodFunction(spec, clazz, m))
     ),

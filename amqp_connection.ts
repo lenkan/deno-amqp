@@ -2,7 +2,6 @@ import { AmqpChannel, openChannel } from "./amqp_channel.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
 import { createFraming } from "./framing/mod.ts";
 import { createMux } from "./connection/mod.ts";
-import { ConnectionCloseArgs } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 
 export interface AmqpConnectionOptions {
