@@ -3,12 +3,12 @@ import {
   encodeLongUint,
   decodeLongUint,
   decodeOctet,
-  decodeLongLongUint
+  decodeLongLongUint,
 } from "./number_encoding.ts";
 import {
   encodeShortString,
   decodeLongString,
-  decodeShortString
+  decodeShortString,
 } from "./string_encoding.ts";
 import { readBytesSync } from "./utils.ts";
 

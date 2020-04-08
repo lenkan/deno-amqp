@@ -3,14 +3,14 @@ import {
   ReceiveMethod,
   ConnectionClose,
   ChannelClose,
-  SendMethod
+  SendMethod,
 } from "../amqp_types.ts";
 import { AmqpSocket } from "./amqp_socket.ts";
 import {
   CONNECTION_CLOSE,
   CONNECTION,
   CHANNEL,
-  CHANNEL_CLOSE
+  CHANNEL_CLOSE,
 } from "../amqp_constants.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<

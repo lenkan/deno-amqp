@@ -2,7 +2,7 @@ import { withTimeout } from "./with_timeout.ts";
 import {
   OutgoingFrame,
   AmqpSocket,
-  IncomingFrame
+  IncomingFrame,
 } from "./amqp_socket.ts";
 
 const HEARTBEAT_FRAME: OutgoingFrame = {

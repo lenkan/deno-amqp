@@ -3,7 +3,7 @@ import {
   assertThrows,
   bufferOf,
   arrayOf,
-  test
+  test,
 } from "../testing.ts";
 import * as enc from "./number_encoding.ts";
 

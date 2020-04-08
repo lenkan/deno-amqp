@@ -7,7 +7,7 @@ import {
   AmqpFieldType,
   AmqpNumberField,
   AmqpBigintField,
-  AmqpStringField
+  AmqpStringField,
 } from "./fields_encoding.ts";
 
 function writeBitField(bits: boolean[]): number {

@@ -16,7 +16,7 @@ import {
   ExchangeDeclareArgs,
   ExchangeDeclareOk,
   ChannelClose,
-  BasicDeliver
+  BasicDeliver,
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";

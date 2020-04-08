@@ -3,7 +3,7 @@ import {
   test,
   assertEquals,
   createMock,
-  arrayOf
+  arrayOf,
 } from "../testing.ts";
 import { AmqpFraming, Frame } from "../framing/mod.ts";
 

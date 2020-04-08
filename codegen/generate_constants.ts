@@ -18,7 +18,7 @@ import {
   printHeaderDecoder,
   constantName,
   isClientMethod,
-  isServerMethod
+  isServerMethod,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;

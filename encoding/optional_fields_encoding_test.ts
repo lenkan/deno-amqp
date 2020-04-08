@@ -2,7 +2,7 @@ import {
   assertEquals,
   bufferOf,
   arrayOf,
-  test
+  test,
 } from "../testing.ts";
 import * as enc from "./optional_fields_encoding.ts";
 import { padArray } from "./utils.ts";

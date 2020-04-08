@@ -4,7 +4,7 @@ import {
   createMock,
   arrayOf,
   assertThrowsAsync,
-  assertStrContains
+  assertStrContains,
 } from "../testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
 import { IncomingFrame } from "./amqp_socket.ts";
@@ -19,7 +19,7 @@ import {
   QUEUE_DECLARE,
   CONNECTION,
   CONNECTION_CLOSE,
-  HARD_ERROR_INTERNAL_ERROR
+  HARD_ERROR_INTERNAL_ERROR,
 } from "../amqp_constants.ts";
 
 function createSocket() {

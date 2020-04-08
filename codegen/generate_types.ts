@@ -8,7 +8,7 @@ import {
   printHeaderUnion,
   printHeaderDefinition,
   printSendMethodUnion,
-  printSendMethodDefinition
+  printSendMethodDefinition,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;

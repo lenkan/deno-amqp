@@ -6,14 +6,14 @@ import {
   decodeShortUint,
   decodeLongUint,
   decodeLongLongUint,
-  decodeOctet
+  decodeOctet,
 } from "./number_encoding.ts";
 import { encodeTable, decodeTable } from "./field_table_encoding.ts";
 import {
   encodeShortString,
   encodeLongString,
   decodeShortString,
-  decodeLongString
+  decodeLongString,
 } from "./string_encoding.ts";
 import { encodeBits } from "./bit_field_encoding.ts";
 

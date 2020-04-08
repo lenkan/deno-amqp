@@ -4,7 +4,7 @@ import {
   encodeLongUint,
   decodeOctet,
   decodeShortUint,
-  decodeLongUint
+  decodeLongUint,
 } from "../encoding/mod.ts";
 
 export interface Frame {

@@ -2,14 +2,14 @@ export {
   AmqpFrameReader,
   AmqpFrameWriter,
   AmqpFraming,
-  Frame
+  Frame,
 } from "./amqp_framing.ts";
 import {
-  createFraming as create
+  createFraming as create,
 } from "./amqp_framing.ts";
 import {
   AmqpLoggingOptions,
-  createFramingLogger
+  createFramingLogger,
 } from "./amqp_framing_logger.ts";
 
 export function createFraming(

@@ -2,7 +2,7 @@ import {
   createAmqpSocket,
   AmqpDecodeReader,
   AmqpEncodeWriter,
-  AmqpSocket
+  AmqpSocket,
 } from "./amqp_socket.ts";
 import { createHeartbeatSocket } from "./amqp_heartbeat_socket.ts";
 import { AmqpFraming } from "../framing/mod.ts";
@@ -10,7 +10,7 @@ import {
   createAmqpMux,
   AmqpMultiplexer,
   AmqpSink,
-  AmqpSource
+  AmqpSource,
 } from "./amqp_multiplexer.ts";
 
 export function createSocket(framing: AmqpFraming) {
@@ -27,5 +27,5 @@ export {
   AmqpSource,
   AmqpSocket,
   AmqpDecodeReader,
-  AmqpEncodeWriter
+  AmqpEncodeWriter,
 };

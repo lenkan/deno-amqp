@@ -4,7 +4,7 @@ import {
   assertEquals,
   createMock,
   arrayOf,
-  assertThrowsAsync
+  assertThrowsAsync,
 } from "../testing.ts";
 
 function createConn() {

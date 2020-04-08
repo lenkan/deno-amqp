@@ -2,7 +2,7 @@ import {
   assertEquals,
   bufferOf,
   arrayOf,
-  test
+  test,
 } from "../testing.ts";
 import * as enc from "./bit_field_encoding.ts";
 

@@ -16,7 +16,7 @@ import {
   printSendMethodUnion,
   printSendMethodDefinition,
   printMethodEncoder,
-  printHeaderEncoder
+  printHeaderEncoder,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;

@@ -2,7 +2,7 @@ import { withTimeout, TimeoutSignal } from "./with_timeout.ts";
 import {
   assertEquals,
   assertThrowsAsync,
-  test
+  test,
 } from "../testing.ts";
 
 function sleep(ms: number) {

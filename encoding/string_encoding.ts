@@ -1,7 +1,7 @@
 import {
   decodeOctet,
   encodeLongUint,
-  decodeLongUint
+  decodeLongUint,
 } from "./number_encoding.ts";
 import { readBytesSync } from "./utils.ts";
 

@@ -2,17 +2,17 @@ import {
   decodeMethod,
   decodeHeader,
   encodeMethod,
-  encodeHeader
+  encodeHeader,
 } from "../amqp_codec.ts";
 import {
   ReceiveMethod,
   SendMethod,
-  Header
+  Header,
 } from "../amqp_types.ts";
 import {
   AmqpFrameReader,
   AmqpFrameWriter,
-  AmqpFraming
+  AmqpFraming,
 } from "../framing/mod.ts";
 
 export interface HeaderFrame {
