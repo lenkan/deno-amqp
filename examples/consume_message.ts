@@ -20,5 +20,6 @@ await channel.consume(
     console.log(JSON.stringify(args));
     console.log(JSON.stringify(props));
     console.log(new TextDecoder().decode(data));
+    await channel.ack({ deliveryTag: args.deliveryTag });
   },
 );

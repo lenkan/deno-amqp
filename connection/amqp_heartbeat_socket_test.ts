@@ -4,12 +4,13 @@ import {
   createMock,
   arrayOf,
   assertThrowsAsync,
-  assertStrContains
+  assertStrContains,
 } from "../testing.ts";
 import {
-  createHeartbeatSocket
+  createHeartbeatSocket,
 } from "./amqp_heartbeat_socket.ts";
 import { AmqpSocket, IncomingFrame } from "./amqp_socket.ts";
+import { CONNECTION, CONNECTION_CLOSE_OK } from "../amqp_constants.ts";
 
 function createConn() {
   return {
@@ -45,19 +46,19 @@ function withHeartbeat(
   return () => {
     const conn = createConn();
     const socket = createSocket(conn);
-    return handler(conn, socket).finally(() =>
-      socket.write(
+    return handler(conn, socket).finally(async () => {
+      await socket.write(
         {
           type: "method",
           channel: 0,
           payload: {
-            classId: 10,
-            methodId: 50,
+            classId: CONNECTION,
+            methodId: CONNECTION_CLOSE_OK,
             args: { classId: 0, methodId: 0, replyCode: 503 },
           },
         },
-      )
-    );
+      );
+    });
   };
 }
 
