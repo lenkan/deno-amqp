@@ -4,6 +4,9 @@ import {
   decodeLongUint,
   decodeOctet,
   decodeLongLongUint,
+  encodeDouble,
+  decodeDouble,
+  decodeFloat,
 } from "./number_encoding.ts";
 import {
   encodeShortString,
@@ -36,12 +39,23 @@ enum TableFieldType {
 const { Buffer } = Deno;
 const textEncoder = new TextEncoder();
 
+function encodeNumber(value: number) {
+  if (Math.round(value) !== value) {
+    return new Uint8Array([
+      TableFieldType.Double,
+      ...encodeDouble(value),
+    ]);
+  }
+
+  return new Uint8Array([
+    TableFieldType.LongUInt,
+    ...encodeLongUint(value),
+  ]);
+}
+
 function encodeTableField(value: unknown): Uint8Array {
   if (typeof value === "number") {
-    return new Uint8Array([
-      TableFieldType.LongUInt,
-      ...encodeLongUint(value),
-    ]);
+    return encodeNumber(value);
   }
 
   if (typeof value === "string") {
@@ -127,6 +141,10 @@ function decodeTableField(r: Deno.Buffer): unknown {
     case TableFieldType.LongLongInt:
       // TODO(lenkan): Decode numbers
       return decodeLongLongUint(r);
+    case TableFieldType.Double:
+      return decodeDouble(r);
+    case TableFieldType.Float:
+      return decodeFloat(r);
     case TableFieldType.LongStr:
       return decodeLongString(r);
     case TableFieldType.ShortStr:

@@ -61,3 +61,17 @@ export function encodeLongLongUint(value: bigint) {
 export function decodeLongLongUint(r: Deno.SyncReader): bigint {
   return readBytesSync(r, 8).getBigUint64(0);
 }
+
+export function encodeDouble(value: number) {
+  const [view, p] = createView(8);
+  view.setFloat64(0, value);
+  return p;
+}
+
+export function decodeDouble(r: Deno.SyncReader) {
+  return readBytesSync(r, 8).getFloat64(0);
+}
+
+export function decodeFloat(r: Deno.SyncReader) {
+  return readBytesSync(r, 4).getFloat32(0);
+}
