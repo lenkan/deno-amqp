@@ -20,10 +20,15 @@ const { args, readFileSync, writeFileSync } = Deno;
 const decoder = new TextDecoder("utf-8");
 const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
 
+const withNowaitInterface = `
+export type WithNowait<T> = T & { nowait?: boolean };
+`;
+
 function generateConnection() {
   return [
     'import * as enc from "./encoding/mod.ts"',
     'import * as t from "./amqp_types.ts"',
+    withNowaitInterface,
     ...spec.classes.flatMap((clazz) =>
       clazz.methods.map((m) => printReceiveMethodDefinition(clazz, m))
     ),

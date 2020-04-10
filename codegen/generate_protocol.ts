@@ -24,6 +24,8 @@ function printSendMethodFunction(
       m.id > method.id && m.name.startsWith(`${method.name}-`)
     )
     : [];
+  const noWaitArg = !!method.arguments.find((a) => a.name === "nowait");
+
   if (method.content) {
     return `
       async ${name}(channel: number, args: t.${argsName}, props: t.${propsName}, data: Uint8Array) {
@@ -31,6 +33,19 @@ function printSendMethodFunction(
           this.mux.send(channel, ${clazz.id}, ${method.id}, args),
           this.mux.sendContent(channel, ${clazz.id}, props, data)
         ]);
+      }
+    `;
+  } else if (noWaitArg) {
+    const response = responses[0];
+    const returnType = `${pascalCase(clazz.name)}${pascalCase(response.name)}`;
+    return `
+      async ${name}Async(channel: number, args: Omit<t.${argsName}, "nowait">): Promise<void> {
+        await this.mux.send(channel, ${clazz.id}, ${method.id}, { ...args, nowait: true });
+      }
+
+      async ${name}(channel: number, args: Omit<t.${argsName}, "nowait">): Promise<t.${returnType}> {
+        await this.mux.send(channel, ${clazz.id}, ${method.id}, { ...args, nowait: false });
+        return this.mux.receive(channel, ${clazz.id}, ${response.id});
       }
     `;
   } else if (method.synchronous && responses.length === 1) {

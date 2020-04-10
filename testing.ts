@@ -55,3 +55,28 @@ export function arrayOf(...a: number[]) {
 export function bufferOf(...a: number[]) {
   return new Deno.Buffer(arrayOf(...a));
 }
+
+export interface ResolvablePromise<T> extends PromiseLike<T> {
+  resolve: (value: T) => PromiseLike<T>;
+  reject: (reason: any) => void;
+}
+
+export function createResolvable<T>(): ResolvablePromise<T> {
+  const fns: any = {};
+  const promise = new Promise<T>((res, rej): void => {
+    fns.resolve = res;
+    fns.reject = rej;
+  });
+
+  const then = promise.then.bind(promise);
+  return {
+    then,
+    resolve(value: T) {
+      fns.resolve(value);
+      return promise;
+    },
+    reject(reason: any) {
+      fns.reject(reason);
+    },
+  };
+}

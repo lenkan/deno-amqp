@@ -153,7 +153,6 @@ export interface ExchangeDeclareArgs {
   /** Default false */ durable?: boolean;
   /** Default false */ autoDelete?: boolean;
   /** Default false */ internal?: boolean;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -164,7 +163,6 @@ export interface ExchangeDeleteArgs {
   /** Default 0 */ ticket?: number;
   exchange: string;
   /** Default false */ ifUnused?: boolean;
-  /** Default false */ nowait?: boolean;
 }
 
 export interface ExchangeDeleteOkArgs {
@@ -175,7 +173,6 @@ export interface ExchangeBindArgs {
   destination: string;
   source: string;
   /** Default "" */ routingKey?: string;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -187,7 +184,6 @@ export interface ExchangeUnbindArgs {
   destination: string;
   source: string;
   /** Default "" */ routingKey?: string;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -201,7 +197,6 @@ export interface QueueDeclareArgs {
   /** Default false */ durable?: boolean;
   /** Default false */ exclusive?: boolean;
   /** Default false */ autoDelete?: boolean;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -216,7 +211,6 @@ export interface QueueBindArgs {
   /** Default "" */ queue?: string;
   exchange: string;
   /** Default "" */ routingKey?: string;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -226,7 +220,6 @@ export interface QueueBindOkArgs {
 export interface QueuePurgeArgs {
   /** Default 0 */ ticket?: number;
   /** Default "" */ queue?: string;
-  /** Default false */ nowait?: boolean;
 }
 
 export interface QueuePurgeOkArgs {
@@ -238,7 +231,6 @@ export interface QueueDeleteArgs {
   /** Default "" */ queue?: string;
   /** Default false */ ifUnused?: boolean;
   /** Default false */ ifEmpty?: boolean;
-  /** Default false */ nowait?: boolean;
 }
 
 export interface QueueDeleteOkArgs {
@@ -272,7 +264,6 @@ export interface BasicConsumeArgs {
   /** Default false */ noLocal?: boolean;
   /** Default false */ noAck?: boolean;
   /** Default false */ exclusive?: boolean;
-  /** Default false */ nowait?: boolean;
   /** Default {} */ arguments?: Record<string, unknown>;
 }
 
@@ -282,7 +273,6 @@ export interface BasicConsumeOkArgs {
 
 export interface BasicCancelArgs {
   consumerTag: string;
-  /** Default false */ nowait?: boolean;
 }
 
 export interface BasicCancelOkArgs {
@@ -376,7 +366,6 @@ export interface TxRollbackOkArgs {
 }
 
 export interface ConfirmSelectArgs {
-  /** Default false */ nowait?: boolean;
 }
 
 export interface ConfirmSelectOkArgs {

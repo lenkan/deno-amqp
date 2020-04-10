@@ -107,7 +107,7 @@ export function printMethodArgsInterface(
   )}Args`;
   return `
 export interface ${name} {
-    ${method.arguments.map((arg) => {
+    ${method.arguments.filter((arg) => arg.name !== "nowait").map((arg) => {
     const isOptional = arg["default-value"] !== undefined;
     const comment = isOptional
       ? `/** Default ${JSON.stringify(arg["default-value"])} */`
@@ -156,13 +156,16 @@ export function printSendMethodDefinition(
   clazz: ClassDefinition,
   method: MethodDefinition,
 ) {
+  const hasNowait = !!method.arguments.find((arg) => arg.name === "nowait");
+  const argsName = `t.${pascalCase(clazz.name)}${pascalCase(method.name)}Args`;
+  const argsType = hasNowait ? `WithNowait<${argsName}>` : argsName;
   return `
   export interface Send${pascalCase(clazz.name)}${pascalCase(
     method.name,
   )} {
     classId: ${clazz.id};
     methodId: ${method.id};
-    args: t.${pascalCase(clazz.name)}${pascalCase(method.name)}Args;
+    args: ${argsType};
   }
   `;
 }
@@ -212,8 +215,11 @@ export function printEncodeMethodFunction(
 ) {
   const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
   const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
+  const hasNowait = !!method.arguments.find((arg) => arg.name === "nowait");
+  const argsType = hasNowait ? `WithNowait<t.${argsName}>` : `t.${argsName}`;
+
   return `
-function ${name}(args: t.${argsName}): Uint8Array {
+function ${name}(args: ${argsType}): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: ${clazz.id} },
     { type: "short", value: ${method.id} },

@@ -1,6 +1,8 @@
 import * as enc from "./encoding/mod.ts";
 import * as t from "./amqp_types.ts";
 
+export type WithNowait<T> = T & { nowait?: boolean };
+
 export interface ReceiveConnectionStart {
   classId: 10;
   methodId: 10;
@@ -532,7 +534,7 @@ export interface SendAccessRequestOk {
 export interface SendExchangeDeclare {
   classId: 40;
   methodId: 10;
-  args: t.ExchangeDeclareArgs;
+  args: WithNowait<t.ExchangeDeclareArgs>;
 }
 
 export interface SendExchangeDeclareOk {
@@ -544,7 +546,7 @@ export interface SendExchangeDeclareOk {
 export interface SendExchangeDelete {
   classId: 40;
   methodId: 20;
-  args: t.ExchangeDeleteArgs;
+  args: WithNowait<t.ExchangeDeleteArgs>;
 }
 
 export interface SendExchangeDeleteOk {
@@ -556,7 +558,7 @@ export interface SendExchangeDeleteOk {
 export interface SendExchangeBind {
   classId: 40;
   methodId: 30;
-  args: t.ExchangeBindArgs;
+  args: WithNowait<t.ExchangeBindArgs>;
 }
 
 export interface SendExchangeBindOk {
@@ -568,7 +570,7 @@ export interface SendExchangeBindOk {
 export interface SendExchangeUnbind {
   classId: 40;
   methodId: 40;
-  args: t.ExchangeUnbindArgs;
+  args: WithNowait<t.ExchangeUnbindArgs>;
 }
 
 export interface SendExchangeUnbindOk {
@@ -580,7 +582,7 @@ export interface SendExchangeUnbindOk {
 export interface SendQueueDeclare {
   classId: 50;
   methodId: 10;
-  args: t.QueueDeclareArgs;
+  args: WithNowait<t.QueueDeclareArgs>;
 }
 
 export interface SendQueueDeclareOk {
@@ -592,7 +594,7 @@ export interface SendQueueDeclareOk {
 export interface SendQueueBind {
   classId: 50;
   methodId: 20;
-  args: t.QueueBindArgs;
+  args: WithNowait<t.QueueBindArgs>;
 }
 
 export interface SendQueueBindOk {
@@ -604,7 +606,7 @@ export interface SendQueueBindOk {
 export interface SendQueuePurge {
   classId: 50;
   methodId: 30;
-  args: t.QueuePurgeArgs;
+  args: WithNowait<t.QueuePurgeArgs>;
 }
 
 export interface SendQueuePurgeOk {
@@ -616,7 +618,7 @@ export interface SendQueuePurgeOk {
 export interface SendQueueDelete {
   classId: 50;
   methodId: 40;
-  args: t.QueueDeleteArgs;
+  args: WithNowait<t.QueueDeleteArgs>;
 }
 
 export interface SendQueueDeleteOk {
@@ -652,7 +654,7 @@ export interface SendBasicQosOk {
 export interface SendBasicConsume {
   classId: 60;
   methodId: 20;
-  args: t.BasicConsumeArgs;
+  args: WithNowait<t.BasicConsumeArgs>;
 }
 
 export interface SendBasicConsumeOk {
@@ -664,7 +666,7 @@ export interface SendBasicConsumeOk {
 export interface SendBasicCancel {
   classId: 60;
   methodId: 30;
-  args: t.BasicCancelArgs;
+  args: WithNowait<t.BasicCancelArgs>;
 }
 
 export interface SendBasicCancelOk {
@@ -784,7 +786,7 @@ export interface SendTxRollbackOk {
 export interface SendConfirmSelect {
   classId: 85;
   methodId: 10;
-  args: t.ConfirmSelectArgs;
+  args: WithNowait<t.ConfirmSelectArgs>;
 }
 
 export interface SendConfirmSelectOk {
@@ -1269,7 +1271,9 @@ function encodeAccessRequestOk(args: t.AccessRequestOkArgs): Uint8Array {
   ]);
 }
 
-function encodeExchangeDeclare(args: t.ExchangeDeclareArgs): Uint8Array {
+function encodeExchangeDeclare(
+  args: WithNowait<t.ExchangeDeclareArgs>,
+): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 40 },
     { type: "short", value: 10 },
@@ -1316,7 +1320,9 @@ function encodeExchangeDeclareOk(args: t.ExchangeDeclareOkArgs): Uint8Array {
   ]);
 }
 
-function encodeExchangeDelete(args: t.ExchangeDeleteArgs): Uint8Array {
+function encodeExchangeDelete(
+  args: WithNowait<t.ExchangeDeleteArgs>,
+): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 40 },
     { type: "short", value: 20 },
@@ -1343,7 +1349,7 @@ function encodeExchangeDeleteOk(args: t.ExchangeDeleteOkArgs): Uint8Array {
   ]);
 }
 
-function encodeExchangeBind(args: t.ExchangeBindArgs): Uint8Array {
+function encodeExchangeBind(args: WithNowait<t.ExchangeBindArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 40 },
     { type: "short", value: 30 },
@@ -1375,7 +1381,9 @@ function encodeExchangeBindOk(args: t.ExchangeBindOkArgs): Uint8Array {
   ]);
 }
 
-function encodeExchangeUnbind(args: t.ExchangeUnbindArgs): Uint8Array {
+function encodeExchangeUnbind(
+  args: WithNowait<t.ExchangeUnbindArgs>,
+): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 40 },
     { type: "short", value: 40 },
@@ -1407,7 +1415,7 @@ function encodeExchangeUnbindOk(args: t.ExchangeUnbindOkArgs): Uint8Array {
   ]);
 }
 
-function encodeQueueDeclare(args: t.QueueDeclareArgs): Uint8Array {
+function encodeQueueDeclare(args: WithNowait<t.QueueDeclareArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 50 },
     { type: "short", value: 10 },
@@ -1456,7 +1464,7 @@ function encodeQueueDeclareOk(args: t.QueueDeclareOkArgs): Uint8Array {
   ]);
 }
 
-function encodeQueueBind(args: t.QueueBindArgs): Uint8Array {
+function encodeQueueBind(args: WithNowait<t.QueueBindArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 50 },
     { type: "short", value: 20 },
@@ -1491,7 +1499,7 @@ function encodeQueueBindOk(args: t.QueueBindOkArgs): Uint8Array {
   ]);
 }
 
-function encodeQueuePurge(args: t.QueuePurgeArgs): Uint8Array {
+function encodeQueuePurge(args: WithNowait<t.QueuePurgeArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 50 },
     { type: "short", value: 30 },
@@ -1518,7 +1526,7 @@ function encodeQueuePurgeOk(args: t.QueuePurgeOkArgs): Uint8Array {
   ]);
 }
 
-function encodeQueueDelete(args: t.QueueDeleteArgs): Uint8Array {
+function encodeQueueDelete(args: WithNowait<t.QueueDeleteArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 50 },
     { type: "short", value: 40 },
@@ -1610,7 +1618,7 @@ function encodeBasicQosOk(args: t.BasicQosOkArgs): Uint8Array {
   ]);
 }
 
-function encodeBasicConsume(args: t.BasicConsumeArgs): Uint8Array {
+function encodeBasicConsume(args: WithNowait<t.BasicConsumeArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 60 },
     { type: "short", value: 20 },
@@ -1657,7 +1665,7 @@ function encodeBasicConsumeOk(args: t.BasicConsumeOkArgs): Uint8Array {
   ]);
 }
 
-function encodeBasicCancel(args: t.BasicCancelArgs): Uint8Array {
+function encodeBasicCancel(args: WithNowait<t.BasicCancelArgs>): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 60 },
     { type: "short", value: 30 },
@@ -1895,7 +1903,9 @@ function encodeTxRollbackOk(args: t.TxRollbackOkArgs): Uint8Array {
   ]);
 }
 
-function encodeConfirmSelect(args: t.ConfirmSelectArgs): Uint8Array {
+function encodeConfirmSelect(
+  args: WithNowait<t.ConfirmSelectArgs>,
+): Uint8Array {
   return enc.encodeFields([
     { type: "short", value: 85 },
     { type: "short", value: 10 },
@@ -2631,7 +2641,7 @@ function encodeConfirmHeader(header: ConfirmHeader): Uint8Array {
 
 function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2640,7 +2650,7 @@ function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
 
 function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2649,7 +2659,7 @@ function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
 
 function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2658,7 +2668,7 @@ function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
 
 function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2667,7 +2677,7 @@ function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
 
 function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2718,7 +2728,7 @@ function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
 
 function decodeTxHeader(r: Deno.SyncReader): TxHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
@@ -2727,7 +2737,7 @@ function decodeTxHeader(r: Deno.SyncReader): TxHeader {
 
 function decodeConfirmHeader(r: Deno.SyncReader): ConfirmHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
   const props = {};
 
