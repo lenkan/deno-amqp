@@ -16,6 +16,13 @@ function credentials(username: string, password: string) {
   return `${NULL_CHAR}${username}${NULL_CHAR}${password}`;
 }
 
+const clientProperties = Object.freeze({
+  product: "deno-amqp",
+  platform: `Deno ${Deno.version.deno} https://deno.land`,
+  version: "0",
+  information: "https://deno.land/x/amqp/",
+});
+
 export interface AmqpConnection {
   close(): Promise<void>;
   openChannel(): Promise<AmqpChannel>;
@@ -45,7 +52,7 @@ export function openConnection(
 
     await protocol.receiveConnectionStart(0);
     await protocol.sendConnectionStartOk(0, {
-      clientProperties: {},
+      clientProperties,
       response: credentials(username, password),
     });
 
