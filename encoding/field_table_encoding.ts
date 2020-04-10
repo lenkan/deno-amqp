@@ -138,6 +138,20 @@ function encodeNumber(value: number) {
 }
 
 function encodeTableField(value: unknown): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return new Uint8Array([
+      ...createView(5, (v) => {
+        v.setUint8(0, TableFieldType.ByteArray);
+        v.setUint32(1, value.length);
+      }),
+      ...value,
+    ]);
+  }
+
+  if (value === null) {
+    return new Uint8Array([TableFieldType.NoValue]);
+  }
+
   if (typeof value === "number") {
     return encodeNumber(value);
   }
@@ -177,19 +191,6 @@ function encodeTableField(value: unknown): Uint8Array {
   throw new Error(
     `Don't know how to encode field of type ${typeof value} yet`,
   );
-}
-
-export function encodeTable(table: Record<string, unknown>) {
-  const buffer = new Buffer();
-  for (const fieldName of Object.keys(table)) {
-    assertValidFieldName(fieldName);
-    const value = table[fieldName];
-    buffer.writeSync(encodeShortString(fieldName));
-    buffer.writeSync(encodeTableField(value));
-  }
-
-  const result = buffer.bytes();
-  return new Uint8Array([...encodeLongUint(result.length), ...result]);
 }
 
 function decodeTableFieldArray(r: Deno.SyncReader): unknown[] {
@@ -269,13 +270,27 @@ function decodeTableField(r: Deno.Buffer): unknown {
     case TableFieldType.FieldTable:
       return decodeTable(r);
     case TableFieldType.NoValue:
-      // TODO: uniform null/undefined
-      return undefined;
+      return null;
     case TableFieldType.ByteArray:
       return readByteArray(r);
     default:
       throw new Error(`Unknown table field type ${fromCharCode(type)}`);
   }
+}
+
+export function encodeTable(table: Record<string, unknown>) {
+  const buffer = new Buffer();
+  for (const fieldName of Object.keys(table)) {
+    const value = table[fieldName];
+    if (value !== undefined) {
+      assertValidFieldName(fieldName);
+      buffer.writeSync(encodeShortString(fieldName));
+      buffer.writeSync(encodeTableField(value));
+    }
+  }
+
+  const result = buffer.bytes();
+  return new Uint8Array([...encodeLongUint(result.length), ...result]);
 }
 
 export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {

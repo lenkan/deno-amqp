@@ -203,6 +203,56 @@ test("encode table with short integer value", () => {
   );
 });
 
+test("encode null value", () => {
+  const table = {
+    n: null,
+  };
+
+  const arr = tableOf(
+    arrayOf(1, charCode("n"), charCode("V")),
+  );
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(encoded, arr);
+});
+
+test("decode null value", () => {
+  const table = {
+    n: null,
+  };
+
+  const arr = tableOf(
+    arrayOf(1, charCode("n"), charCode("V")),
+  );
+
+  const decoded = enc.decodeTable(new Deno.Buffer(arr));
+  assertEquals(decoded, table);
+});
+
+test("encode undefined value", () => {
+  const table = {
+    n: undefined,
+  };
+
+  const arr = tableOf(arrayOf());
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(encoded, arr);
+});
+
+test("encode byte array", () => {
+  const table = {
+    n: arrayOf(1, 2, 3),
+  };
+
+  const arr = tableOf(
+    arrayOf(1, charCode("n"), charCode("x"), 0, 0, 0, 3, ...table.n),
+  );
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(encoded, arr);
+});
+
 test("decode byte array", () => {
   const expected = {
     n: arrayOf(1, 2, 3),
