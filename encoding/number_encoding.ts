@@ -1,17 +1,25 @@
-function readBytesSync(r: Deno.SyncReader, length: number): DataView {
+function viewOf(r: Deno.SyncReader, length: number): DataView {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 
-  if (result !== length) {
-    throw new Error("Not enough data in buffer");
+  if (typeof result !== "number" || result !== length) {
+    throw new Error(
+      `Not enough data in buffer (expected: ${length}, got: ${result
+        .toString()})`,
+    );
   }
 
   return new DataView(data.buffer);
 }
 
-function createView(size: number): [DataView, Uint8Array] {
+function createView(
+  size: number,
+  setter: (v: DataView) => void,
+): Uint8Array {
   const p = new Uint8Array(size);
-  return [new DataView(p.buffer), p];
+  const view = new DataView(p.buffer);
+  setter(view);
+  return p;
 }
 
 export function encodeOctet(value: number) {
@@ -23,7 +31,7 @@ export function encodeOctet(value: number) {
 }
 
 export function decodeOctet(r: Deno.SyncReader) {
-  return readBytesSync(r, 1).getUint8(0);
+  return viewOf(r, 1).getUint8(0);
 }
 
 export function encodeShortUint(value: number) {
@@ -31,47 +39,34 @@ export function encodeShortUint(value: number) {
     throw new Error("Invalid value for short-uint");
   }
 
-  const p = new Uint8Array(2);
-  const view = new DataView(p.buffer);
-  view.setUint16(0, value);
-  return p;
+  return createView(2, (v) => v.setUint16(0, value));
 }
 
 export function decodeShortUint(buf: Deno.SyncReader) {
-  const view = new DataView(readBytesSync(buf, 2).buffer);
-  return view.getUint16(0);
+  return viewOf(buf, 2).getUint16(0);
 }
 
 export function encodeLongUint(value: number) {
-  const [view, p] = createView(4);
-  view.setUint32(0, value);
-  return p;
+  return createView(4, (v) => v.setUint32(0, value));
 }
 
 export function decodeLongUint(r: Deno.SyncReader) {
-  return readBytesSync(r, 4).getUint32(0);
+  return viewOf(r, 4).getUint32(0);
 }
 
-export function encodeLongLongUint(value: bigint) {
-  const [view, p] = createView(8);
-  view.setBigUint64(0, value);
-  return p;
+export function encodeLongLongUint(value: number) {
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(`Tried to encode unsafe integer`);
+  }
+
+  return createView(8, (v) => v.setBigUint64(0, BigInt(value)));
 }
 
-export function decodeLongLongUint(r: Deno.SyncReader): bigint {
-  return readBytesSync(r, 8).getBigUint64(0);
-}
-
-export function encodeDouble(value: number) {
-  const [view, p] = createView(8);
-  view.setFloat64(0, value);
-  return p;
-}
-
-export function decodeDouble(r: Deno.SyncReader) {
-  return readBytesSync(r, 8).getFloat64(0);
-}
-
-export function decodeFloat(r: Deno.SyncReader) {
-  return readBytesSync(r, 4).getFloat32(0);
+export function decodeLongLongUint(r: Deno.SyncReader): number {
+  const view = viewOf(r, 8);
+  const result = Number(view.getBigUint64(0));
+  if (!Number.isSafeInteger(result)) {
+    throw new Error(`Tried to decode unsafe integer`);
+  }
+  return result;
 }

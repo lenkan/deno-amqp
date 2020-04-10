@@ -66,22 +66,22 @@ test("decode long uint", () => {
 
 test("encode long long uint", () => {
   assertEquals(
-    enc.encodeLongLongUint(BigInt(0x00000000fbcdef00)),
+    enc.encodeLongLongUint(0x00000000fbcdef00),
     arrayOf(0x00, 0x00, 0x00, 0x00, 0xfb, 0xcd, 0xef, 0x00),
   );
 });
 
 test("decode long long uint - leading zeroes", () => {
   const data = bufferOf(0x00, 0x00, 0x00, 0x00, 0x0F, 0xFF, 0xFF, 0xFF);
-  assertEquals(enc.decodeLongLongUint(data), BigInt(0x000000000fffffff));
+  assertEquals(enc.decodeLongLongUint(data), 0x000000000fffffff);
 });
 
 test("decode long long uint - 255", () => {
   const data = bufferOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF);
-  assertEquals(enc.decodeLongLongUint(data), BigInt(0x00000000000000ff));
+  assertEquals(enc.decodeLongLongUint(data), 0x00000000000000ff);
 });
 
 test("decode long long uint - max-safe", () => {
   const data = bufferOf(0x00, 0x1f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
-  assertEquals(enc.decodeLongLongUint(data), BigInt(0x001fffffffffffff));
+  assertEquals(enc.decodeLongLongUint(data), 0x001fffffffffffff);
 });

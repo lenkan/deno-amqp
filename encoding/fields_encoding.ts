@@ -18,13 +18,8 @@ import {
 import { encodeBits } from "./bit_field_encoding.ts";
 
 export interface AmqpNumberField {
-  type: "octet" | "short" | "long";
+  type: "octet" | "short" | "long" | "longlong" | "timestamp";
   value: number;
-}
-
-export interface AmqpBigintField {
-  type: "longlong" | "timestamp";
-  value: bigint;
 }
 
 export interface AmqpStringField {
@@ -44,7 +39,6 @@ export interface AmqpTableField {
 
 export type AmqpField =
   | AmqpNumberField
-  | AmqpBigintField
   | AmqpStringField
   | AmqpBitField
   | AmqpTableField;
@@ -115,6 +109,7 @@ export function decodeField(
     case "long":
       return decodeLongUint(r);
     case "longlong":
+    case "timestamp":
       return decodeLongLongUint(r);
     case "table":
       return decodeTable(r);
@@ -124,8 +119,6 @@ export function decodeField(
       return decodeShortString(r);
     case "longstr":
       return decodeLongString(r);
-    case "timestamp":
-      return decodeLongLongUint(r);
     default:
       assertUnreachable(type);
   }

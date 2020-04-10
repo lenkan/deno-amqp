@@ -3,54 +3,138 @@ import {
   encodeLongUint,
   decodeLongUint,
   decodeOctet,
-  decodeLongLongUint,
-  encodeDouble,
-  decodeDouble,
-  decodeFloat,
 } from "./number_encoding.ts";
 import {
   encodeShortString,
   decodeLongString,
   decodeShortString,
+  encodeLongString,
 } from "./string_encoding.ts";
-import { readBytesSync } from "./utils.ts";
-
-enum TableFieldType {
-  Boolean = 116, // t
-  ShortShortInt = 98, // b
-  ShortShortUInt = 66, // B
-  ShortInt = 115, // s
-  ShortUInt = 117, // u
-  LongInt = 73, // I
-  LongUInt = 105, // i
-  LongLongInt = 108, // l
-  Float = 102, // f
-  Double = 100, // d
-  Decimal = 68, // D
-  ShortStr = 115, // s
-  LongStr = 83, // S
-  FieldArray = 65, // A
-  Timestamp = 84, // T
-  FieldTable = 70, // F
-  ByteArray = 120, // x
-  NoValue = 86, // V
-}
 
 const { Buffer } = Deno;
-const textEncoder = new TextEncoder();
 
-function encodeNumber(value: number) {
-  if (Math.round(value) !== value) {
-    return new Uint8Array([
-      TableFieldType.Double,
-      ...encodeDouble(value),
-    ]);
+function charCode(type: string) {
+  return type.charCodeAt(0);
+}
+
+function fromCharCode(code: number) {
+  return new TextDecoder().decode(new Uint8Array([code]));
+}
+
+function viewOf(r: Deno.SyncReader, length: number): DataView {
+  const data = new Uint8Array(length);
+  const result = r.readSync(data);
+
+  if (typeof result !== "number" || result !== length) {
+    throw new Error(
+      `Not enough data in buffer (expected: ${length}, got: ${result
+        .toString()})`,
+    );
   }
 
-  return new Uint8Array([
-    TableFieldType.LongUInt,
-    ...encodeLongUint(value),
-  ]);
+  return new DataView(data.buffer);
+}
+
+function createView(
+  size: number,
+  setter: (v: DataView) => void,
+): Uint8Array {
+  const p = new Uint8Array(size);
+  const view = new DataView(p.buffer);
+  setter(view);
+  return p;
+}
+
+const CHARCODE_A = charCode("A");
+const CHARCODE_Z = charCode("Z");
+const CHARCODE_a = charCode("a");
+const CHARCODE_z = charCode("z");
+const CHARCODE_underscore = charCode("_");
+const CHARCODE_dollar = charCode("$");
+const CHARCODE_hash = charCode("#");
+const validChars = [CHARCODE_dollar, CHARCODE_hash, CHARCODE_underscore];
+
+function isAlpha(code: number) {
+  return (code >= CHARCODE_A && code <= CHARCODE_Z) ||
+    (code >= CHARCODE_a && code <= CHARCODE_z);
+}
+
+function isNumeric(code: number) {
+  return (code >= 47 && code <= 58);
+}
+
+function isAllowedCharatacter(code: number) {
+  return isAlpha(code) || isNumeric(code) || validChars.includes(code);
+}
+
+function assertValidFieldName(name: string) {
+  if (!isAlpha(name.charCodeAt(0))) {
+    throw new Error(`Invalid field name '${name}'`);
+  }
+
+  for (let i = 1; i < name.length; i++) {
+    if (!isAllowedCharatacter(name.charCodeAt(i))) {
+      throw new Error(`Invalid field name '${name}'`);
+    }
+  }
+}
+
+/**
+ * https://www.rabbitmq.com/amqp-0-9-1-errata.html#section_3
+ */
+enum TableFieldType {
+  Boolean = charCode("t"), // 116
+  ShortShortInt = charCode("b"), // 98
+  ShortShortUInt = charCode("B"), // 66
+  ShortInt = charCode("s"), // 115
+  ShortUInt = charCode("u"), // 117
+  LongInt = charCode("I"), // 73
+  LongUInt = charCode("i"), // 105
+  LongLongInt = charCode("l"), // 108
+  Float = charCode("f"), // 102
+  Double = charCode("d"), // 100
+  Decimal = charCode("D"), // 68
+  LongStr = charCode("S"), // 83
+  FieldArray = charCode("A"), // 65
+  Timestamp = charCode("T"), // 84
+  FieldTable = charCode("F"), // 70
+  NoValue = charCode("V"), // 86
+  ByteArray = charCode("x"), // 120
+}
+
+function encodeNumber(value: number) {
+  if (Math.round(value) !== value || !Number.isSafeInteger(value)) {
+    return createView(9, (v) => {
+      v.setUint8(0, TableFieldType.Double);
+      v.setFloat64(1, value);
+    });
+  }
+
+  if (value >= -0x80 && value < 0x80) {
+    return createView(2, (v) => {
+      v.setUint8(0, TableFieldType.ShortShortInt);
+      v.setInt8(1, value);
+    });
+  }
+
+  if (value >= -0x8000 && value < 0x8000) {
+    return createView(3, (v) => {
+      v.setUint8(0, TableFieldType.ShortInt);
+      v.setInt16(1, value);
+    });
+  }
+
+  if (value >= -0x80000000 && value < 0x80000000) {
+    return createView(5, (v) => {
+      v.setUint8(0, TableFieldType.LongInt);
+      v.setInt32(1, value);
+    });
+  }
+
+  return createView(5, (v) => {
+    v.setUint8(0, TableFieldType.LongInt);
+    v.setBigInt64(1, BigInt(value));
+  });
 }
 
 function encodeTableField(value: unknown): Uint8Array {
@@ -59,20 +143,10 @@ function encodeTableField(value: unknown): Uint8Array {
   }
 
   if (typeof value === "string") {
-    const encodedString = textEncoder.encode(value);
-    if (encodedString.length <= 255) {
-      return new Uint8Array([
-        TableFieldType.ShortStr,
-        ...encodeOctet(encodedString.length),
-        ...encodedString,
-      ]);
-    } else {
-      return new Uint8Array([
-        TableFieldType.LongStr,
-        ...encodeLongUint(encodedString.length),
-        ...encodedString,
-      ]);
-    }
+    return new Uint8Array([
+      TableFieldType.LongStr,
+      ...encodeLongString(value),
+    ]);
   }
 
   if (Array.isArray(value)) {
@@ -108,6 +182,7 @@ function encodeTableField(value: unknown): Uint8Array {
 export function encodeTable(table: Record<string, unknown>) {
   const buffer = new Buffer();
   for (const fieldName of Object.keys(table)) {
+    assertValidFieldName(fieldName);
     const value = table[fieldName];
     buffer.writeSync(encodeShortString(fieldName));
     buffer.writeSync(encodeTableField(value));
@@ -119,8 +194,14 @@ export function encodeTable(table: Record<string, unknown>) {
 
 function decodeTableFieldArray(r: Deno.SyncReader): unknown[] {
   const length = decodeLongUint(r);
-  const buffer = new Deno.Buffer(readBytesSync(r, length));
+  const data = new Uint8Array(length);
+  const n = r.readSync(data);
 
+  if (n !== length) {
+    throw new Error(`Not enough data in reader for array`);
+  }
+
+  const buffer = new Deno.Buffer(data);
   const array: unknown[] = [];
 
   while (!buffer.empty()) {
@@ -131,41 +212,87 @@ function decodeTableFieldArray(r: Deno.SyncReader): unknown[] {
   return array;
 }
 
+function fromBigInt(value: bigint): number {
+  const num = Number(value);
+  if (!Number.isSafeInteger(num)) {
+    throw new Error(`Received unsafe integer`);
+  }
+
+  return num;
+}
+
+function readByteArray(r: Deno.SyncReader) {
+  const length = viewOf(r, 4).getUint32(0);
+  return readBytes(r, length);
+}
+
+function readBytes(r: Deno.SyncReader, length: number) {
+  const data = new Uint8Array(length);
+  if (r.readSync(data) !== length) {
+    throw new Error(`Not enough data in reader`);
+  }
+  return data;
+}
+
 function decodeTableField(r: Deno.Buffer): unknown {
-  const type = decodeOctet(r);
+  const type: TableFieldType = decodeOctet(r);
   switch (type) {
     case TableFieldType.Boolean:
-      return decodeOctet(r) > 0;
+      return viewOf(r, 1).getUint8(0) > 0;
+    case TableFieldType.ShortShortUInt:
+      return viewOf(r, 1).getUint8(0);
+    case TableFieldType.ShortShortInt:
+      return viewOf(r, 1).getInt8(0);
+    case TableFieldType.ShortUInt:
+      return viewOf(r, 2).getUint16(0);
+    case TableFieldType.ShortInt:
+      return viewOf(r, 2).getInt16(0);
     case TableFieldType.LongUInt:
-      return decodeLongUint(r);
+      return viewOf(r, 4).getUint32(0);
+    case TableFieldType.LongInt:
+      return viewOf(r, 4).getInt32(0);
     case TableFieldType.LongLongInt:
-      // TODO(lenkan): Decode numbers
-      return decodeLongLongUint(r);
-    case TableFieldType.Double:
-      return decodeDouble(r);
+      return fromBigInt(viewOf(r, 8).getBigInt64(0));
     case TableFieldType.Float:
-      return decodeFloat(r);
+      return viewOf(r, 4).getFloat32(0);
+    case TableFieldType.Double:
+      return viewOf(r, 8).getFloat64(0);
+    case TableFieldType.Decimal:
+      // TODO: decode decimal
+      throw new Error("Cant decode decimal");
     case TableFieldType.LongStr:
       return decodeLongString(r);
-    case TableFieldType.ShortStr:
-      return decodeShortString(r);
-    case TableFieldType.FieldTable:
-      return decodeTable(r);
     case TableFieldType.FieldArray:
       return decodeTableFieldArray(r);
+    case TableFieldType.Timestamp:
+      return fromBigInt(viewOf(r, 8).getBigUint64(0));
+    case TableFieldType.FieldTable:
+      return decodeTable(r);
+    case TableFieldType.NoValue:
+      // TODO: uniform null/undefined
+      return undefined;
+    case TableFieldType.ByteArray:
+      return readByteArray(r);
     default:
-      throw new Error(`Unknown field type '${type}'`);
+      throw new Error(`Unknown table field type ${fromCharCode(type)}`);
   }
 }
 
 export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {
-  const size = decodeLongUint(r);
-  const result: Record<string, unknown> = {};
-  const data = new Buffer(readBytesSync(r, size));
+  const length = decodeLongUint(r);
+  const data = new Uint8Array(length);
+  const n = r.readSync(data);
 
-  while (!data.empty()) {
-    const fieldName = decodeShortString(data);
-    const fieldValue = decodeTableField(data);
+  if (n !== length) {
+    throw new Error("Not enough data in reader");
+  }
+
+  const buffer = new Deno.Buffer(data);
+  const result: Record<string, unknown> = {};
+
+  while (!buffer.empty()) {
+    const fieldName = decodeShortString(buffer);
+    const fieldValue = decodeTableField(buffer);
     result[fieldName] = fieldValue;
   }
 

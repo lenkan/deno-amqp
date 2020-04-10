@@ -3,9 +3,35 @@ import {
   bufferOf,
   arrayOf,
   test,
+  assertThrows,
+  assertArrayContains,
 } from "../testing.ts";
 import * as enc from "./field_table_encoding.ts";
-import { assertArrayContains } from "https://deno.land/std@v0.40.0/testing/asserts.ts";
+
+function charCode(type: string) {
+  return type.charCodeAt(0);
+}
+
+function tableOf(data: Uint8Array) {
+  const length = data.length;
+  return new Uint8Array([
+    ...[0, 0, 0, length],
+    ...data,
+  ]);
+}
+
+test("encode table - throws on invalid field names", () => {
+  const illegalNames = ["_foo", "1foo", " foo"];
+  for (const illegalName of illegalNames) {
+    assertThrows(
+      () => enc.encodeTable({ [illegalName]: 123 }),
+      Error,
+      "Invalid field name",
+      illegalName,
+    );
+  }
+});
+
 test("encode table - with array", () => {
   const table = {
     a: [123, true, "abc"],
@@ -16,9 +42,9 @@ test("encode table - with array", () => {
     ...[0, 0, 0, 19],
     ...[1, 97],
     ...[65, 0, 0, 0, 12],
-    ...[105, 0, 0, 0, 123],
+    ...[98, 123],
     ...[116, 1],
-    ...[115, 3, 97, 98, 99],
+    ...[83, 0, 0, 0, 3, 97, 98, 99],
   ));
 });
 
@@ -26,13 +52,14 @@ test("decode table - with array", () => {
   const table = {
     a: [123, true, "abc"],
   };
+
   const data = bufferOf(
-    ...[0, 0, 0, 19],
+    ...[0, 0, 0, 22],
     ...[1, 97],
-    ...[65, 0, 0, 0, 12],
+    ...[65, 0, 0, 0, 15],
     ...[105, 0, 0, 0, 123],
     ...[116, 1],
-    ...[115, 3, 97, 98, 99],
+    ...[83, 0, 0, 0, 3, 97, 98, 99],
   );
 
   const encoded = enc.decodeTable(data);
@@ -116,8 +143,8 @@ test("encode table with double precision floating point value", () => {
   };
 
   const encoded = enc.encodeTable(table);
-  assertArrayContains(
-    Array.from(encoded.values()),
+  assertEquals(
+    Array.from(encoded.values()).slice(4),
     [1, 110, 100, 64, 94, 221, 47, 26, 159, 190, 119],
   );
 });
@@ -128,20 +155,64 @@ test("encode table with negative double precision floating point value", () => {
   };
 
   const encoded = enc.encodeTable(table);
-  assertArrayContains(
-    Array.from(encoded.values()),
+  assertEquals(
+    Array.from(encoded.values()).slice(4),
     [1, 110, 100, 192, 94, 221, 47, 26, 159, 190, 119],
   );
 });
 
-test("encode table with integer point value", () => {
+test("encode table with shortshort integer value", () => {
   const table = {
     n: 123,
   };
 
   const encoded = enc.encodeTable(table);
-  assertArrayContains(
-    Array.from(encoded.values()),
-    [1, 110, 105, 0, 0, 0, 123],
+  assertEquals(
+    Array.from(encoded.values()).slice(4),
+    [1, 110, 98, 123],
   );
+});
+
+test("encode table with shortshort negative integer value", () => {
+  const table = {
+    n: -123,
+  };
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(
+    Array.from(encoded.values()).slice(4),
+    [1, 110, 98, 0x85],
+  );
+});
+
+test("encode table with short integer value", () => {
+  const table = {
+    n: 1233,
+    p: -1203,
+  };
+
+  const encoded = enc.encodeTable(table);
+  assertEquals(
+    Array.from(encoded.values()).slice(4, 4 + 5),
+    [1, 110, 115, 4, 209],
+  );
+
+  assertEquals(
+    Array.from(encoded.values()).slice(9),
+    [1, 112, 115, 251, 77],
+  );
+});
+
+test("decode byte array", () => {
+  const expected = {
+    n: arrayOf(1, 2, 3),
+  };
+
+  const arr = tableOf(
+    arrayOf(1, charCode("n"), charCode("x"), 0, 0, 0, 3, ...expected.n),
+  );
+
+  const reader = new Deno.Buffer(arr);
+  const decoded = enc.decodeTable(reader);
+  assertEquals(decoded, expected);
 });

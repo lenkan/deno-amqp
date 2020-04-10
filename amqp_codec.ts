@@ -986,10 +986,9 @@ export type Header =
   | ConfirmHeader;
 
 function encodeConnectionStart(args: t.ConnectionStartArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 10 },
     {
       type: "octet" as const,
       value: args.versionMajor !== undefined ? args.versionMajor : 0,
@@ -1007,15 +1006,13 @@ function encodeConnectionStart(args: t.ConnectionStartArgs): Uint8Array {
       type: "longstr" as const,
       value: args.locales !== undefined ? args.locales : "en_US",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionStartOk(args: t.ConnectionStartOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 11 },
     { type: "table" as const, value: args.clientProperties },
     {
       type: "shortstr" as const,
@@ -1026,35 +1023,29 @@ function encodeConnectionStartOk(args: t.ConnectionStartOkArgs): Uint8Array {
       type: "shortstr" as const,
       value: args.locale !== undefined ? args.locale : "en_US",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionSecure(args: t.ConnectionSecureArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 20 },
     { type: "longstr" as const, value: args.challenge },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionSecureOk(args: t.ConnectionSecureOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 21 },
     { type: "longstr" as const, value: args.response },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionTune(args: t.ConnectionTuneArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 30 },
     {
       type: "short" as const,
       value: args.channelMax !== undefined ? args.channelMax : 0,
@@ -1067,15 +1058,13 @@ function encodeConnectionTune(args: t.ConnectionTuneArgs): Uint8Array {
       type: "short" as const,
       value: args.heartbeat !== undefined ? args.heartbeat : 0,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionTuneOk(args: t.ConnectionTuneOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(31));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 31 },
     {
       type: "short" as const,
       value: args.channelMax !== undefined ? args.channelMax : 0,
@@ -1088,15 +1077,13 @@ function encodeConnectionTuneOk(args: t.ConnectionTuneOkArgs): Uint8Array {
       type: "short" as const,
       value: args.heartbeat !== undefined ? args.heartbeat : 0,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionOpen(args: t.ConnectionOpenArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 40 },
     {
       type: "shortstr" as const,
       value: args.virtualHost !== undefined ? args.virtualHost : "/",
@@ -1109,28 +1096,24 @@ function encodeConnectionOpen(args: t.ConnectionOpenArgs): Uint8Array {
       type: "bit" as const,
       value: args.insist !== undefined ? args.insist : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionOpenOk(args: t.ConnectionOpenOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(41));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 41 },
     {
       type: "shortstr" as const,
       value: args.knownHosts !== undefined ? args.knownHosts : "",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionClose(args: t.ConnectionCloseArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 50 },
     { type: "short" as const, value: args.replyCode },
     {
       type: "shortstr" as const,
@@ -1138,115 +1121,98 @@ function encodeConnectionClose(args: t.ConnectionCloseArgs): Uint8Array {
     },
     { type: "short" as const, value: args.classId },
     { type: "short" as const, value: args.methodId },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionCloseOk(args: t.ConnectionCloseOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(51));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 51 },
+  ]);
 }
 
 function encodeConnectionBlocked(args: t.ConnectionBlockedArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 60 },
     {
       type: "shortstr" as const,
       value: args.reason !== undefined ? args.reason : "",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionUnblocked(
   args: t.ConnectionUnblockedArgs,
 ): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(61));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 61 },
+  ]);
 }
 
 function encodeConnectionUpdateSecret(
   args: t.ConnectionUpdateSecretArgs,
 ): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(70));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 70 },
     { type: "longstr" as const, value: args.newSecret },
     { type: "shortstr" as const, value: args.reason },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConnectionUpdateSecretOk(
   args: t.ConnectionUpdateSecretOkArgs,
 ): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(71));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 71 },
+  ]);
 }
 
 function encodeChannelOpen(args: t.ChannelOpenArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 10 },
     {
       type: "shortstr" as const,
       value: args.outOfBand !== undefined ? args.outOfBand : "",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeChannelOpenOk(args: t.ChannelOpenOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 11 },
     {
       type: "longstr" as const,
       value: args.channelId !== undefined ? args.channelId : "",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeChannelFlow(args: t.ChannelFlowArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 20 },
     { type: "bit" as const, value: args.active },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeChannelFlowOk(args: t.ChannelFlowOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 21 },
     { type: "bit" as const, value: args.active },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeChannelClose(args: t.ChannelCloseArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 40 },
     { type: "short" as const, value: args.replyCode },
     {
       type: "shortstr" as const,
@@ -1254,23 +1220,20 @@ function encodeChannelClose(args: t.ChannelCloseArgs): Uint8Array {
     },
     { type: "short" as const, value: args.classId },
     { type: "short" as const, value: args.methodId },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeChannelCloseOk(args: t.ChannelCloseOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(41));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 41 },
+  ]);
 }
 
 function encodeAccessRequest(args: t.AccessRequestArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 30 },
+    { type: "short", value: 10 },
     {
       type: "shortstr" as const,
       value: args.realm !== undefined ? args.realm : "/data",
@@ -1292,28 +1255,24 @@ function encodeAccessRequest(args: t.AccessRequestArgs): Uint8Array {
       value: args.write !== undefined ? args.write : true,
     },
     { type: "bit" as const, value: args.read !== undefined ? args.read : true },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeAccessRequestOk(args: t.AccessRequestOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 30 },
+    { type: "short", value: 11 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 1,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeExchangeDeclare(args: t.ExchangeDeclareArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 10 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1347,23 +1306,20 @@ function encodeExchangeDeclare(args: t.ExchangeDeclareArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeExchangeDeclareOk(args: t.ExchangeDeclareOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 11 },
+  ]);
 }
 
 function encodeExchangeDelete(args: t.ExchangeDeleteArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 20 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1377,23 +1333,20 @@ function encodeExchangeDelete(args: t.ExchangeDeleteArgs): Uint8Array {
       type: "bit" as const,
       value: args.nowait !== undefined ? args.nowait : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeExchangeDeleteOk(args: t.ExchangeDeleteOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 21 },
+  ]);
 }
 
 function encodeExchangeBind(args: t.ExchangeBindArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 30 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1412,23 +1365,20 @@ function encodeExchangeBind(args: t.ExchangeBindArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeExchangeBindOk(args: t.ExchangeBindOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(31));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 31 },
+  ]);
 }
 
 function encodeExchangeUnbind(args: t.ExchangeUnbindArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 40 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1447,23 +1397,20 @@ function encodeExchangeUnbind(args: t.ExchangeUnbindArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeExchangeUnbindOk(args: t.ExchangeUnbindOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(51));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 51 },
+  ]);
 }
 
 function encodeQueueDeclare(args: t.QueueDeclareArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 10 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1496,27 +1443,23 @@ function encodeQueueDeclare(args: t.QueueDeclareArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueDeclareOk(args: t.QueueDeclareOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 11 },
     { type: "shortstr" as const, value: args.queue },
     { type: "long" as const, value: args.messageCount },
     { type: "long" as const, value: args.consumerCount },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueBind(args: t.QueueBindArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 20 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1538,23 +1481,20 @@ function encodeQueueBind(args: t.QueueBindArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueBindOk(args: t.QueueBindOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 21 },
+  ]);
 }
 
 function encodeQueuePurge(args: t.QueuePurgeArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 30 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1567,25 +1507,21 @@ function encodeQueuePurge(args: t.QueuePurgeArgs): Uint8Array {
       type: "bit" as const,
       value: args.nowait !== undefined ? args.nowait : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueuePurgeOk(args: t.QueuePurgeOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(31));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 31 },
     { type: "long" as const, value: args.messageCount },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueDelete(args: t.QueueDeleteArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 40 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1606,25 +1542,21 @@ function encodeQueueDelete(args: t.QueueDeleteArgs): Uint8Array {
       type: "bit" as const,
       value: args.nowait !== undefined ? args.nowait : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueDeleteOk(args: t.QueueDeleteOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(41));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 41 },
     { type: "long" as const, value: args.messageCount },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueUnbind(args: t.QueueUnbindArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 50 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1642,23 +1574,20 @@ function encodeQueueUnbind(args: t.QueueUnbindArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeQueueUnbindOk(args: t.QueueUnbindOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(51));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 51 },
+  ]);
 }
 
 function encodeBasicQos(args: t.BasicQosArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 10 },
     {
       type: "long" as const,
       value: args.prefetchSize !== undefined ? args.prefetchSize : 0,
@@ -1671,23 +1600,20 @@ function encodeBasicQos(args: t.BasicQosArgs): Uint8Array {
       type: "bit" as const,
       value: args.global !== undefined ? args.global : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicQosOk(args: t.BasicQosOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 11 },
+  ]);
 }
 
 function encodeBasicConsume(args: t.BasicConsumeArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 20 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1720,49 +1646,41 @@ function encodeBasicConsume(args: t.BasicConsumeArgs): Uint8Array {
       type: "table" as const,
       value: args.arguments !== undefined ? args.arguments : {},
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicConsumeOk(args: t.BasicConsumeOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 21 },
     { type: "shortstr" as const, value: args.consumerTag },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicCancel(args: t.BasicCancelArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 30 },
     { type: "shortstr" as const, value: args.consumerTag },
     {
       type: "bit" as const,
       value: args.nowait !== undefined ? args.nowait : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicCancelOk(args: t.BasicCancelOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(31));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 31 },
     { type: "shortstr" as const, value: args.consumerTag },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicPublish(args: t.BasicPublishArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 40 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1783,15 +1701,13 @@ function encodeBasicPublish(args: t.BasicPublishArgs): Uint8Array {
       type: "bit" as const,
       value: args.immediate !== undefined ? args.immediate : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicReturn(args: t.BasicReturnArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 50 },
     { type: "short" as const, value: args.replyCode },
     {
       type: "shortstr" as const,
@@ -1799,32 +1715,28 @@ function encodeBasicReturn(args: t.BasicReturnArgs): Uint8Array {
     },
     { type: "shortstr" as const, value: args.exchange },
     { type: "shortstr" as const, value: args.routingKey },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicDeliver(args: t.BasicDeliverArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 60 },
     { type: "shortstr" as const, value: args.consumerTag },
-    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
+    { type: "longlong" as const, value: args.deliveryTag },
     {
       type: "bit" as const,
       value: args.redelivered !== undefined ? args.redelivered : false,
     },
     { type: "shortstr" as const, value: args.exchange },
     { type: "shortstr" as const, value: args.routingKey },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicGet(args: t.BasicGetArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(70));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 70 },
     {
       type: "short" as const,
       value: args.ticket !== undefined ? args.ticket : 0,
@@ -1837,16 +1749,14 @@ function encodeBasicGet(args: t.BasicGetArgs): Uint8Array {
       type: "bit" as const,
       value: args.noAck !== undefined ? args.noAck : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicGetOk(args: t.BasicGetOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(71));
-  w.writeSync(enc.encodeFields([
-    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 71 },
+    { type: "longlong" as const, value: args.deliveryTag },
     {
       type: "bit" as const,
       value: args.redelivered !== undefined ? args.redelivered : false,
@@ -1854,96 +1764,83 @@ function encodeBasicGetOk(args: t.BasicGetOkArgs): Uint8Array {
     { type: "shortstr" as const, value: args.exchange },
     { type: "shortstr" as const, value: args.routingKey },
     { type: "long" as const, value: args.messageCount },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicGetEmpty(args: t.BasicGetEmptyArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(72));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 72 },
     {
       type: "shortstr" as const,
       value: args.clusterId !== undefined ? args.clusterId : "",
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicAck(args: t.BasicAckArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(80));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 80 },
     {
       type: "longlong" as const,
-      value: BigInt(args.deliveryTag !== undefined ? args.deliveryTag : 0),
+      value: args.deliveryTag !== undefined ? args.deliveryTag : 0,
     },
     {
       type: "bit" as const,
       value: args.multiple !== undefined ? args.multiple : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicReject(args: t.BasicRejectArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeFields([
-    { type: "longlong" as const, value: BigInt(args.deliveryTag) },
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 90 },
+    { type: "longlong" as const, value: args.deliveryTag },
     {
       type: "bit" as const,
       value: args.requeue !== undefined ? args.requeue : true,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicRecoverAsync(args: t.BasicRecoverAsyncArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(100));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 100 },
     {
       type: "bit" as const,
       value: args.requeue !== undefined ? args.requeue : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicRecover(args: t.BasicRecoverArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(110));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 110 },
     {
       type: "bit" as const,
       value: args.requeue !== undefined ? args.requeue : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeBasicRecoverOk(args: t.BasicRecoverOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(111));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 111 },
+  ]);
 }
 
 function encodeBasicNack(args: t.BasicNackArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(120));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 120 },
     {
       type: "longlong" as const,
-      value: BigInt(args.deliveryTag !== undefined ? args.deliveryTag : 0),
+      value: args.deliveryTag !== undefined ? args.deliveryTag : 0,
     },
     {
       type: "bit" as const,
@@ -1953,77 +1850,67 @@ function encodeBasicNack(args: t.BasicNackArgs): Uint8Array {
       type: "bit" as const,
       value: args.requeue !== undefined ? args.requeue : true,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeTxSelect(args: t.TxSelectArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 10 },
+  ]);
 }
 
 function encodeTxSelectOk(args: t.TxSelectOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 11 },
+  ]);
 }
 
 function encodeTxCommit(args: t.TxCommitArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 20 },
+  ]);
 }
 
 function encodeTxCommitOk(args: t.TxCommitOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(21));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 21 },
+  ]);
 }
 
 function encodeTxRollback(args: t.TxRollbackArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 30 },
+  ]);
 }
 
 function encodeTxRollbackOk(args: t.TxRollbackOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(31));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 31 },
+  ]);
 }
 
 function encodeConfirmSelect(args: t.ConfirmSelectArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(85));
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: 85 },
+    { type: "short", value: 10 },
     {
       type: "bit" as const,
       value: args.nowait !== undefined ? args.nowait : false,
     },
-  ]));
-  return w.bytes();
+  ]);
 }
 
 function encodeConfirmSelectOk(args: t.ConfirmSelectOkArgs): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(85));
-  w.writeSync(enc.encodeShortUint(11));
-  w.writeSync(enc.encodeFields([]));
-  return w.bytes();
+  return enc.encodeFields([
+    { type: "short", value: 85 },
+    { type: "short", value: 11 },
+  ]);
 }
 
 function decodeConnectionStart(r: Deno.SyncReader): t.ConnectionStart {
@@ -2506,7 +2393,7 @@ function decodeBasicDeliver(r: Deno.SyncReader): t.BasicDeliver {
   );
   const args = {
     consumerTag: fields[0] as string,
-    deliveryTag: Number(fields[1]),
+    deliveryTag: fields[1] as number,
     redelivered: fields[2] as boolean,
     exchange: fields[3] as string,
     routingKey: fields[4] as string,
@@ -2530,7 +2417,7 @@ function decodeBasicGetOk(r: Deno.SyncReader): t.BasicGetOk {
     ["longlong", "bit", "shortstr", "shortstr", "long"],
   );
   const args = {
-    deliveryTag: Number(fields[0]),
+    deliveryTag: fields[0] as number,
     redelivered: fields[1] as boolean,
     exchange: fields[2] as string,
     routingKey: fields[3] as string,
@@ -2548,7 +2435,7 @@ function decodeBasicGetEmpty(r: Deno.SyncReader): t.BasicGetEmpty {
 function decodeBasicAck(r: Deno.SyncReader): t.BasicAck {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
-    deliveryTag: Number(fields[0]),
+    deliveryTag: fields[0] as number,
     multiple: fields[1] as boolean,
   };
   return args;
@@ -2557,7 +2444,7 @@ function decodeBasicAck(r: Deno.SyncReader): t.BasicAck {
 function decodeBasicReject(r: Deno.SyncReader): t.BasicReject {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
-    deliveryTag: Number(fields[0]),
+    deliveryTag: fields[0] as number,
     requeue: fields[1] as boolean,
   };
   return args;
@@ -2584,7 +2471,7 @@ function decodeBasicRecoverOk(r: Deno.SyncReader): t.BasicRecoverOk {
 function decodeBasicNack(r: Deno.SyncReader): t.BasicNack {
   const fields = enc.decodeFields(r, ["longlong", "bit", "bit"]);
   const args = {
-    deliveryTag: Number(fields[0]),
+    deliveryTag: fields[0] as number,
     multiple: fields[1] as boolean,
     requeue: fields[2] as boolean,
   };
@@ -2641,54 +2528,66 @@ function decodeConfirmSelectOk(r: Deno.SyncReader): t.ConfirmSelectOk {
 
 function encodeConnectionHeader(header: ConnectionHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(10));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 10 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeChannelHeader(header: ChannelHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(20));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 20 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeAccessHeader(header: AccessHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(30));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 30 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeExchangeHeader(header: ExchangeHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(40));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 40 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeQueueHeader(header: QueueHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(50));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 50 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeBasicHeader(header: BasicHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(60));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 60 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([
     { type: "shortstr", value: header.props.contentType },
     { type: "shortstr", value: header.props.contentEncoding },
@@ -2699,12 +2598,7 @@ function encodeBasicHeader(header: BasicHeader): Uint8Array {
     { type: "shortstr", value: header.props.replyTo },
     { type: "shortstr", value: header.props.expiration },
     { type: "shortstr", value: header.props.messageId },
-    {
-      type: "timestamp",
-      value: header.props.timestamp !== undefined
-        ? BigInt(header.props.timestamp)
-        : undefined,
-    },
+    { type: "timestamp", value: header.props.timestamp },
     { type: "shortstr", value: header.props.type },
     { type: "shortstr", value: header.props.userId },
     { type: "shortstr", value: header.props.appId },
@@ -2715,18 +2609,22 @@ function encodeBasicHeader(header: BasicHeader): Uint8Array {
 
 function encodeTxHeader(header: TxHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(90));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 90 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
 
 function encodeConfirmHeader(header: ConfirmHeader): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(85));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short", value: 85 },
+    { type: "short", value: 0 }, // weight unused
+    { type: "longlong", value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([]));
   return w.bytes();
 }
@@ -2778,7 +2676,7 @@ function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
 
 function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r));
+  const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(
     r,
     [

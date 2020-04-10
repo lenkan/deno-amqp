@@ -80,6 +80,33 @@ test("decode fields", () => {
   assertEquals(enc.decodeFields(data, types), expected);
 });
 
+test("decode fields - short uint", () => {
+  const data = bufferOf(0, 123);
+  const types: enc.AmqpFieldType[] = ["short"];
+
+  const expected: enc.AmqpFieldValue[] = [123];
+
+  assertEquals(enc.decodeFields(data, types), expected);
+});
+
+test("decode fields - long uint", () => {
+  const data = bufferOf(0, 0, 0, 123);
+  const types: enc.AmqpFieldType[] = ["long"];
+
+  const expected: enc.AmqpFieldValue[] = [123];
+
+  assertEquals(enc.decodeFields(data, types), expected);
+});
+
+test("decode fields - long long uint", () => {
+  const data = bufferOf(0, 0, 0, 0, 0, 0, 0, 123);
+  const types: enc.AmqpFieldType[] = ["longlong"];
+
+  const expected: enc.AmqpFieldValue[] = [123];
+
+  assertEquals(enc.decodeFields(data, types), expected);
+});
+
 test("decode fields - large bit array at end", () => {
   const data = bufferOf(123, 0b10110110, 0b10000000);
   const types: enc.AmqpFieldType[] = [

@@ -214,10 +214,9 @@ export function printEncodeMethodFunction(
   const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
   return `
 function ${name}(args: t.${argsName}): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(${clazz.id}));
-  w.writeSync(enc.encodeShortUint(${method.id}));
-  w.writeSync(enc.encodeFields([
+  return enc.encodeFields([
+    { type: "short", value: ${clazz.id} },
+    { type: "short", value: ${method.id} },
     ${method.arguments.map((arg) => {
     const type = resolveType(spec, arg);
     const name = camelCase(arg.name);
@@ -225,14 +224,10 @@ function ${name}(args: t.${argsName}): Uint8Array {
     const value = arg["default-value"] !== undefined
       ? `args.${name} !== undefined ? args.${name} : ${defaultValue}`
       : `args.${name}`;
-    if (type === "longlong" || type === "timestamp") {
-      return `{ type: "${type}" as const, value: BigInt(${value}) }`;
-    }
 
     return `{ type: "${type}" as const, value: ${value} }`;
   }).join(",")}
-  ]));
-  return w.bytes();
+  ]);
 }
   `;
 }
@@ -251,9 +246,6 @@ function ${name}(r: Deno.SyncReader): t.${returnName} {
   ).join(",")}]);
   const args = { ${method.arguments.map((a, i) => {
     const type = resolveType(spec, a);
-    if (type === "longlong" || type === "timestamp") {
-      return `${camelCase(a.name)}: Number(fields[${i}])`;
-    }
     return `${camelCase(a.name)}: fields[${i}] as ${resolveTypescriptType(
       type,
     )}`;
@@ -323,15 +315,14 @@ export function printEncodeHeaderFunction(
   return `
 function ${name}(header: ${argName}): Uint8Array {
   const w = new Deno.Buffer();
-  w.writeSync(enc.encodeShortUint(${clazz.id}));
-  w.writeSync(enc.encodeShortUint(0));
-  w.writeSync(enc.encodeLongLongUint(BigInt(header.size)));
+  w.writeSync(enc.encodeFields([
+    { type: "short",  value: ${clazz.id} },
+    { type: "short",  value: 0 }, // weight unused
+    { type: "longlong",  value: header.size },
+  ]));
   w.writeSync(enc.encodeOptionalFields([
     ${(clazz.properties || []).map((prop) => {
     const name = camelCase(prop.name);
-    if (prop.type === "longlong" || prop.type === "timestamp") {
-      return `{ type: "${prop.type}", value: header.props.${name} !== undefined ? BigInt(header.props.${name}) : undefined }`;
-    }
     return `{ type: "${prop.type}", value: header.props.${name} }`;
   }).join(",")}
   ]));
@@ -347,7 +338,7 @@ export function printDecodeHeaderFunction(
   return `
 function ${name}(r: Deno.SyncReader): ${pascalCase(clazz.name)}Header {
   const weight = enc.decodeShortUint(r);
-  const size = Number(enc.decodeLongLongUint(r)); 
+  const size = enc.decodeLongLongUint(r); 
   const fields = enc.decodeOptionalFields(r, [${(clazz.properties || []).map(
     (p) => '"' + p.type + '"',
   ).join(",")}]);

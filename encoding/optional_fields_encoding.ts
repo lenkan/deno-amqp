@@ -6,7 +6,6 @@ import {
   AmqpField,
   AmqpFieldType,
   AmqpNumberField,
-  AmqpBigintField,
   AmqpStringField,
 } from "./fields_encoding.ts";
 
@@ -63,11 +62,6 @@ export interface AmqpOptionalNumberField {
   value: number | undefined;
 }
 
-export interface AmqpOptionalBigintField {
-  type: AmqpBigintField["type"];
-  value: bigint | undefined;
-}
-
 export interface AmqpOptionalStringField {
   type: AmqpStringField["type"];
   value: string | undefined;
@@ -85,7 +79,6 @@ export interface AmqpOptionalTableField {
 
 export type AmqpOptionalField =
   | AmqpOptionalNumberField
-  | AmqpOptionalBigintField
   | AmqpOptionalStringField
   | AmqpOptionalBitField
   | AmqpOptionalTableField;
