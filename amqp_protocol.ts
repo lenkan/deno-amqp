@@ -81,14 +81,14 @@ export class AmqpProtocol {
 
   async sendExchangeDeclareAsync(
     channel: number,
-    args: Omit<t.ExchangeDeclareArgs, "nowait">,
+    args: t.ExchangeDeclareArgs,
   ): Promise<void> {
     await this.mux.send(channel, 40, 10, { ...args, nowait: true });
   }
 
   async sendExchangeDeclare(
     channel: number,
-    args: Omit<t.ExchangeDeclareArgs, "nowait">,
+    args: t.ExchangeDeclareArgs,
   ): Promise<t.ExchangeDeclareOk> {
     await this.mux.send(channel, 40, 10, { ...args, nowait: false });
     return this.mux.receive(channel, 40, 11);
@@ -103,14 +103,14 @@ export class AmqpProtocol {
 
   async sendExchangeDeleteAsync(
     channel: number,
-    args: Omit<t.ExchangeDeleteArgs, "nowait">,
+    args: t.ExchangeDeleteArgs,
   ): Promise<void> {
     await this.mux.send(channel, 40, 20, { ...args, nowait: true });
   }
 
   async sendExchangeDelete(
     channel: number,
-    args: Omit<t.ExchangeDeleteArgs, "nowait">,
+    args: t.ExchangeDeleteArgs,
   ): Promise<t.ExchangeDeleteOk> {
     await this.mux.send(channel, 40, 20, { ...args, nowait: false });
     return this.mux.receive(channel, 40, 21);
@@ -125,14 +125,14 @@ export class AmqpProtocol {
 
   async sendExchangeBindAsync(
     channel: number,
-    args: Omit<t.ExchangeBindArgs, "nowait">,
+    args: t.ExchangeBindArgs,
   ): Promise<void> {
     await this.mux.send(channel, 40, 30, { ...args, nowait: true });
   }
 
   async sendExchangeBind(
     channel: number,
-    args: Omit<t.ExchangeBindArgs, "nowait">,
+    args: t.ExchangeBindArgs,
   ): Promise<t.ExchangeBindOk> {
     await this.mux.send(channel, 40, 30, { ...args, nowait: false });
     return this.mux.receive(channel, 40, 31);
@@ -147,14 +147,14 @@ export class AmqpProtocol {
 
   async sendExchangeUnbindAsync(
     channel: number,
-    args: Omit<t.ExchangeUnbindArgs, "nowait">,
+    args: t.ExchangeUnbindArgs,
   ): Promise<void> {
     await this.mux.send(channel, 40, 40, { ...args, nowait: true });
   }
 
   async sendExchangeUnbind(
     channel: number,
-    args: Omit<t.ExchangeUnbindArgs, "nowait">,
+    args: t.ExchangeUnbindArgs,
   ): Promise<t.ExchangeUnbindOk> {
     await this.mux.send(channel, 40, 40, { ...args, nowait: false });
     return this.mux.receive(channel, 40, 51);
@@ -169,14 +169,14 @@ export class AmqpProtocol {
 
   async sendQueueDeclareAsync(
     channel: number,
-    args: Omit<t.QueueDeclareArgs, "nowait">,
+    args: t.QueueDeclareArgs,
   ): Promise<void> {
     await this.mux.send(channel, 50, 10, { ...args, nowait: true });
   }
 
   async sendQueueDeclare(
     channel: number,
-    args: Omit<t.QueueDeclareArgs, "nowait">,
+    args: t.QueueDeclareArgs,
   ): Promise<t.QueueDeclareOk> {
     await this.mux.send(channel, 50, 10, { ...args, nowait: false });
     return this.mux.receive(channel, 50, 11);
@@ -191,14 +191,14 @@ export class AmqpProtocol {
 
   async sendQueueBindAsync(
     channel: number,
-    args: Omit<t.QueueBindArgs, "nowait">,
+    args: t.QueueBindArgs,
   ): Promise<void> {
     await this.mux.send(channel, 50, 20, { ...args, nowait: true });
   }
 
   async sendQueueBind(
     channel: number,
-    args: Omit<t.QueueBindArgs, "nowait">,
+    args: t.QueueBindArgs,
   ): Promise<t.QueueBindOk> {
     await this.mux.send(channel, 50, 20, { ...args, nowait: false });
     return this.mux.receive(channel, 50, 21);
@@ -213,14 +213,14 @@ export class AmqpProtocol {
 
   async sendQueuePurgeAsync(
     channel: number,
-    args: Omit<t.QueuePurgeArgs, "nowait">,
+    args: t.QueuePurgeArgs,
   ): Promise<void> {
     await this.mux.send(channel, 50, 30, { ...args, nowait: true });
   }
 
   async sendQueuePurge(
     channel: number,
-    args: Omit<t.QueuePurgeArgs, "nowait">,
+    args: t.QueuePurgeArgs,
   ): Promise<t.QueuePurgeOk> {
     await this.mux.send(channel, 50, 30, { ...args, nowait: false });
     return this.mux.receive(channel, 50, 31);
@@ -235,14 +235,14 @@ export class AmqpProtocol {
 
   async sendQueueDeleteAsync(
     channel: number,
-    args: Omit<t.QueueDeleteArgs, "nowait">,
+    args: t.QueueDeleteArgs,
   ): Promise<void> {
     await this.mux.send(channel, 50, 40, { ...args, nowait: true });
   }
 
   async sendQueueDelete(
     channel: number,
-    args: Omit<t.QueueDeleteArgs, "nowait">,
+    args: t.QueueDeleteArgs,
   ): Promise<t.QueueDeleteOk> {
     await this.mux.send(channel, 50, 40, { ...args, nowait: false });
     return this.mux.receive(channel, 50, 41);
@@ -280,14 +280,14 @@ export class AmqpProtocol {
 
   async sendBasicConsumeAsync(
     channel: number,
-    args: Omit<t.BasicConsumeArgs, "nowait">,
+    args: t.BasicConsumeArgs,
   ): Promise<void> {
     await this.mux.send(channel, 60, 20, { ...args, nowait: true });
   }
 
   async sendBasicConsume(
     channel: number,
-    args: Omit<t.BasicConsumeArgs, "nowait">,
+    args: t.BasicConsumeArgs,
   ): Promise<t.BasicConsumeOk> {
     await this.mux.send(channel, 60, 20, { ...args, nowait: false });
     return this.mux.receive(channel, 60, 21);
@@ -295,14 +295,14 @@ export class AmqpProtocol {
 
   async sendBasicCancelAsync(
     channel: number,
-    args: Omit<t.BasicCancelArgs, "nowait">,
+    args: t.BasicCancelArgs,
   ): Promise<void> {
     await this.mux.send(channel, 60, 30, { ...args, nowait: true });
   }
 
   async sendBasicCancel(
     channel: number,
-    args: Omit<t.BasicCancelArgs, "nowait">,
+    args: t.BasicCancelArgs,
   ): Promise<t.BasicCancelOk> {
     await this.mux.send(channel, 60, 30, { ...args, nowait: false });
     return this.mux.receive(channel, 60, 31);
@@ -387,14 +387,14 @@ export class AmqpProtocol {
 
   async sendConfirmSelectAsync(
     channel: number,
-    args: Omit<t.ConfirmSelectArgs, "nowait">,
+    args: t.ConfirmSelectArgs,
   ): Promise<void> {
     await this.mux.send(channel, 85, 10, { ...args, nowait: true });
   }
 
   async sendConfirmSelect(
     channel: number,
-    args: Omit<t.ConfirmSelectArgs, "nowait">,
+    args: t.ConfirmSelectArgs,
   ): Promise<t.ConfirmSelectOk> {
     await this.mux.send(channel, 85, 10, { ...args, nowait: false });
     return this.mux.receive(channel, 85, 11);

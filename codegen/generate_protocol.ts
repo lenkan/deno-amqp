@@ -39,11 +39,11 @@ function printSendMethodFunction(
     const response = responses[0];
     const returnType = `${pascalCase(clazz.name)}${pascalCase(response.name)}`;
     return `
-      async ${name}Async(channel: number, args: Omit<t.${argsName}, "nowait">): Promise<void> {
+      async ${name}Async(channel: number, args: t.${argsName}): Promise<void> {
         await this.mux.send(channel, ${clazz.id}, ${method.id}, { ...args, nowait: true });
       }
 
-      async ${name}(channel: number, args: Omit<t.${argsName}, "nowait">): Promise<t.${returnType}> {
+      async ${name}(channel: number, args: t.${argsName}): Promise<t.${returnType}> {
         await this.mux.send(channel, ${clazz.id}, ${method.id}, { ...args, nowait: false });
         return this.mux.receive(channel, ${clazz.id}, ${response.id});
       }
