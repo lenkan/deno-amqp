@@ -1,6 +1,7 @@
 import { AmqpProtocol } from "./amqp_protocol.ts";
-import { createMock, assertEquals, createResolvable } from "./testing.ts";
+import { createMock, assertEquals } from "./testing.ts";
 import { QueueDeclareOk } from "./amqp_types.ts";
+import { createResolvable } from "./utils.ts";
 
 Deno.test("should not wait for reply when sending async", async () => {
   const reply = { consumerCount: 0, messageCount: 0, queue: "amqp.gen" };

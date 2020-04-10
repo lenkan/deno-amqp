@@ -6,7 +6,7 @@ if (!queueName) {
   Deno.exit(1);
 }
 
-const connection = await connect();
+const connection = await connect({ loglevel: "debug" });
 
 const channel = await connection.openChannel();
 
@@ -20,3 +20,12 @@ await channel.consume(
     await channel.ack({ deliveryTag: args.deliveryTag });
   },
 );
+
+connection.closed().then(() => {
+  console.log("Closed peacefully");
+}).catch((error) => {
+  console.error("Connection closed with error");
+  console.error(error.message);
+});
+
+// setTimeout(() => connection.close(), 60000);

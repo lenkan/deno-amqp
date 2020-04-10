@@ -1,12 +1,24 @@
-import { ConnectionClose, ChannelClose } from "../amqp_types.ts";
-import { Header, ReceiveMethod, SendMethod } from "../amqp_codec.ts";
-import { AmqpSocket } from "./amqp_socket.ts";
+import {
+  Header,
+  ReceiveMethod,
+  SendMethod,
+} from "../amqp_codec.ts";
+import {
+  AmqpSocket,
+  IncomingFrame,
+  AmqpDecodeReader,
+  AmqpEncodeWriter,
+} from "./amqp_socket.ts";
 import {
   CONNECTION_CLOSE,
   CONNECTION,
   CHANNEL,
   CHANNEL_CLOSE,
 } from "../amqp_constants.ts";
+import {
+  serializeConnectionError,
+  serializeChannelError,
+} from "./error_handling.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -67,232 +79,186 @@ export interface AmqpSink {
   ): Promise<void>;
 }
 
-interface MethodReceiver<T extends number, U extends number> {
-  channel: number;
-  classId: T;
-  methodId: U;
-  resolve: (m: ExtractMethod<T, U>) => void;
-  reject: (e: Error) => void;
-}
-
-interface HeaderReceiver<T extends number> {
-  channel: number;
-  classId: T;
-  resolve: (h: Extract<Header, { classId: T }>) => void;
-  reject: (e: Error) => void;
-}
-
-interface ContentReceiver {
-  channel: number;
-  resolve: (data: Uint8Array) => void;
-  reject: (e: Error) => void;
-}
-
-function serializeChannelError(channel: number, args: ChannelClose) {
-  return `Channel ${channel} closed by server - ${args.replyCode} ${args
-    .replyText || ""}`;
-}
-
-function serializeConnectionError(args: ConnectionClose) {
-  return `Connection closed by server - ${args.replyCode} ${args
-    .replyText || ""}`;
-}
-
 export interface AmqpMultiplexer extends AmqpSource, AmqpSink {}
 
-class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
-  private methodReceivers: MethodReceiver<any, any>[] = [];
-  private headerReceivers: HeaderReceiver<any>[] = [];
-  private contentReceivers: ContentReceiver[] = [];
+interface FrameSubscriber {
+  handle(frame: IncomingFrame): boolean;
+  error(error: Error): void;
+}
 
-  constructor(private socket: AmqpSocket) {}
+function createSubscriber(
+  handle: (frame: IncomingFrame) => boolean,
+  onError: (e: Error) => void,
+): FrameSubscriber {
+  return { handle, error: onError };
+}
 
-  public start() {
-    this.listen().catch((error) => {
-      this.handleError(error);
-    });
+function assertNotClosed(channel: number, frame: IncomingFrame): void {
+  if (frame.type === "method") {
+    if (
+      frame.channel === channel && frame.payload.classId === CHANNEL &&
+      frame.payload.methodId === CHANNEL_CLOSE
+    ) {
+      throw new Error(serializeChannelError(channel, frame.payload.args));
+    }
+
+    if (
+      frame.payload.classId === CONNECTION &&
+      frame.payload.methodId === CONNECTION_CLOSE
+    ) {
+      throw new Error(serializeConnectionError(frame.payload.args));
+    }
   }
+}
 
-  private async listen() {
+function createSocketDemux(
+  reader: AmqpDecodeReader,
+  subscribers: FrameSubscriber[],
+): AmqpSource {
+  listen().catch(handleError);
+
+  async function listen() {
     while (true) {
-      const frame = await this.socket.read();
-      if (frame.type === "method") {
-        this.emitMethod(frame.channel, frame.payload);
-      } else if (frame.type === "header") {
-        this.emitHeader(frame.channel, frame.payload);
-      } else if (frame.type === "content") {
-        this.emitContent(frame.channel, frame.payload);
-      }
+      emit(await reader.read());
     }
   }
 
-  private handleError(error: Error) {
-    for (const receiver of [...this.contentReceivers]) {
-      this.removeContentReceiver(receiver);
-      receiver.reject(error);
-    }
-    for (const receiver of [...this.methodReceivers]) {
-      this.removeMethodReceiver(receiver);
-      receiver.reject(error);
-    }
-
-    for (const receiver of [...this.headerReceivers]) {
-      this.removeHeaderReceiver(receiver);
-      receiver.reject(error);
-    }
-  }
-
-  private removeHeaderReceiver(receiver: HeaderReceiver<any>) {
-    const index = this.headerReceivers.indexOf(receiver);
+  function removeSubscriber(subscriber: FrameSubscriber) {
+    const index = subscribers.indexOf(subscriber);
     if (index !== -1) {
-      this.headerReceivers.splice(index, index + 1);
+      subscribers.splice(index, 1);
     }
   }
 
-  private removeMethodReceiver(receiver: MethodReceiver<any, any>) {
-    const index = this.methodReceivers.indexOf(receiver);
-    if (index !== -1) {
-      this.methodReceivers.splice(index, index + 1);
+  function handleError(error: Error) {
+    for (const subscriber of [...subscribers]) {
+      subscriber.error(error);
+      removeSubscriber(subscriber);
     }
   }
 
-  private removeContentReceiver(receiver: ContentReceiver) {
-    const index = this.contentReceivers.indexOf(receiver);
-    if (index !== -1) {
-      this.contentReceivers.splice(index, index + 1);
-    }
-  }
-
-  private emitMethod(channel: number, method: ReceiveMethod) {
-    for (const receiver of [...this.methodReceivers]) {
-      if (
-        channel === receiver.channel && method.classId === receiver.classId &&
-        method.methodId === receiver.methodId
-      ) {
-        this.removeMethodReceiver(receiver);
-        receiver.resolve(method.args);
-        continue;
-      }
-
-      if (
-        method.classId === CONNECTION && method.methodId === CONNECTION_CLOSE
-      ) {
-        this.removeMethodReceiver(receiver);
-        receiver.reject(new Error(serializeConnectionError(method.args)));
-        continue;
-      }
-
-      if (
-        channel === receiver.channel && method.classId === CHANNEL &&
-        method.methodId === CHANNEL_CLOSE
-      ) {
-        this.removeMethodReceiver(receiver);
-        receiver.reject(new Error(serializeChannelError(channel, method.args)));
-        continue;
+  function emit(frame: IncomingFrame) {
+    for (const subscriber of [...subscribers]) {
+      try {
+        if (subscriber.handle(frame)) {
+          removeSubscriber(subscriber);
+        }
+      } catch (error) {
+        subscriber.error(error);
+        removeSubscriber(subscriber);
       }
     }
   }
 
-  private emitHeader(channel: number, header: Header) {
-    for (const receiver of [...this.headerReceivers]) {
-      if (receiver.channel === channel && receiver.classId === header.classId) {
-        this.removeHeaderReceiver(receiver);
-        receiver.resolve(header);
-      }
-    }
+  function addSubscriber(subscriber: FrameSubscriber) {
+    subscribers.push(subscriber);
   }
 
-  private emitContent(channel: number, data: Uint8Array) {
-    for (const receiver of [...this.contentReceivers]) {
-      if (receiver.channel === channel) {
-        this.removeContentReceiver(receiver);
-        receiver.resolve(data);
-      }
-    }
-  }
-
-  async receive<T extends number, U extends number>(
+  async function receive(
     channel: number,
-    classId: T,
-    methodId: U,
-  ): Promise<ExtractMethod<T, U>> {
-    return new Promise<any>((resolve, reject) => {
-      const receiver: MethodReceiver<T, U> = {
-        channel,
-        classId,
-        methodId,
-        resolve,
-        reject,
-      };
-      this.methodReceivers.push(receiver);
-    });
-  }
-
-  subscribe<T extends number, U extends number>(
-    channel: number,
-    classId: T,
-    methodId: U,
-    handler: (args: any) => void,
-  ): () => void {
-    const resolve = (args: any) => {
-      handler(args);
-      this.methodReceivers.push(receiver);
-    };
-
-    const receiver: MethodReceiver<T, U> = {
-      channel,
-      classId,
-      methodId,
-      resolve,
-      reject: () => {},
-    };
-
-    this.methodReceivers.push(receiver);
-    return () => this.removeMethodReceiver(receiver);
-  }
-
-  async receiveHeader<T extends number>(
-    channel: number,
-    classId: T,
-  ): Promise<Extract<Header, { classId: T }>> {
-    return new Promise<any>((resolve, reject) => {
-      const receiver: HeaderReceiver<any> = {
-        channel,
-        classId,
-        resolve,
-        reject,
-      };
-      this.headerReceivers.push(receiver);
-    });
-  }
-
-  async receiveContent(channel: number, classId: number) {
-    const header = await this.receiveHeader(channel, classId);
-    const buffer = new Deno.Buffer();
-    return new Promise<any>((resolve, reject) => {
-      const receiver: ContentReceiver = {
-        channel,
-        resolve: (data) => {
-          buffer.writeSync(data);
-          if (buffer.length < header.size) {
-            this.contentReceivers.push(receiver);
-          } else {
-            resolve([header.props, buffer.bytes()]);
+    classId: number,
+    methodId: number,
+  ): Promise<ReceiveMethod["args"]> {
+    return new Promise<ReceiveMethod["args"]>((resolve, reject) => {
+      addSubscriber(createSubscriber((frame) => {
+        if (frame.type === "method") {
+          if (
+            frame.channel === channel &&
+            frame.payload.classId === classId &&
+            frame.payload.methodId === methodId
+          ) {
+            resolve(frame.payload.args);
+            return true;
           }
-        },
-        reject,
-      };
-      this.contentReceivers.push(receiver);
+        }
+
+        assertNotClosed(channel, frame);
+        return false;
+      }, reject));
     });
   }
 
-  async send(
+  function subscribe(
+    channel: number,
+    classId: number,
+    methodId: number,
+    handler: (args: ReceiveMethod["args"]) => void,
+  ): () => void {
+    const subscriber: FrameSubscriber = createSubscriber((frame) => {
+      if (frame.type === "method") {
+        if (
+          frame.channel === channel &&
+          frame.payload.classId === classId &&
+          frame.payload.methodId === methodId
+        ) {
+          handler(frame.payload.args);
+        }
+      }
+
+      return false;
+    }, () => {});
+
+    addSubscriber(subscriber);
+    return () => removeSubscriber(subscriber);
+  }
+
+  async function receiveHeader(
+    channel: number,
+    classId: number,
+  ): Promise<Header> {
+    return new Promise<Header>((resolve, reject) => {
+      addSubscriber(createSubscriber((frame) => {
+        if (
+          frame.channel === channel &&
+          frame.type === "header" &&
+          frame.payload.classId === classId
+        ) {
+          resolve(frame.payload);
+          return true;
+        }
+        assertNotClosed(channel, frame);
+        return false;
+      }, reject));
+    });
+  }
+
+  async function receiveContent(channel: number, classId: number) {
+    const header = await receiveHeader(channel, classId);
+    const buffer = new Deno.Buffer();
+    return new Promise<[Header["props"], Uint8Array]>((resolve, reject) => {
+      addSubscriber(createSubscriber((frame) => {
+        if (frame.channel === channel && frame.type === "content") {
+          buffer.writeSync(frame.payload);
+          if (buffer.length >= header.size) {
+            resolve([header.props, buffer.bytes()]);
+            return true;
+          }
+        } else if (frame.channel === channel && frame.type !== "content") {
+          resolve([header.props, buffer.bytes()]);
+          return true;
+        }
+
+        assertNotClosed(channel, frame);
+        return false;
+      }, reject));
+    });
+  }
+
+  return {
+    receive: receive as AmqpSource["receive"],
+    receiveContent: receiveContent as AmqpSource["receiveContent"],
+    subscribe: subscribe as AmqpSource["subscribe"],
+  };
+}
+
+function createSocketMux(writer: AmqpEncodeWriter): AmqpSink {
+  async function send(
     channel: number,
     classId: number,
     methodId: number,
     args: object,
   ) {
-    return this.socket.write(
+    return writer.write(
       {
         type: "method",
         channel,
@@ -301,7 +267,7 @@ class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
     );
   }
 
-  async sendContent(
+  async function sendContent(
     channel: number,
     classId: number,
     props: object,
@@ -309,22 +275,25 @@ class AmqpSocketMultiplexer implements AmqpSource, AmqpSink {
   ) {
     const size = data.length;
     await Promise.all([
-      this.socket.write({
+      writer.write({
         type: "header",
         channel,
         payload: { classId, props, size } as Header,
       }),
-      this.socket.write({
+      writer.write({
         type: "content",
         channel,
         payload: data,
       }),
     ]);
   }
+
+  return { send, sendContent };
 }
 
 export function createAmqpMux(socket: AmqpSocket): AmqpMultiplexer {
-  const mux = new AmqpSocketMultiplexer(socket);
-  mux.start();
-  return mux;
+  const subscribers: FrameSubscriber[] = [];
+  const demux = createSocketDemux(socket, subscribers);
+  const mux = createSocketMux(socket);
+  return { ...demux, ...mux };
 }

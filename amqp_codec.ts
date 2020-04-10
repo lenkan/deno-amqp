@@ -1,6 +1,98 @@
 import * as enc from "./encoding/mod.ts";
 import * as t from "./amqp_types.ts";
 
+const methodNames: Record<number, Record<number, string>> = {
+  [10]: {
+    [10]: "connection.start",
+    [11]: "connection.start-ok",
+    [20]: "connection.secure",
+    [21]: "connection.secure-ok",
+    [30]: "connection.tune",
+    [31]: "connection.tune-ok",
+    [40]: "connection.open",
+    [41]: "connection.open-ok",
+    [50]: "connection.close",
+    [51]: "connection.close-ok",
+    [60]: "connection.blocked",
+    [61]: "connection.unblocked",
+    [70]: "connection.update-secret",
+    [71]: "connection.update-secret-ok",
+  },
+  [20]: {
+    [10]: "channel.open",
+    [11]: "channel.open-ok",
+    [20]: "channel.flow",
+    [21]: "channel.flow-ok",
+    [40]: "channel.close",
+    [41]: "channel.close-ok",
+  },
+  [30]: {
+    [10]: "access.request",
+    [11]: "access.request-ok",
+  },
+  [40]: {
+    [10]: "exchange.declare",
+    [11]: "exchange.declare-ok",
+    [20]: "exchange.delete",
+    [21]: "exchange.delete-ok",
+    [30]: "exchange.bind",
+    [31]: "exchange.bind-ok",
+    [40]: "exchange.unbind",
+    [51]: "exchange.unbind-ok",
+  },
+  [50]: {
+    [10]: "queue.declare",
+    [11]: "queue.declare-ok",
+    [20]: "queue.bind",
+    [21]: "queue.bind-ok",
+    [30]: "queue.purge",
+    [31]: "queue.purge-ok",
+    [40]: "queue.delete",
+    [41]: "queue.delete-ok",
+    [50]: "queue.unbind",
+    [51]: "queue.unbind-ok",
+  },
+  [60]: {
+    [10]: "basic.qos",
+    [11]: "basic.qos-ok",
+    [20]: "basic.consume",
+    [21]: "basic.consume-ok",
+    [30]: "basic.cancel",
+    [31]: "basic.cancel-ok",
+    [40]: "basic.publish",
+    [50]: "basic.return",
+    [60]: "basic.deliver",
+    [70]: "basic.get",
+    [71]: "basic.get-ok",
+    [72]: "basic.get-empty",
+    [80]: "basic.ack",
+    [90]: "basic.reject",
+    [100]: "basic.recover-async",
+    [110]: "basic.recover",
+    [111]: "basic.recover-ok",
+    [120]: "basic.nack",
+  },
+  [90]: {
+    [10]: "tx.select",
+    [11]: "tx.select-ok",
+    [20]: "tx.commit",
+    [21]: "tx.commit-ok",
+    [30]: "tx.rollback",
+    [31]: "tx.rollback-ok",
+  },
+  [85]: {
+    [10]: "confirm.select",
+    [11]: "confirm.select-ok",
+  },
+};
+
+export function getMethodName(
+  classId: number,
+  methodId: number,
+): string | undefined {
+  return methodNames[classId] && methodNames[classId][methodId];
+}
+
 export type WithNowait<T> = T & { nowait?: boolean };
 
 export interface ReceiveConnectionStart {

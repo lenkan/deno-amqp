@@ -4,13 +4,11 @@ import {
   createMock,
   arrayOf,
   assertThrowsAsync,
-  assertStrContains,
 } from "../testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
 import { IncomingFrame } from "./amqp_socket.ts";
 import { ConnectionStart } from "../amqp_types.ts";
 import {
-  BASIC,
   QUEUE,
   QUEUE_DECLARE_OK,
   CHANNEL,
@@ -262,9 +260,13 @@ test("receive - rejects on channel close", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(async () => {
-    await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
-  }, Error, "Channel 1 closed by server - 403 Some reason");
+  await assertThrowsAsync(
+    async () => {
+      await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
+    },
+    Error,
+    "Channel 1 closed by server - 403 Some reason - caused by 'queue.declare'",
+  );
 });
 
 test("receive - rejects on connection close", async () => {
@@ -291,6 +293,36 @@ test("receive - rejects on connection close", async () => {
   await assertThrowsAsync(async () => {
     await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
   }, Error, "Connection closed by server - 541 Some reason");
+});
+
+test("receive - rejects on connection close with caused by method", async () => {
+  const conn = createSocket();
+  conn.read.mockImplementation(createMockReader([
+    {
+      type: "method" as const,
+      channel: 0,
+      payload: {
+        classId: CONNECTION,
+        methodId: CONNECTION_CLOSE,
+        args: {
+          replyCode: HARD_ERROR_INTERNAL_ERROR,
+          replyText: "Some reason",
+          classId: 60,
+          methodId: 40,
+        },
+      },
+    },
+  ]));
+
+  const mux = createAmqpMux(conn);
+
+  await assertThrowsAsync(
+    async () => {
+      await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
+    },
+    Error,
+    "Connection closed by server - 541 Some reason - caused by 'basic.publish'",
+  );
 });
 
 test("subscribe - invokes handler with frame args", async () => {

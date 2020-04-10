@@ -1,23 +1,96 @@
-import { connect } from "../mod.ts";
+import {
+  connect,
+  AmqpConnection,
+  AmqpChannel,
+  BasicProperties,
+  BasicDeliverArgs,
+} from "../mod.ts";
 import { assertThrowsAsync } from "../testing.ts";
-const { test } = Deno;
+import {
+  assertMatch,
+  assertEquals,
+} from "https://deno.land/std@v0.40.0/testing/asserts.ts";
+import { createResolvable } from "../utils.ts";
+interface AmqpChannelTest {
+  (conn: AmqpConnection, channel: AmqpChannel): Promise<void>;
+}
 
-test(
-  "cannot declare queue after channel after has been closed by server",
-  async () => {
-    const conn1 = await connect({ loglevel: "debug" });
-
+function withChannel(tester: AmqpChannelTest): () => Promise<void> {
+  return async () => {
+    const connection = await connect();
+    const channel = await connection.openChannel();
     try {
-      const chan1 = await conn1.openChannel();
-
-      // Should cause an error due to reserved queue name
-      await chan1.declareQueue({ queue: "amq.help" }).catch((_) => {});
-
-      await assertThrowsAsync(async () => {
-        await chan1.declareQueue({});
-      });
+      await tester(connection, channel);
     } finally {
-      await conn1.close().catch((_) => {});
+      await connection.close();
     }
-  },
+  };
+}
+
+Deno.test(
+  "cannot declare queue after channel after has been closed by server",
+  withChannel(async (conn1, chan1) => {
+    // Should cause an error due to reserved queue name
+    await assertThrowsAsync(
+      async () => {
+        await chan1.declareQueue({ queue: "amq.help" });
+      },
+      Error,
+      "Channel 1 closed by server - 403 ACCESS_REFUSED - queue name 'amq.help' contains reserved prefix 'amq.*' - caused by 'queue.declare'",
+    );
+
+    await assertThrowsAsync(
+      async () => {
+        await chan1.declareQueue({});
+      },
+      Error,
+      "Connection closed by server - 504 CHANNEL_ERROR - expected 'channel.open' - caused by 'queue.declare'",
+    );
+
+    await assertThrowsAsync(
+      async () => {
+        await conn1.closed();
+      },
+      Error,
+      "Connection closed by server - 504 CHANNEL_ERROR - expected 'channel.open' - caused by 'queue.declare'",
+    );
+  }),
 );
+
+Deno.test(
+  "can declare, consume and publish to anonymous queue",
+  withChannel(async (_conn1, chan1) => {
+    const { queue } = await chan1.declareQueue({ autoDelete: true });
+    const promise = createResolvable<
+      [BasicDeliverArgs, BasicProperties, Uint8Array]
+    >();
+
+    await chan1.consume({ noAck: true }, (args, props, content) => {
+      promise.resolve([args, props, content]);
+    });
+
+    const now = Date.now();
+    await chan1.publish(
+      { routingKey: queue },
+      { timestamp: now },
+      new TextEncoder().encode(JSON.stringify({ foo: "bar" })),
+    );
+
+    const [args, props, content] = await promise;
+    assertEquals(args.deliveryTag, 1);
+    assertEquals(args.exchange, "");
+    assertEquals(args.routingKey, queue);
+    assertEquals(args.redelivered, false);
+    assertEquals(cleanObj(props), { timestamp: now });
+  }),
+);
+
+function cleanObj<T extends object>(o: T): T {
+  return Object.keys(o).reduce<T>((res: any, key) => {
+    const value = (o as any)[key];
+    if (value !== undefined) {
+      res[key] = value;
+    }
+    return res;
+  }, {} as T);
+}
