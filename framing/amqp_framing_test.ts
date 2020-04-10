@@ -29,6 +29,12 @@ function createMockReader(data: Uint8Array) {
   };
 }
 
+function createEofReader() {
+  return function mockRead(p: Uint8Array) {
+    return Promise.resolve(Deno.EOF);
+  };
+}
+
 test("write method frame", async () => {
   const conn = createConn();
   const middleware = createMiddleware(conn);
@@ -117,4 +123,48 @@ test("throws on unknown frame type", async () => {
   await assertThrowsAsync(async () => {
     await middleware.read();
   });
+});
+
+test("throws on bad frame end", async () => {
+  const conn = createConn();
+  const middleware = createMiddleware(conn);
+
+  const data = arrayOf(
+    ...[8],
+    ...[0, 0],
+    ...[0, 0, 0, 0],
+    ...[207], // BAD frame-end
+  );
+
+  conn.read.mockImplementation(createMockReader(data));
+
+  await assertThrowsAsync(async () => {
+    await middleware.read();
+  });
+});
+
+test("read throws on EOF", async () => {
+  const conn = createConn();
+
+  const framing = createFraming(conn);
+
+  conn.read.mockImplementation(createEofReader());
+
+  await assertThrowsAsync(async () => {
+    await framing.read();
+  }, Error);
+});
+
+test("read throws on broken reader", async () => {
+  const conn = createConn();
+
+  const framing = createFraming(conn);
+
+  conn.read.mockImplementation(() => {
+    throw new Error("Damn");
+  });
+
+  await assertThrowsAsync(async () => {
+    await framing.read();
+  }, Error, "Damn");
 });

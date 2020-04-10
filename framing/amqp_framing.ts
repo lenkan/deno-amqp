@@ -39,7 +39,7 @@ function createReader(r: Deno.Reader) {
     }
 
     if (n !== length) {
-      throw new Error(`Not enough data in reader`);
+      throw new Error(`Expected ${length} bytes from reader, got ${r}`);
     }
 
     return data;
@@ -47,9 +47,6 @@ function createReader(r: Deno.Reader) {
 
   return async function read(): Promise<Frame> {
     const prefix = await readBytes(7);
-    if (!prefix) {
-      throw new Error(`EOF reached`);
-    }
 
     const prefixReader = new Deno.Buffer(prefix);
     const type = decodeOctet(prefixReader);
