@@ -29,3 +29,5 @@ const conn = await retry(async () => {
 });
 
 conn.close();
+
+await sleep(5000);
