@@ -27,5 +27,3 @@ connection.closed().then(() => {
   console.error("Connection closed with error");
   console.error(error.message);
 });
-
-// setTimeout(() => connection.close(), 60000);

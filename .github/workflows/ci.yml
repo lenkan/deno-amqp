@@ -2,20 +2,23 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      
-    - name: Setup Deno environment
-      uses: denolib/setup-deno@v1.3.0
-      with:
-        deno-version: v0.40.0
-      
-    - name: Test encoding
-      run: deno test encoding/*_test.ts
+      - uses: actions/checkout@v2
+
+      - name: Setup Deno environment
+        uses: denolib/setup-deno@v1.3.0
+        with:
+          deno-version: v0.40.0
+
+      - name: Check formatting
+        run: deno fmt --check
+
+      - name: Run unit tests
+        run: deno test src/

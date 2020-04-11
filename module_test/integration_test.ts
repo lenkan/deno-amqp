@@ -5,12 +5,11 @@ import {
   BasicProperties,
   BasicDeliverArgs,
 } from "../mod.ts";
-import { assertThrowsAsync } from "../testing.ts";
 import {
-  assertMatch,
   assertEquals,
+  assertThrowsAsync,
 } from "https://deno.land/std@v0.40.0/testing/asserts.ts";
-import { createResolvable } from "../utils.ts";
+import { createResolvable } from "../src/utils.ts";
 interface AmqpChannelTest {
   (conn: AmqpConnection, channel: AmqpChannel): Promise<void>;
 }
