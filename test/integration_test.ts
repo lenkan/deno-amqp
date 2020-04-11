@@ -27,6 +27,24 @@ function withChannel(tester: AmqpChannelTest): () => Promise<void> {
   };
 }
 
+function cleanObj<T extends object>(o: T): T {
+  return Object.keys(o).reduce<T>((res: any, key) => {
+    const value = (o as any)[key];
+    if (value !== undefined) {
+      res[key] = value;
+    }
+    return res;
+  }, {} as T);
+}
+
+function encodeText(str: string) {
+  return new TextEncoder().encode(str);
+}
+
+function decodeText(data: Uint8Array) {
+  return new TextDecoder().decode(data);
+}
+
 Deno.test(
   "cannot declare queue after channel after has been closed by server",
   withChannel(async (conn1, chan1) => {
@@ -73,7 +91,7 @@ Deno.test(
     await chan1.publish(
       { routingKey: queue },
       { timestamp: now },
-      new TextEncoder().encode(JSON.stringify({ foo: "bar" })),
+      encodeText(JSON.stringify({ foo: "bar" })),
     );
 
     const [args, props, content] = await promise;
@@ -82,15 +100,6 @@ Deno.test(
     assertEquals(args.routingKey, queue);
     assertEquals(args.redelivered, false);
     assertEquals(cleanObj(props), { timestamp: now });
+    assertEquals(JSON.parse(decodeText(content)), { foo: "bar" });
   }),
 );
-
-function cleanObj<T extends object>(o: T): T {
-  return Object.keys(o).reduce<T>((res: any, key) => {
-    const value = (o as any)[key];
-    if (value !== undefined) {
-      res[key] = value;
-    }
-    return res;
-  }, {} as T);
-}
