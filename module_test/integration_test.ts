@@ -4,7 +4,7 @@ import {
   AmqpChannel,
   BasicProperties,
   BasicDeliverArgs,
-} from "../mod.ts";
+} from "../amqp.ts";
 import {
   assertEquals,
   assertThrowsAsync,

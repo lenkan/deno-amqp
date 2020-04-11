@@ -1,4 +1,4 @@
-import { connect } from "../mod.ts";
+import { connect } from "../amqp.ts";
 
 const queueName = Deno.args[0];
 
