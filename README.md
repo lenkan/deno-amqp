@@ -1,4 +1,5 @@
 # deno-amqp
+![CI](https://github.com/lenkan/deno-amqp/workflows/CI/badge.svg)
 
 AMQP 0.9.1 implementation for https://deno.land/. The library is implemented to connect to a RabbitMQ broker. For testing purposes, an instance can be started using docker:
 
