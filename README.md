@@ -12,7 +12,7 @@ docker run -d --rm -p 15672:15672 -p 5672:5672 rabbitmq:3-management
 ## Consume messages
 
 ```ts
-import { connect } from "https://deno.land/x/amqp/amqp.ts";
+import { connect } from "https://deno.land/x/amqp/mod.ts";
 
 const connection = await connect();
 const channel = await connection.openChannel();
@@ -33,7 +33,7 @@ await channel.consume(
 ## Publish messages
 
 ```ts
-import { connect } from "https://deno.land/x/amqp/amqp.ts";
+import { connect } from "https://deno.land/x/amqp/mod.ts";
 
 const connection = await connect();
 const channel = await connection.openChannel();
