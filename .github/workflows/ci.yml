@@ -30,3 +30,6 @@ jobs:
 
       - name: Wait for rabbit
         run: deno run --allow-net module_test/wait_for_server.ts
+
+      - name: Run module tests
+        run: deno run --allow-net module_test/
