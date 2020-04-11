@@ -1,11 +1,11 @@
 import {
   test,
   assertEquals,
-  createMock,
   arrayOf,
   assertThrowsAsync,
   assertStrContains,
 } from "../testing.ts";
+import { mock } from "../mock.ts";
 import {
   createHeartbeatSocket,
 } from "./amqp_heartbeat_socket.ts";
@@ -14,8 +14,8 @@ import { CONNECTION, CONNECTION_CLOSE_OK } from "../amqp_constants.ts";
 
 function createConn() {
   return {
-    read: createMock(),
-    write: createMock(() => {}),
+    read: mock.fn(),
+    write: mock.fn(() => {}),
   };
 }
 
@@ -63,7 +63,7 @@ function withHeartbeat(
 }
 
 test("does not return heartbeat frames", withHeartbeat(async (conn, socket) => {
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "heartbeat" as const,
       channel: 0,
@@ -107,7 +107,7 @@ test(
       },
     );
 
-    conn.read.mockImplementation(async () => {
+    conn.read.mock.setImplementation(async () => {
       await sleeper;
       const frame = { type: "content", channel: 0, payload: arrayOf() };
       return frame;
@@ -132,19 +132,19 @@ test("sends heartbeat on interval", withHeartbeat(async (conn, socket) => {
       payload: { classId: 10, methodId: 31, args: { heartbeat: 0.1 } },
     },
   );
-  conn.write.mockReset();
+  conn.write.mock.reset();
 
   await sleep(100);
-  assertEquals(conn.write.mockCalls.length, 1);
-  assertEquals(conn.write.mockCalls[0][0], {
+  assertEquals(conn.write.mock.calls.length, 1);
+  assertEquals(conn.write.mock.calls[0][0], {
     type: "heartbeat",
     channel: 0,
     payload: arrayOf(),
   });
 
   await sleep(200);
-  assertEquals(conn.write.mockCalls.length, 2);
-  assertEquals(conn.write.mockCalls[1][0], {
+  assertEquals(conn.write.mock.calls.length, 2);
+  assertEquals(conn.write.mock.calls[1][0], {
     type: "heartbeat",
     channel: 0,
     payload: arrayOf(),

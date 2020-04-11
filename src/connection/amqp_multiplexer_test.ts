@@ -1,7 +1,6 @@
 import {
   test,
   assertEquals,
-  createMock,
   arrayOf,
   assertThrowsAsync,
 } from "../testing.ts";
@@ -19,11 +18,12 @@ import {
   CONNECTION_CLOSE,
   HARD_ERROR_INTERNAL_ERROR,
 } from "../amqp_constants.ts";
+import { mock } from "../mock.ts";
 
 function createSocket() {
   return {
-    read: createMock(),
-    write: createMock(() => {}),
+    read: mock.fn(),
+    write: mock.fn(() => {}),
   };
 }
 
@@ -44,7 +44,7 @@ function createMockReader(frames: IncomingFrame[]) {
 
 test("receive content - header and single content frame", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "header" as const,
       channel: 1,
@@ -70,7 +70,7 @@ test("receive content - header and single content frame", async () => {
 
 test("receive content - header and multiple content frames", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "header" as const,
       channel: 1,
@@ -101,7 +101,7 @@ test("receive content - header and multiple content frames", async () => {
 
 test("receive content - throws error if not enough content", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "header" as const,
       channel: 1,
@@ -127,7 +127,7 @@ test("receive content - throws error if not enough content", async () => {
 
 test("receive content - throws error if no header", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "content",
       channel: 1,
@@ -144,7 +144,7 @@ test("receive content - throws error if no header", async () => {
 
 test("receive content - can receive content on multiple channels", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "header" as const,
       channel: 1,
@@ -198,7 +198,7 @@ test("receive content - can receive content on multiple channels", async () => {
 
 test("receive - throws error if EOF", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([]));
+  conn.read.mock.setImplementation(createMockReader([]));
 
   const mux = createAmqpMux(conn);
 
@@ -209,7 +209,7 @@ test("receive - throws error if EOF", async () => {
 
 test("receive - resolves with frame args", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "method",
       channel: 1,
@@ -241,7 +241,7 @@ test("receive - resolves with frame args", async () => {
 
 test("receive - rejects on channel close", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "method" as const,
       channel: 1,
@@ -271,7 +271,7 @@ test("receive - rejects on channel close", async () => {
 
 test("receive - rejects on connection close", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "method" as const,
       channel: 0,
@@ -297,7 +297,7 @@ test("receive - rejects on connection close", async () => {
 
 test("receive - rejects on connection close with caused by method", async () => {
   const conn = createSocket();
-  conn.read.mockImplementation(createMockReader([
+  conn.read.mock.setImplementation(createMockReader([
     {
       type: "method" as const,
       channel: 0,
@@ -343,7 +343,7 @@ test("subscribe - invokes handler with frame args", async () => {
     },
   };
 
-  conn.read.mockImplementation(createMockReader([frame, frame]));
+  conn.read.mock.setImplementation(createMockReader([frame, frame]));
   const mux = createAmqpMux(conn);
 
   const result = await new Promise<ConnectionStart[]>((resolve) => {

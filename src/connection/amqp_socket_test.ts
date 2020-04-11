@@ -2,15 +2,15 @@ import { createAmqpSocket } from "./amqp_socket.ts";
 import {
   test,
   assertEquals,
-  createMock,
   arrayOf,
 } from "../testing.ts";
+import { mock } from "../mock.ts";
 import { AmqpFraming, Frame } from "../framing/mod.ts";
 
 function createSocket() {
   return {
-    read: createMock(),
-    write: createMock(() => {}),
+    read: mock.fn(),
+    write: mock.fn(() => {}),
   };
 }
 
@@ -33,7 +33,7 @@ test("write method frame", async () => {
   const conn = createSocket();
   const middleware = createMiddleware(conn);
 
-  conn.write.mockReset();
+  conn.write.mock.reset();
 
   middleware.write(
     {
@@ -43,8 +43,8 @@ test("write method frame", async () => {
     },
   );
 
-  assertEquals(conn.write.mockCalls.length, 1);
-  assertEquals(conn.write.mockCalls[0][0], {
+  assertEquals(conn.write.mock.calls.length, 1);
+  assertEquals(conn.write.mock.calls[0][0], {
     type: 1,
     channel: 0,
     payload: arrayOf(
@@ -119,7 +119,7 @@ test("read method frame", async () => {
     ),
   };
 
-  conn.read.mockImplementation(createMockReader([data]));
+  conn.read.mock.setImplementation(createMockReader([data]));
 
   const frame = await middleware.read();
   assertEquals(frame, {

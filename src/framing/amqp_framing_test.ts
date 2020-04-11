@@ -2,16 +2,16 @@ import { createFraming } from "./amqp_framing.ts";
 import {
   test,
   assertEquals,
-  createMock,
   arrayOf,
   assertThrowsAsync,
 } from "../testing.ts";
+import { mock } from "../mock.ts";
 
 function createConn() {
-  return {
-    read: createMock(),
-    write: createMock(() => {}),
-  };
+  return mock.obj<Deno.Reader & Deno.Writer>({
+    read: mock.fn(),
+    write: mock.fn(() => {}),
+  });
 }
 
 function createMiddleware(conn: Deno.Reader & Deno.Writer) {
@@ -21,7 +21,7 @@ function createMiddleware(conn: Deno.Reader & Deno.Writer) {
 function createMockReader(data: Uint8Array) {
   let offset: number = 0;
 
-  return function mockRead(p: Uint8Array) {
+  return async function mockRead(p: Uint8Array): Promise<number> {
     const slice = data.slice(offset, p.length + offset);
     offset += slice.length;
     p.set(slice, 0);
@@ -39,7 +39,7 @@ test("write method frame", async () => {
   const conn = createConn();
   const middleware = createMiddleware(conn);
 
-  conn.write.mockReset();
+  conn.write.mock.reset();
 
   middleware.write(
     {
@@ -49,8 +49,8 @@ test("write method frame", async () => {
     },
   );
 
-  assertEquals(conn.write.mockCalls.length, 1);
-  assertEquals(conn.write.mockCalls[0][0], arrayOf(
+  assertEquals(conn.write.mock.calls.length, 1);
+  assertEquals(conn.write.mock.calls[0][0], arrayOf(
     ...[1],
     ...[0, 0],
     ...[0, 0, 0, 5],
@@ -74,7 +74,7 @@ test("read method frame", async () => {
     ...[123],
     ...[206],
   );
-  conn.read.mockImplementation(createMockReader(data));
+  conn.read.mock.setImplementation(createMockReader(data));
 
   const frame = await middleware.read();
   assertEquals(frame, {
@@ -94,7 +94,7 @@ test("read heartbeat frame", async () => {
     ...[0, 0, 0, 0],
     ...[206],
   );
-  conn.read.mockImplementation(createMockReader(data));
+  conn.read.mock.setImplementation(createMockReader(data));
 
   const frame = await middleware.read();
   assertEquals(frame, {
@@ -118,7 +118,7 @@ test("throws on unknown frame type", async () => {
     ...[206],
   );
 
-  conn.read.mockImplementation(createMockReader(data));
+  conn.read.mock.setImplementation(createMockReader(data));
 
   await assertThrowsAsync(async () => {
     await middleware.read();
@@ -136,7 +136,7 @@ test("throws on bad frame end", async () => {
     ...[207], // BAD frame-end
   );
 
-  conn.read.mockImplementation(createMockReader(data));
+  conn.read.mock.setImplementation(createMockReader(data));
 
   await assertThrowsAsync(async () => {
     await middleware.read();
@@ -148,7 +148,7 @@ test("read throws on EOF", async () => {
 
   const framing = createFraming(conn);
 
-  conn.read.mockImplementation(createEofReader());
+  conn.read.mock.setImplementation(createEofReader());
 
   await assertThrowsAsync(async () => {
     await framing.read();
@@ -160,7 +160,7 @@ test("read throws on broken reader", async () => {
 
   const framing = createFraming(conn);
 
-  conn.read.mockImplementation(() => {
+  conn.read.mock.setImplementation(() => {
     throw new Error("Damn");
   });
 
