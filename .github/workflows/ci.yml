@@ -29,7 +29,7 @@ jobs:
           rabbitmq version: "3"
 
       - name: Wait for rabbit
-        run: deno run --allow-net module_test/wait_for_server.ts
+        run: deno run --allow-run module_test/wait_for_server.ts
 
       - name: Run module tests
         run: deno test --allow-net module_test/

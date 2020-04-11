@@ -1,9 +1,8 @@
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 async function retry<T>(func: () => Promise<T>): Promise<T> {
-  let times = 100;
+  let times = 30;
   while (times--) {
     try {
       const result = await func();
@@ -13,21 +12,19 @@ async function retry<T>(func: () => Promise<T>): Promise<T> {
       await sleep(1000);
     }
   }
-  throw new Error(`Giving up after 100 retries`);
+
+  throw new Error(`Giving up after 30 retries`);
 }
 
-const starter = new Uint8Array([
-  ...new TextEncoder().encode("AMQP"),
-  ...[0, 0, 9, 1],
-]);
+async function runConnect() {
+  const process = Deno.run(
+    { cmd: ["deno", "--allow-net", "./module_test/connect.ts"] },
+  );
 
-const conn = await retry(async () => {
-  const conn = await Deno.connect({ hostname: "localhost", port: 5672 });
-  await conn.write(starter);
-  await conn.read(new Uint8Array(7));
-  return conn;
-});
+  const status = await process.status();
+  if (!status.success) {
+    throw new Error("Failed to connect");
+  }
+}
 
-conn.close();
-
-await sleep(5000);
+await retry(runConnect);
