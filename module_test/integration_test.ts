@@ -10,6 +10,7 @@ import {
   assertThrowsAsync,
 } from "https://deno.land/std@v0.40.0/testing/asserts.ts";
 import { createResolvable } from "../src/utils.ts";
+
 interface AmqpChannelTest {
   (conn: AmqpConnection, channel: AmqpChannel): Promise<void>;
 }
@@ -18,6 +19,7 @@ function withChannel(tester: AmqpChannelTest): () => Promise<void> {
   return async () => {
     const connection = await connect();
     const channel = await connection.openChannel();
+
     try {
       await tester(connection, channel);
     } finally {

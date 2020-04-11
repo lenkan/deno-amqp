@@ -22,3 +22,11 @@ jobs:
 
       - name: Run unit tests
         run: deno test src/
+
+      - name: Start rabbitmq
+        uses: nijel/rabbitmq-action@v1.0.0
+        with:
+          rabbitmq version: "3"
+
+      - name: Wait for rabbit
+        run: deno run --allow-net module_test/wait_for_server.ts
