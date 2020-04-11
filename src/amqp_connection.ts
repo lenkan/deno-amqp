@@ -25,13 +25,29 @@ const clientProperties = Object.freeze({
   information: "https://deno.land/x/amqp/",
 });
 
+/**
+ * Represents a live AMQP connection
+ */
 export interface AmqpConnection {
+  /**
+   * Closes the AMQP connection.
+   */
   close(): Promise<void>;
 
   /**
-   * Returns a promise that is settled when the connection is closed
+   * Returns a promise that is settled when the connection is closed.
+   *
+   * If the connection is unexpectedly closed by the server, it will reject with an error.
+   * If the connection is successfully closed by the this client, it will resolve once the close handshake
+   * has completed successfully.
+   *
+   * This can be useful to detect if the server has crashed or otherwise encountered an irrecoverable exception.
    */
   closed(): Promise<void>;
+
+  /**
+   * Opens up a new AMQP channel for operations.
+   */
   openChannel(): Promise<AmqpChannel>;
 }
 
