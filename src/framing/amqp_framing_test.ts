@@ -33,11 +33,11 @@ function createEofReader() {
 
 test("write method frame", async () => {
   const conn = createConn();
-  const middleware = createFrameWriter(conn);
+  const write = createFrameWriter(conn);
 
   conn.write.mock.reset();
 
-  middleware.write(
+  write(
     {
       type: 1,
       channel: 0,
@@ -59,7 +59,7 @@ test("write method frame", async () => {
 
 test("read method frame", async () => {
   const conn = createConn();
-  const middleware = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   const data = arrayOf(
     ...[1],
@@ -72,7 +72,7 @@ test("read method frame", async () => {
   );
   conn.read.mock.setImplementation(createMockReader(data));
 
-  const frame = await middleware.read();
+  const frame = await read();
   assertEquals(frame, {
     type: 1,
     channel: 0,
@@ -82,7 +82,7 @@ test("read method frame", async () => {
 
 test("read heartbeat frame", async () => {
   const conn = createConn();
-  const middleware = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   const data = arrayOf(
     ...[8],
@@ -92,7 +92,7 @@ test("read heartbeat frame", async () => {
   );
   conn.read.mock.setImplementation(createMockReader(data));
 
-  const frame = await middleware.read();
+  const frame = await read();
   assertEquals(frame, {
     type: 8,
     channel: 0,
@@ -102,7 +102,7 @@ test("read heartbeat frame", async () => {
 
 test("throws on unknown frame type", async () => {
   const conn = createConn();
-  const middleware = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   const data = arrayOf(
     ...[4],
@@ -117,13 +117,13 @@ test("throws on unknown frame type", async () => {
   conn.read.mock.setImplementation(createMockReader(data));
 
   await assertThrowsAsync(async () => {
-    await middleware.read();
+    await read();
   });
 });
 
 test("throws on bad frame end", async () => {
   const conn = createConn();
-  const middleware = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   const data = arrayOf(
     ...[8],
@@ -135,32 +135,32 @@ test("throws on bad frame end", async () => {
   conn.read.mock.setImplementation(createMockReader(data));
 
   await assertThrowsAsync(async () => {
-    await middleware.read();
+    await read();
   });
 });
 
 test("read throws on EOF", async () => {
   const conn = createConn();
 
-  const framing = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   conn.read.mock.setImplementation(createEofReader());
 
   await assertThrowsAsync(async () => {
-    await framing.read();
+    await read();
   }, Error);
 });
 
 test("read throws on broken reader", async () => {
   const conn = createConn();
 
-  const framing = createFrameReader(conn);
+  const read = createFrameReader(conn);
 
   conn.read.mock.setImplementation(() => {
     throw new Error("Damn");
   });
 
   await assertThrowsAsync(async () => {
-    await framing.read();
+    await read();
   }, Error, "Damn");
 });

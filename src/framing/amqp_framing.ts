@@ -13,23 +13,13 @@ export interface Frame {
   payload: Uint8Array;
 }
 
-export interface AmqpFrameReader {
-  read(): Promise<Frame>;
-}
-
-export interface AmqpFrameWriter {
-  write(frame: Frame): Promise<void>;
-}
-
-export interface AmqpFraming extends AmqpFrameReader, AmqpFrameWriter {}
-
 function verifyFrame(type: number) {
   if (![1, 2, 3, 8].includes(type)) {
     throw new Error(`Unknown frame type '${type}'`);
   }
 }
 
-export function createFrameReader(r: Deno.Reader): AmqpFrameReader {
+export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
   async function readBytes(length: number): Promise<Uint8Array> {
     const data = new Uint8Array(length);
     const n = await r.read(data);
@@ -68,10 +58,12 @@ export function createFrameReader(r: Deno.Reader): AmqpFrameReader {
     };
   }
 
-  return { read };
+  return read;
 }
 
-export function createFrameWriter(w: Deno.Writer): AmqpFrameWriter {
+export function createFrameWriter(
+  w: Deno.Writer,
+): (frame: Frame) => Promise<void> {
   async function write(frame: Frame): Promise<void> {
     const buffer = new Deno.Buffer();
     buffer.writeSync(encodeOctet(frame.type));
@@ -81,5 +73,5 @@ export function createFrameWriter(w: Deno.Writer): AmqpFrameWriter {
     buffer.writeSync(encodeOctet(206));
     await w.write(buffer.bytes());
   }
-  return { write };
+  return write;
 }

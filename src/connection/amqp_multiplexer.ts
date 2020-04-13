@@ -4,10 +4,6 @@ import {
   SendMethod,
 } from "../amqp_codec.ts";
 import {
-  AmqpDecoder,
-  AmqpEncoder,
-} from "./amqp_encoding.ts";
-import {
   CONNECTION_CLOSE,
   CONNECTION,
   CHANNEL,
@@ -21,7 +17,7 @@ import {
   IncomingFrame,
   AmqpSocketReader,
   AmqpSocketWriter,
-} from "./amqp_socket.ts";
+} from "../framing/mod.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,

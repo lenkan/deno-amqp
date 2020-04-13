@@ -1,6 +1,6 @@
 import { AmqpChannel, openChannel } from "./amqp_channel.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import { createFraming, createReader, createWriter } from "./framing/mod.ts";
+import { createSocket } from "./framing/mod.ts";
 import { createMux } from "./connection/mod.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { serializeConnectionError } from "./connection/error_handling.ts";
@@ -62,11 +62,8 @@ export function openConnection(
   let frameMax: number = -1;
   let isOpen: boolean = false;
 
-  const mux = createMux({
-    read: createReader(conn, { loglevel }),
-    write: createWriter(conn, { loglevel }),
-    close: () => conn.close(),
-  });
+  const socket = createSocket(conn, { loglevel });
+  const mux = createMux(socket);
 
   const protocol = new AmqpProtocol(mux);
 

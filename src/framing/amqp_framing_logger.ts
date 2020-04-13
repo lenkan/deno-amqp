@@ -1,20 +1,15 @@
-import {
-  AmqpFraming,
-  Frame,
-  AmqpFrameReader,
-  AmqpFrameWriter,
-} from "./amqp_framing.ts";
+import { Frame } from "./amqp_framing.ts";
 
 export interface AmqpLoggingOptions {
   loglevel: "debug" | "none";
 }
 
 export function createLoggingReader(
-  reader: AmqpFrameReader,
+  reader: () => Promise<Frame>,
   options: AmqpLoggingOptions,
 ) {
   return async () => {
-    const frame = await reader.read();
+    const frame = await reader();
     if (options.loglevel === "debug") {
       const prefix = `RECV(${frame.channel}) ${frame.type} ${frame.payload
         .slice(0, 8)}`;
@@ -25,7 +20,7 @@ export function createLoggingReader(
 }
 
 export function createLoggingWriter(
-  writer: AmqpFrameWriter,
+  writer: (frame: Frame) => Promise<void>,
   options: AmqpLoggingOptions,
 ) {
   return async (frame: Frame) => {
@@ -34,6 +29,6 @@ export function createLoggingWriter(
         .slice(0, 8)}`;
       console.log(prefix);
     }
-    return writer.write(frame);
+    return writer(frame);
   };
 }

@@ -5,7 +5,7 @@ import {
   AmqpSocketWriter,
   OutgoingFrame,
   IncomingFrame,
-} from "./amqp_socket.ts";
+} from "../framing/mod.ts";
 
 const HEARTBEAT_FRAME: OutgoingFrame = {
   type: "heartbeat",

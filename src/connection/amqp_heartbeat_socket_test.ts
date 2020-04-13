@@ -13,9 +13,8 @@ import {
   AmqpSocket,
   IncomingFrame,
   AmqpSocketReader,
-  AmqpSocketCloser,
   AmqpSocketWriter,
-} from "./amqp_socket.ts";
+} from "../framing/mod.ts";
 import { CONNECTION, CONNECTION_CLOSE_OK } from "../amqp_constants.ts";
 
 function createConn() {

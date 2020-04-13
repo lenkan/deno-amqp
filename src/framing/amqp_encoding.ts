@@ -4,11 +4,8 @@ import {
   encodeMethod,
   encodeHeader,
 } from "../amqp_codec.ts";
-import {
-  AmqpFrameReader,
-  AmqpFrameWriter,
-} from "../framing/mod.ts";
 import { IncomingFrame, OutgoingFrame } from "./amqp_socket.ts";
+import { Frame } from "./amqp_framing.ts";
 
 export interface AmqpDecoder {
   (): Promise<IncomingFrame>;
@@ -18,9 +15,9 @@ export interface AmqpEncoder {
   (frame: OutgoingFrame): Promise<void>;
 }
 
-export function createAmqpDecoder(reader: AmqpFrameReader): AmqpDecoder {
+export function createAmqpDecoder(read: () => Promise<Frame>): AmqpDecoder {
   return async (): Promise<IncomingFrame> => {
-    const frame = await reader.read();
+    const frame = await read();
     switch (frame.type) {
       case 1:
         return {
@@ -53,11 +50,11 @@ export function createAmqpDecoder(reader: AmqpFrameReader): AmqpDecoder {
   };
 }
 
-export function createAmqpEncoder(writer: AmqpFrameWriter): AmqpEncoder {
+export function createAmqpEncoder(write: (frame: Frame) => void): AmqpEncoder {
   return async (frame: OutgoingFrame) => {
     switch (frame.type) {
       case "method":
-        return writer.write(
+        return write(
           {
             type: 1,
             channel: frame.channel,
@@ -65,7 +62,7 @@ export function createAmqpEncoder(writer: AmqpFrameWriter): AmqpEncoder {
           },
         );
       case "header":
-        return writer.write(
+        return write(
           {
             type: 2,
             channel: frame.channel,
@@ -73,11 +70,11 @@ export function createAmqpEncoder(writer: AmqpFrameWriter): AmqpEncoder {
           },
         );
       case "content":
-        return writer.write(
+        return write(
           { type: 3, channel: frame.channel, payload: frame.payload },
         );
       case "heartbeat":
-        return writer.write(
+        return write(
           { type: 8, channel: frame.channel, payload: frame.payload },
         );
       default:

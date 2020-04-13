@@ -5,7 +5,7 @@ import {
   arrayOf,
 } from "../testing.ts";
 import { mock } from "../mock.ts";
-import { AmqpFraming, Frame } from "../framing/mod.ts";
+import { Frame } from "../framing/mod.ts";
 
 function createSocket() {
   return {
@@ -27,7 +27,7 @@ function createMockReader(frames: Frame[]) {
 
 test("write method frame", async () => {
   const conn = createSocket();
-  const write = createAmqpEncoder(conn);
+  const write = createAmqpEncoder(conn.write);
 
   conn.write.mock.reset();
 
@@ -78,7 +78,7 @@ test("write method frame", async () => {
 
 test("read method frame", async () => {
   const conn = createSocket();
-  const read = createAmqpDecoder(conn);
+  const read = createAmqpDecoder(conn.read);
 
   const data: Frame = {
     type: 1,
