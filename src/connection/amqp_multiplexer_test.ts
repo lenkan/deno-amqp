@@ -68,6 +68,27 @@ test("receive content - header and single content frame", async () => {
   assertEquals(data, arrayOf(1, 2));
 });
 
+test("receive content - header and no content frame", async () => {
+  const conn = createSocket();
+  conn.read.mock.setImplementation(createMockReader([
+    {
+      type: "header" as const,
+      channel: 1,
+      payload: {
+        classId: 60,
+        size: 0,
+        props: {},
+      },
+    },
+  ]));
+
+  const mux = createAmqpMux(conn);
+  const [props, data] = await mux.receiveContent(1, 60);
+
+  assertEquals(props, {});
+  assertEquals(data, arrayOf());
+});
+
 test("receive content - header and multiple content frames", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
@@ -194,6 +215,47 @@ test("receive content - can receive content on multiple channels", async () => {
   assertEquals(content1[1], arrayOf(2));
   assertEquals(content2[0], { correlationId: "2" });
   assertEquals(content2[1], arrayOf(1, 3));
+});
+
+test("send content - does not send content frame when there is no content", async () => {
+  const conn = createSocket();
+  const mux = createAmqpMux(conn);
+
+  await mux.sendContent(1, 60, {}, new Uint8Array(0));
+
+  assertEquals(conn.write.mock.calls.length, 1);
+  assertEquals(conn.write.mock.calls[0][0], {
+    type: "header",
+    channel: 1,
+    payload: {
+      classId: 60,
+      props: {},
+      size: 0,
+    },
+  });
+});
+
+test("send content - sends header and content frame", async () => {
+  const conn = createSocket();
+  const mux = createAmqpMux(conn);
+
+  await mux.sendContent(1, 60, {}, new Uint8Array([1, 2]));
+
+  assertEquals(conn.write.mock.calls.length, 2);
+  assertEquals(conn.write.mock.calls[0][0], {
+    type: "header",
+    channel: 1,
+    payload: {
+      classId: 60,
+      props: {},
+      size: 2,
+    },
+  });
+  assertEquals(conn.write.mock.calls[1][0], {
+    type: "content",
+    channel: 1,
+    payload: new Uint8Array([1, 2]),
+  });
 });
 
 test("receive - throws error if EOF", async () => {

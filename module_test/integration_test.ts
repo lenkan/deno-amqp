@@ -104,3 +104,32 @@ Deno.test(
     assertEquals(JSON.parse(decodeText(content)), { foo: "bar" });
   }),
 );
+
+Deno.test(
+  "can publish and consume empty messages",
+  withChannel(async (_conn1, chan1) => {
+    const { queue } = await chan1.declareQueue({ autoDelete: true });
+    const promise = createResolvable<
+      [BasicDeliverArgs, BasicProperties, Uint8Array]
+    >();
+
+    await chan1.consume({ noAck: true }, (args, props, content) => {
+      promise.resolve([args, props, content]);
+    });
+
+    const now = Date.now();
+    await chan1.publish(
+      { routingKey: queue },
+      { timestamp: now },
+      new Uint8Array(0),
+    );
+
+    const [args, props, content] = await promise;
+    assertEquals(args.deliveryTag, 1);
+    assertEquals(args.exchange, "");
+    assertEquals(args.routingKey, queue);
+    assertEquals(args.redelivered, false);
+    assertEquals(cleanObj(props), { timestamp: now });
+    assertEquals(content, new Uint8Array(0));
+  }),
+);

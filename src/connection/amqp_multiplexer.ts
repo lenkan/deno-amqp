@@ -224,6 +224,10 @@ function createSocketDemux(
 
   async function receiveContent(channel: number, classId: number) {
     const header = await receiveHeader(channel, classId);
+    if (header.size === 0) {
+      return [header.props, new Uint8Array(0)];
+    }
+
     const buffer = new Deno.Buffer();
     return new Promise<[Header["props"], Uint8Array]>((resolve, reject) => {
       addSubscriber(createSubscriber((frame) => {
@@ -274,18 +278,27 @@ function createSocketMux(writer: AmqpEncodeWriter): AmqpSink {
     data: Uint8Array,
   ) {
     const size = data.length;
-    await Promise.all([
-      writer.write({
+
+    if (size === 0) {
+      await writer.write({
         type: "header",
         channel,
         payload: { classId, props, size } as Header,
-      }),
-      writer.write({
-        type: "content",
-        channel,
-        payload: data,
-      }),
-    ]);
+      });
+    } else {
+      await Promise.all([
+        writer.write({
+          type: "header",
+          channel,
+          payload: { classId, props, size } as Header,
+        }),
+        writer.write({
+          type: "content",
+          channel,
+          payload: data,
+        }),
+      ]);
+    }
   }
 
   return { send, sendContent };
