@@ -25,6 +25,11 @@ export interface AmqpConnectOptions {
   password?: string;
 
   /**
+   * AMQP virtual host. Defaults to "/"
+   */
+  vhost?: string;
+
+  /**
    * Interval in seconds for the AMQP heartbeat frames. If not provided, the suggested heartbeat interval from
    * the AMQP broker will be used (usually 60s).
    *
@@ -55,13 +60,14 @@ export async function connect(options: AmqpConnectOptions = {}): Promise<
     password = "guest",
     heartbeatInterval,
     loglevel = "none",
+    vhost = "/",
   } = options;
 
   const conn = await Deno.connect({ port, hostname });
 
   const connection = await openConnection(
     conn,
-    { username, password, heartbeatInterval, loglevel },
+    { username, password, heartbeatInterval, loglevel, vhost },
   );
 
   return connection;

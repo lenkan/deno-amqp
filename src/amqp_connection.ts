@@ -9,6 +9,7 @@ import { createResolvable } from "./utils.ts";
 export interface AmqpConnectionOptions {
   username: string;
   password: string;
+  vhost?: string;
   heartbeatInterval?: number;
   loglevel: "debug" | "none";
 }
@@ -101,7 +102,9 @@ export function openConnection(
       },
     );
 
-    await protocol.sendConnectionOpen(0, {});
+    await protocol.sendConnectionOpen(0, {
+      virtualHost: options.vhost || "/",
+    });
     isOpen = true;
   }
 
