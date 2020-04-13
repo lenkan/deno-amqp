@@ -1,4 +1,4 @@
-import { createAmqpSocket } from "./amqp_socket.ts";
+import { createAmqpDecoder, createAmqpEncoder } from "./amqp_encoding.ts";
 import {
   test,
   assertEquals,
@@ -14,10 +14,6 @@ function createSocket() {
   };
 }
 
-function createMiddleware(sock: AmqpFraming) {
-  return createAmqpSocket(sock);
-}
-
 function createMockReader(frames: Frame[]) {
   return function mockRead() {
     const frame = frames.shift();
@@ -31,11 +27,11 @@ function createMockReader(frames: Frame[]) {
 
 test("write method frame", async () => {
   const conn = createSocket();
-  const middleware = createMiddleware(conn);
+  const write = createAmqpEncoder(conn);
 
   conn.write.mock.reset();
 
-  middleware.write(
+  write(
     {
       type: "method",
       channel: 0,
@@ -82,7 +78,7 @@ test("write method frame", async () => {
 
 test("read method frame", async () => {
   const conn = createSocket();
-  const middleware = createMiddleware(conn);
+  const read = createAmqpDecoder(conn);
 
   const data: Frame = {
     type: 1,
@@ -121,7 +117,7 @@ test("read method frame", async () => {
 
   conn.read.mock.setImplementation(createMockReader([data]));
 
-  const frame = await middleware.read();
+  const frame = await read();
   assertEquals(frame, {
     type: "method",
     channel: 0,

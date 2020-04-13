@@ -1,9 +1,9 @@
 import {
-  createAmqpSocket,
-  AmqpDecodeReader,
-  AmqpEncodeWriter,
-  AmqpSocket,
-} from "./amqp_socket.ts";
+  AmqpDecoder,
+  AmqpEncoder,
+  createAmqpDecoder,
+  createAmqpEncoder,
+} from "./amqp_encoding.ts";
 import { createHeartbeatSocket } from "./amqp_heartbeat_socket.ts";
 import { AmqpFraming } from "../framing/mod.ts";
 import {
@@ -12,13 +12,15 @@ import {
   AmqpSink,
   AmqpSource,
 } from "./amqp_multiplexer.ts";
+import { AmqpSocket } from "./amqp_socket.ts";
 
-export function createSocket(framing: AmqpFraming) {
-  return createHeartbeatSocket(createAmqpSocket(framing));
-}
-
-export function createMux(framing: AmqpFraming) {
-  return createAmqpMux(createHeartbeatSocket(createAmqpSocket(framing)));
+export function createMux(conn: AmqpFraming & Deno.Closer): AmqpMultiplexer {
+  const socket = createHeartbeatSocket({
+    read: createAmqpDecoder(conn),
+    write: createAmqpEncoder(conn),
+    close: () => conn.close(),
+  });
+  return createAmqpMux(socket);
 }
 
 export {
@@ -26,6 +28,4 @@ export {
   AmqpSink,
   AmqpSource,
   AmqpSocket,
-  AmqpDecodeReader,
-  AmqpEncodeWriter,
 };

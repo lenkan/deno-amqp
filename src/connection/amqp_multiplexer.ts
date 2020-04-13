@@ -4,11 +4,9 @@ import {
   SendMethod,
 } from "../amqp_codec.ts";
 import {
-  AmqpSocket,
-  IncomingFrame,
-  AmqpDecodeReader,
-  AmqpEncodeWriter,
-} from "./amqp_socket.ts";
+  AmqpDecoder,
+  AmqpEncoder,
+} from "./amqp_encoding.ts";
 import {
   CONNECTION_CLOSE,
   CONNECTION,
@@ -19,6 +17,11 @@ import {
   serializeConnectionError,
   serializeChannelError,
 } from "./error_handling.ts";
+import {
+  IncomingFrame,
+  AmqpSocketReader,
+  AmqpSocketWriter,
+} from "./amqp_socket.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -112,7 +115,7 @@ function assertNotClosed(channel: number, frame: IncomingFrame): void {
 }
 
 function createSocketDemux(
-  reader: AmqpDecodeReader,
+  reader: AmqpSocketReader,
   subscribers: FrameSubscriber[],
 ): AmqpSource {
   listen().catch(handleError);
@@ -255,7 +258,7 @@ function createSocketDemux(
   };
 }
 
-function createSocketMux(writer: AmqpEncodeWriter): AmqpSink {
+function createSocketMux(writer: AmqpSocketWriter): AmqpSink {
   async function send(
     channel: number,
     classId: number,
@@ -304,7 +307,9 @@ function createSocketMux(writer: AmqpEncodeWriter): AmqpSink {
   return { send, sendContent };
 }
 
-export function createAmqpMux(socket: AmqpSocket): AmqpMultiplexer {
+export function createAmqpMux(
+  socket: AmqpSocketReader & AmqpSocketWriter,
+): AmqpMultiplexer {
   const subscribers: FrameSubscriber[] = [];
   const demux = createSocketDemux(socket, subscribers);
   const mux = createSocketMux(socket);

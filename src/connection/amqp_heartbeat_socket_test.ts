@@ -9,17 +9,24 @@ import { mock } from "../mock.ts";
 import {
   createHeartbeatSocket,
 } from "./amqp_heartbeat_socket.ts";
-import { AmqpSocket, IncomingFrame } from "./amqp_socket.ts";
+import {
+  AmqpSocket,
+  IncomingFrame,
+  AmqpSocketReader,
+  AmqpSocketCloser,
+  AmqpSocketWriter,
+} from "./amqp_socket.ts";
 import { CONNECTION, CONNECTION_CLOSE_OK } from "../amqp_constants.ts";
 
 function createConn() {
   return {
     read: mock.fn(),
     write: mock.fn(() => {}),
+    close: mock.fn(() => {}),
   };
 }
 
-function createSocket(conn: AmqpSocket) {
+function createSocket(conn: AmqpSocket): AmqpSocketReader & AmqpSocketWriter {
   return createHeartbeatSocket(conn);
 }
 
@@ -40,7 +47,7 @@ function sleep(ms: number) {
 function withHeartbeat(
   handler: (
     conn: ReturnType<typeof createConn>,
-    socket: AmqpSocket,
+    socket: AmqpSocketReader & AmqpSocketWriter,
   ) => Promise<void>,
 ): () => Promise<void> {
   return () => {
@@ -118,6 +125,7 @@ test(
     });
 
     assertStrContains(error.message, "timeout");
+    assertEquals(conn.close.mock.calls.length, 1);
 
     await sleeper;
   }),

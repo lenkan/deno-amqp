@@ -1,7 +1,9 @@
 import { withTimeout } from "./with_timeout.ts";
 import {
-  OutgoingFrame,
   AmqpSocket,
+  AmqpSocketReader,
+  AmqpSocketWriter,
+  OutgoingFrame,
   IncomingFrame,
 } from "./amqp_socket.ts";
 
@@ -11,7 +13,7 @@ const HEARTBEAT_FRAME: OutgoingFrame = {
   payload: new Uint8Array([]),
 };
 
-class AmqpHeartbeatSocket implements AmqpSocket {
+class AmqpHeartbeatSocket implements AmqpSocketReader, AmqpSocketWriter {
   private heartbeatTimeout: number = 0;
   private sendTimer: number | null = 0;
   private monitorHeartbeats: boolean = false;
@@ -35,6 +37,7 @@ class AmqpHeartbeatSocket implements AmqpSocket {
         timeoutMessage,
       ).catch((error) => {
         this.clear();
+        this.socket.close();
         throw error;
       });
 
@@ -106,6 +109,6 @@ class AmqpHeartbeatSocket implements AmqpSocket {
 
 export function createHeartbeatSocket(
   socket: AmqpSocket,
-): AmqpSocket {
+): AmqpSocketReader & AmqpSocketWriter {
   return new AmqpHeartbeatSocket(socket);
 }

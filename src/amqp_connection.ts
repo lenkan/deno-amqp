@@ -1,6 +1,6 @@
 import { AmqpChannel, openChannel } from "./amqp_channel.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import { createFraming } from "./framing/mod.ts";
+import { createFraming, createReader, createWriter } from "./framing/mod.ts";
 import { createMux } from "./connection/mod.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { serializeConnectionError } from "./connection/error_handling.ts";
@@ -62,17 +62,23 @@ export function openConnection(
   let frameMax: number = -1;
   let isOpen: boolean = false;
 
-  const framing = createFraming(conn, { loglevel });
-  const mux = createMux(framing);
+  const mux = createMux({
+    read: createReader(conn, { loglevel }),
+    write: createWriter(conn, { loglevel }),
+    close: () => conn.close(),
+  });
+
   const protocol = new AmqpProtocol(mux);
 
   const closedPromise = createResolvable<void>();
 
-  protocol.subscribeConnectionClose(0, async (args) => {
+  protocol.receiveConnectionClose(0).then(async (args) => {
     isOpen = false;
     await protocol.sendConnectionCloseOk(0, {});
-    conn.close();
     closedPromise.reject(new Error(serializeConnectionError(args)));
+    conn.close();
+  }).catch(closedPromise.reject).finally(() => {
+    isOpen = false;
   });
 
   async function open() {
