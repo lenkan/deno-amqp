@@ -29,7 +29,7 @@ function verifyFrame(type: number) {
   }
 }
 
-function createReader(r: Deno.Reader) {
+export function createFrameReader(r: Deno.Reader): AmqpFrameReader {
   async function readBytes(length: number): Promise<Uint8Array> {
     const data = new Uint8Array(length);
     const n = await r.read(data);
@@ -45,7 +45,7 @@ function createReader(r: Deno.Reader) {
     return data;
   }
 
-  return async function read(): Promise<Frame> {
+  async function read(): Promise<Frame> {
     const prefix = await readBytes(7);
 
     const prefixReader = new Deno.Buffer(prefix);
@@ -66,11 +66,13 @@ function createReader(r: Deno.Reader) {
       channel: channel,
       payload: rest.slice(0, rest.length - 1),
     };
-  };
+  }
+
+  return { read };
 }
 
-function createWriter(w: Deno.Writer) {
-  return async function write(frame: Frame): Promise<void> {
+export function createFrameWriter(w: Deno.Writer): AmqpFrameWriter {
+  async function write(frame: Frame): Promise<void> {
     const buffer = new Deno.Buffer();
     buffer.writeSync(encodeOctet(frame.type));
     buffer.writeSync(encodeShortUint(frame.channel));
@@ -78,11 +80,6 @@ function createWriter(w: Deno.Writer) {
     buffer.writeSync(frame.payload);
     buffer.writeSync(encodeOctet(206));
     await w.write(buffer.bytes());
-  };
-}
-
-export function createFraming(conn: Deno.Reader & Deno.Writer) {
-  const read = createReader(conn);
-  const write = createWriter(conn);
-  return { read, write };
+  }
+  return { write };
 }

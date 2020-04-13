@@ -1,4 +1,4 @@
-import { createFraming } from "./amqp_framing.ts";
+import { createFrameReader, createFrameWriter } from "./amqp_framing.ts";
 import {
   test,
   assertEquals,
@@ -12,10 +12,6 @@ function createConn() {
     read: mock.fn(),
     write: mock.fn(() => {}),
   });
-}
-
-function createMiddleware(conn: Deno.Reader & Deno.Writer) {
-  return createFraming(conn);
 }
 
 function createMockReader(data: Uint8Array) {
@@ -37,7 +33,7 @@ function createEofReader() {
 
 test("write method frame", async () => {
   const conn = createConn();
-  const middleware = createMiddleware(conn);
+  const middleware = createFrameWriter(conn);
 
   conn.write.mock.reset();
 
@@ -63,7 +59,7 @@ test("write method frame", async () => {
 
 test("read method frame", async () => {
   const conn = createConn();
-  const middleware = createMiddleware(conn);
+  const middleware = createFrameReader(conn);
 
   const data = arrayOf(
     ...[1],
@@ -86,7 +82,7 @@ test("read method frame", async () => {
 
 test("read heartbeat frame", async () => {
   const conn = createConn();
-  const middleware = createMiddleware(conn);
+  const middleware = createFrameReader(conn);
 
   const data = arrayOf(
     ...[8],
@@ -106,7 +102,7 @@ test("read heartbeat frame", async () => {
 
 test("throws on unknown frame type", async () => {
   const conn = createConn();
-  const middleware = createMiddleware(conn);
+  const middleware = createFrameReader(conn);
 
   const data = arrayOf(
     ...[4],
@@ -127,7 +123,7 @@ test("throws on unknown frame type", async () => {
 
 test("throws on bad frame end", async () => {
   const conn = createConn();
-  const middleware = createMiddleware(conn);
+  const middleware = createFrameReader(conn);
 
   const data = arrayOf(
     ...[8],
@@ -146,7 +142,7 @@ test("throws on bad frame end", async () => {
 test("read throws on EOF", async () => {
   const conn = createConn();
 
-  const framing = createFraming(conn);
+  const framing = createFrameReader(conn);
 
   conn.read.mock.setImplementation(createEofReader());
 
@@ -158,7 +154,7 @@ test("read throws on EOF", async () => {
 test("read throws on broken reader", async () => {
   const conn = createConn();
 
-  const framing = createFraming(conn);
+  const framing = createFrameReader(conn);
 
   conn.read.mock.setImplementation(() => {
     throw new Error("Damn");

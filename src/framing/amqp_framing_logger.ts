@@ -1,38 +1,39 @@
-import { AmqpFraming, Frame } from "./amqp_framing.ts";
+import {
+  AmqpFraming,
+  Frame,
+  AmqpFrameReader,
+  AmqpFrameWriter,
+} from "./amqp_framing.ts";
 
 export interface AmqpLoggingOptions {
   loglevel: "debug" | "none";
 }
 
-class AmqpFramingLogger implements AmqpFraming {
-  constructor(
-    private socket: AmqpFraming,
-    private options: AmqpLoggingOptions,
-  ) {}
-
-  async read(): Promise<Frame> {
-    const frame = await this.socket.read();
-    if (this.options.loglevel === "debug") {
+export function createLoggingReader(
+  reader: AmqpFrameReader,
+  options: AmqpLoggingOptions,
+) {
+  return async () => {
+    const frame = await reader.read();
+    if (options.loglevel === "debug") {
       const prefix = `RECV(${frame.channel}) ${frame.type} ${frame.payload
         .slice(0, 8)}`;
       console.log(prefix);
     }
     return frame;
-  }
+  };
+}
 
-  write(frame: Frame): Promise<void> {
-    if (this.options.loglevel === "debug") {
+export function createLoggingWriter(
+  writer: AmqpFrameWriter,
+  options: AmqpLoggingOptions,
+) {
+  return async (frame: Frame) => {
+    if (options.loglevel === "debug") {
       const prefix = `SEND(${frame.channel}) ${frame.type} ${frame.payload
         .slice(0, 8)}`;
       console.log(prefix);
     }
-    return this.socket.write(frame);
-  }
-}
-
-export function createFramingLogger(
-  framing: AmqpFraming,
-  options: AmqpLoggingOptions,
-): AmqpFraming {
-  return new AmqpFramingLogger(framing, options);
+    return writer.write(frame);
+  };
 }
