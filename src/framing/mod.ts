@@ -12,6 +12,11 @@ import {
   AmqpSocketWriter,
   IncomingFrame,
   OutgoingFrame,
+  ContentFrame,
+  HeaderFrame,
+  HeartbeatFrame,
+  IncomingMethodFrame,
+  OutgoingMethodFrame,
 } from "./amqp_socket.ts";
 import { createAmqpEncoder, createAmqpDecoder } from "./amqp_encoding.ts";
 
@@ -22,6 +27,11 @@ export {
   AmqpSocketWriter,
   IncomingFrame,
   OutgoingFrame,
+  ContentFrame,
+  HeaderFrame,
+  HeartbeatFrame,
+  IncomingMethodFrame,
+  OutgoingMethodFrame,
 };
 
 export function createReader(r: Deno.Reader, options: AmqpLoggingOptions) {

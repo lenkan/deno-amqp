@@ -3,7 +3,6 @@ import {
   assertEquals,
   arrayOf,
   assertThrowsAsync,
-  assertStrContains,
 } from "../testing.ts";
 import { mock } from "../mock.ts";
 import {
@@ -16,6 +15,7 @@ import {
   AmqpSocketWriter,
 } from "../framing/mod.ts";
 import { CONNECTION, CONNECTION_CLOSE_OK } from "../amqp_constants.ts";
+import { ConnectionTuneOkArgs, ConnectionOpenArgs } from "../amqp_types.ts";
 
 function createConn() {
   return {
@@ -68,26 +68,45 @@ function withHeartbeat(
   };
 }
 
+function tuneOk(args: ConnectionTuneOkArgs) {
+  return {
+    type: "method" as const,
+    channel: 0,
+    payload: { classId: 10 as const, methodId: 31 as const, args },
+  };
+}
+
+function open(args: ConnectionOpenArgs) {
+  return {
+    type: "method" as const,
+    channel: 0,
+    payload: { classId: 10 as const, methodId: 40 as const, args },
+  };
+}
+
+function heartbeat() {
+  return {
+    type: "heartbeat" as const,
+    channel: 0,
+    payload: arrayOf(),
+  };
+}
+function content(data: Uint8Array = new Uint8Array(0)) {
+  return {
+    type: "content" as const,
+    channel: 0,
+    payload: data,
+  };
+}
+
 test("does not return heartbeat frames", withHeartbeat(async (conn, socket) => {
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "heartbeat" as const,
-      channel: 0,
-      payload: arrayOf(),
-    },
-    {
-      type: "content",
-      channel: 0,
-      payload: arrayOf(),
-    },
+    heartbeat(),
+    content(),
   ]));
 
   const frame = await socket.read();
-  assertEquals(frame, {
-    type: "content",
-    channel: 0,
-    payload: arrayOf(),
-  });
+  assertEquals(frame, content());
 }));
 
 test(
@@ -95,35 +114,31 @@ test(
   withHeartbeat(async (conn, socket) => {
     const sleeper = sleep(300);
 
-    // tune-ok
-    socket.write(
-      {
-        type: "method",
-        channel: 0,
-        payload: { classId: 10, methodId: 31, args: { heartbeat: 0.1 } },
-      },
-    );
+    socket.write(tuneOk({ channelMax: 0, heartbeat: 0.1 }));
+    socket.write(open({}));
 
-    // open
-    socket.write(
-      {
-        type: "method",
-        channel: 0,
-        payload: { classId: 10, methodId: 40, args: {} },
-      },
-    );
+    conn.read.mock.setImplementation(() => sleeper.then(() => content()));
 
-    conn.read.mock.setImplementation(async () => {
-      await sleeper;
-      const frame = { type: "content", channel: 0, payload: arrayOf() };
-      return frame;
-    });
-
-    const error = await assertThrowsAsync(async () => {
+    await assertThrowsAsync(async () => {
       await socket.read();
-    });
+    }, Error, "missed heartbeat from server, timeout 0.1s");
 
-    assertStrContains(error.message, "timeout");
+    await sleeper;
+  }),
+);
+
+test(
+  "closes connection if reading times out",
+  withHeartbeat(async (conn, socket) => {
+    const sleeper = sleep(300);
+
+    socket.write(tuneOk({ heartbeat: 0.1 }));
+    socket.write(open({}));
+
+    conn.read.mock.setImplementation(() => sleeper.then(() => content()));
+
+    await socket.read().catch(() => {});
+
     assertEquals(conn.close.mock.calls.length, 1);
 
     await sleeper;
@@ -131,29 +146,14 @@ test(
 );
 
 test("sends heartbeat on interval", withHeartbeat(async (conn, socket) => {
-  // tune-ok
-  await socket.write(
-    {
-      type: "method",
-      channel: 0,
-      payload: { classId: 10, methodId: 31, args: { heartbeat: 0.1 } },
-    },
-  );
+  await socket.write(tuneOk({ heartbeat: 0.1 }));
   conn.write.mock.reset();
 
   await sleep(100);
   assertEquals(conn.write.mock.calls.length, 1);
-  assertEquals(conn.write.mock.calls[0][0], {
-    type: "heartbeat",
-    channel: 0,
-    payload: arrayOf(),
-  });
+  assertEquals(conn.write.mock.calls[0][0], heartbeat());
 
   await sleep(200);
   assertEquals(conn.write.mock.calls.length, 2);
-  assertEquals(conn.write.mock.calls[1][0], {
-    type: "heartbeat",
-    channel: 0,
-    payload: arrayOf(),
-  });
+  assertEquals(conn.write.mock.calls[1][0], heartbeat());
 }));

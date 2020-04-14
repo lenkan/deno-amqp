@@ -5,7 +5,15 @@ import {
   AmqpSocketWriter,
   OutgoingFrame,
   IncomingFrame,
+  HeartbeatFrame,
 } from "../framing/mod.ts";
+import {
+  CONNECTION,
+  CONNECTION_TUNE_OK,
+  CONNECTION_OPEN,
+  CONNECTION_CLOSE,
+  CONNECTION_CLOSE_OK,
+} from "../amqp_constants.ts";
 
 const HEARTBEAT_FRAME: OutgoingFrame = {
   type: "heartbeat",
@@ -29,7 +37,7 @@ class AmqpHeartbeatSocket implements AmqpSocketReader, AmqpSocketWriter {
         : 0;
 
       const timeoutMessage =
-        `missed heartbeat from server, timeout ${timeout}s`;
+        `missed heartbeat from server, timeout ${this.heartbeatTimeout}s`;
 
       const frame = await withTimeout(
         async () => this.socket.read(),
@@ -45,12 +53,10 @@ class AmqpHeartbeatSocket implements AmqpSocketReader, AmqpSocketWriter {
         continue;
       }
 
-      // close-ok
-      if (
-        frame.type === "method" && frame.payload.classId === 10 &&
-        frame.payload.methodId === 51
-      ) {
-        this.clear();
+      if (frame.type === "method" && frame.payload.classId === CONNECTION) {
+        if (frame.payload.methodId === CONNECTION_CLOSE_OK) {
+          this.clear();
+        }
       }
 
       return frame;
@@ -58,28 +64,18 @@ class AmqpHeartbeatSocket implements AmqpSocketReader, AmqpSocketWriter {
   }
 
   async write(frame: OutgoingFrame): Promise<void> {
-    // tune-ok
-    if (
-      frame.type === "method" && frame.payload.classId === 10 &&
-      frame.payload.methodId === 31
-    ) {
-      this.heartbeatTimeout = frame.payload.args.heartbeat || 0;
-    }
+    if (frame.type === "method" && frame.payload.classId === CONNECTION) {
+      if (frame.payload.methodId === CONNECTION_TUNE_OK) {
+        this.heartbeatTimeout = frame.payload.args.heartbeat || 0;
+      }
 
-    // open
-    if (
-      frame.type === "method" && frame.payload.classId === 10 &&
-      frame.payload.methodId === 40
-    ) {
-      this.monitorHeartbeats = true;
-    }
+      if (frame.payload.methodId === CONNECTION_OPEN) {
+        this.monitorHeartbeats = true;
+      }
 
-    // close-ok
-    if (
-      frame.type === "method" && frame.payload.classId === 10 &&
-      frame.payload.methodId === 51
-    ) {
-      this.clear();
+      if (frame.payload.methodId === CONNECTION_CLOSE_OK) {
+        this.clear();
+      }
     }
 
     this.resetSendTimer();
