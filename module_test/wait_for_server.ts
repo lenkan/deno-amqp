@@ -1,3 +1,5 @@
+import { connect } from "../mod.ts";
+
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -16,15 +18,10 @@ async function retry<T>(func: () => Promise<T>): Promise<T> {
   throw new Error(`Giving up after 30 retries`);
 }
 
-async function runConnect() {
-  const process = Deno.run(
-    { cmd: ["deno", "--allow-net", "./module_test/connect.ts"] },
-  );
-
-  const status = await process.status();
-  if (!status.success) {
-    throw new Error("Failed to connect");
-  }
+try {
+  const conn = await retry(connect);
+  await conn.close();
+  Deno.exit(0);
+} catch (error) {
+  Deno.exit(1);
 }
-
-await retry(runConnect);

@@ -121,7 +121,7 @@ test(
 
     await assertThrowsAsync(async () => {
       await socket.read();
-    }, Error, "missed heartbeat from server, timeout 0.1s");
+    }, Error, "server heartbeat timeout 0.1s");
 
     await sleeper;
   }),
@@ -142,6 +142,60 @@ test(
     assertEquals(conn.close.mock.calls.length, 1);
 
     await sleeper;
+  }),
+);
+
+test(
+  "handles error that happens after timeout",
+  withHeartbeat(async (conn, socket) => {
+    const sleeper = sleep(300);
+
+    socket.write(tuneOk({ heartbeat: 0.1 }));
+    socket.write(open({}));
+
+    conn.read.mock.setImplementation(() =>
+      sleeper.then(() => {
+        throw new Error("Damn");
+      })
+    );
+
+    await socket.read().catch(() => {});
+
+    assertEquals(conn.close.mock.calls.length, 1);
+
+    await sleeper;
+  }),
+);
+
+test(
+  "does not close connection if socket returns with error",
+  withHeartbeat(async (conn, socket) => {
+    socket.write(tuneOk({ channelMax: 0, heartbeat: 0.1 }));
+    socket.write(open({}));
+
+    conn.read.mock.setImplementation(async () => {
+      throw new Error("Damn");
+    });
+
+    await socket.read().catch(() => {});
+
+    assertEquals(conn.close.mock.calls.length, 0);
+  }),
+);
+
+test(
+  "forwards error from socket",
+  withHeartbeat(async (conn, socket) => {
+    socket.write(tuneOk({ channelMax: 0, heartbeat: 0.1 }));
+    socket.write(open({}));
+
+    conn.read.mock.setImplementation(async () => {
+      throw new Error("Damn");
+    });
+
+    await assertThrowsAsync(async () => {
+      await socket.read();
+    }, Error, "Damn");
   }),
 );
 

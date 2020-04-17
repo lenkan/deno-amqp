@@ -114,11 +114,16 @@ function createSocketDemux(
   reader: AmqpSocketReader,
   subscribers: FrameSubscriber[],
 ): AmqpSource {
-  listen().catch(handleError);
+  listen();
 
   async function listen() {
-    while (true) {
-      emit(await reader.read());
+    try {
+      while (true) {
+        const frame = await reader.read();
+        emit(frame);
+      }
+    } catch (error) {
+      handleError(error);
     }
   }
 

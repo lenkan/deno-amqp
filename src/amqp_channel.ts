@@ -151,7 +151,8 @@ export async function openChannel(
     return protocol.sendExchangeDeclare(channelNumber, args);
   }
 
-  const channel: AmqpChannel = {
+  await protocol.sendChannelOpen(channelNumber, {});
+  return {
     close,
     declareExchange,
     declareQueue,
@@ -162,9 +163,4 @@ export async function openChannel(
     publish,
     qos,
   };
-
-  return new Promise<AmqpChannel>(async (resolve) => {
-    await protocol.sendChannelOpen(channelNumber, {});
-    return resolve(channel);
-  });
 }

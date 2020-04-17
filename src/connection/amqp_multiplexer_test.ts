@@ -5,8 +5,13 @@ import {
   assertThrowsAsync,
 } from "../testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
-import { IncomingFrame } from "../framing/mod.ts";
-import { ConnectionStart } from "../amqp_types.ts";
+import { IncomingFrame, HeaderFrame, ContentFrame } from "../framing/mod.ts";
+import {
+  ConnectionStart,
+  ChannelCloseArgs,
+  ConnectionCloseArgs,
+  BasicProperties,
+} from "../amqp_types.ts";
 import {
   QUEUE,
   QUEUE_DECLARE_OK,
@@ -42,23 +47,75 @@ function createMockReader(frames: IncomingFrame[]) {
   };
 }
 
+function connectionClose(
+  channel: number,
+  args: ConnectionCloseArgs,
+): IncomingFrame {
+  return {
+    type: "method" as const,
+    channel,
+    payload: {
+      classId: CONNECTION,
+      methodId: CONNECTION_CLOSE,
+      args: {
+        replyCode: args.replyCode,
+        replyText: args.replyText || "",
+        classId: args.classId || 0,
+        methodId: args.methodId || 0,
+      },
+    },
+  };
+}
+
+function channelClose(
+  channel: number,
+  args: ChannelCloseArgs,
+): IncomingFrame {
+  return {
+    type: "method" as const,
+    channel,
+    payload: {
+      classId: CHANNEL,
+      methodId: CHANNEL_CLOSE,
+      args: {
+        replyCode: args.replyCode,
+        replyText: args.replyText || "",
+        classId: args.classId || 0,
+        methodId: args.methodId || 0,
+      },
+    },
+  };
+}
+
+function basicHeader(
+  channel: number,
+  size: number,
+  props: BasicProperties,
+): HeaderFrame {
+  return {
+    type: "header" as const,
+    channel,
+    payload: {
+      classId: 60,
+      size,
+      props: props,
+    },
+  };
+}
+
+function contentFrame(channel: number, data: number[]): ContentFrame {
+  return {
+    type: "content",
+    channel,
+    payload: arrayOf(...data),
+  };
+}
+
 test("receive content - header and single content frame", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "header" as const,
-      channel: 1,
-      payload: {
-        classId: 60,
-        size: 2,
-        props: {},
-      },
-    },
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(1, 2),
-    },
+    basicHeader(1, 2, {}),
+    contentFrame(1, [1, 2]),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -71,15 +128,7 @@ test("receive content - header and single content frame", async () => {
 test("receive content - header and no content frame", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "header" as const,
-      channel: 1,
-      payload: {
-        classId: 60,
-        size: 0,
-        props: {},
-      },
-    },
+    basicHeader(1, 0, {}),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -92,25 +141,9 @@ test("receive content - header and no content frame", async () => {
 test("receive content - header and multiple content frames", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "header" as const,
-      channel: 1,
-      payload: {
-        classId: 60,
-        size: 2,
-        props: {},
-      },
-    },
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(1),
-    },
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(2),
-    },
+    basicHeader(1, 2, {}),
+    contentFrame(1, [1]),
+    contentFrame(1, [2]),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -123,20 +156,8 @@ test("receive content - header and multiple content frames", async () => {
 test("receive content - throws error if not enough content", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "header" as const,
-      channel: 1,
-      payload: {
-        classId: 60,
-        size: 2,
-        props: {},
-      },
-    },
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(1),
-    },
+    basicHeader(1, 2, {}),
+    contentFrame(1, [1]),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -149,11 +170,7 @@ test("receive content - throws error if not enough content", async () => {
 test("receive content - throws error if no header", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(1),
-    },
+    contentFrame(1, [1]),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -166,43 +183,11 @@ test("receive content - throws error if no header", async () => {
 test("receive content - can receive content on multiple channels", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "header" as const,
-      channel: 1,
-      payload: {
-        classId: 60,
-        size: 1,
-        props: {
-          correlationId: "1",
-        },
-      },
-    },
-    {
-      type: "header" as const,
-      channel: 2,
-      payload: {
-        classId: 60,
-        size: 2,
-        props: {
-          correlationId: "2",
-        },
-      },
-    },
-    {
-      type: "content",
-      channel: 2,
-      payload: arrayOf(1),
-    },
-    {
-      type: "content",
-      channel: 1,
-      payload: arrayOf(2),
-    },
-    {
-      type: "content",
-      channel: 2,
-      payload: arrayOf(3),
-    },
+    basicHeader(1, 1, { correlationId: "1" }),
+    basicHeader(2, 2, { correlationId: "2" }),
+    contentFrame(2, [1]),
+    contentFrame(1, [2]),
+    contentFrame(2, [3]),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -304,20 +289,12 @@ test("receive - resolves with frame args", async () => {
 test("receive - rejects on channel close", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "method" as const,
-      channel: 1,
-      payload: {
-        classId: CHANNEL,
-        methodId: CHANNEL_CLOSE,
-        args: {
-          replyCode: SOFT_ERROR_ACCESS_REFUSED,
-          replyText: "Some reason",
-          classId: QUEUE,
-          methodId: QUEUE_DECLARE,
-        },
-      },
-    },
+    channelClose(1, {
+      replyCode: SOFT_ERROR_ACCESS_REFUSED,
+      replyText: "Some reason",
+      classId: QUEUE,
+      methodId: QUEUE_DECLARE,
+    }),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -334,20 +311,12 @@ test("receive - rejects on channel close", async () => {
 test("receive - rejects on connection close", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "method" as const,
-      channel: 0,
-      payload: {
-        classId: CONNECTION,
-        methodId: CONNECTION_CLOSE,
-        args: {
-          replyCode: HARD_ERROR_INTERNAL_ERROR,
-          replyText: "Some reason",
-          classId: 0,
-          methodId: 0,
-        },
-      },
-    },
+    connectionClose(0, {
+      replyCode: HARD_ERROR_INTERNAL_ERROR,
+      replyText: "Some reason",
+      classId: 0,
+      methodId: 0,
+    }),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -360,20 +329,12 @@ test("receive - rejects on connection close", async () => {
 test("receive - rejects on connection close with caused by method", async () => {
   const conn = createSocket();
   conn.read.mock.setImplementation(createMockReader([
-    {
-      type: "method" as const,
-      channel: 0,
-      payload: {
-        classId: CONNECTION,
-        methodId: CONNECTION_CLOSE,
-        args: {
-          replyCode: HARD_ERROR_INTERNAL_ERROR,
-          replyText: "Some reason",
-          classId: 60,
-          methodId: 40,
-        },
-      },
-    },
+    connectionClose(0, {
+      replyCode: HARD_ERROR_INTERNAL_ERROR,
+      replyText: "Some reason",
+      classId: 60,
+      methodId: 40,
+    }),
   ]));
 
   const mux = createAmqpMux(conn);
@@ -385,6 +346,33 @@ test("receive - rejects on connection close with caused by method", async () => 
     Error,
     "Connection closed by server - 541 Some reason - caused by 'basic.publish'",
   );
+});
+
+test("receive - stops reading on error", async () => {
+  const conn = createSocket();
+  conn.read.mock.setImplementation(async () => {
+    throw new Error("Damn");
+  });
+
+  createAmqpMux(conn);
+  await sleep(0);
+  await sleep(0);
+  assertEquals(conn.read.mock.calls.length, 1);
+});
+
+test("receive - reads until error", async () => {
+  const conn = createSocket();
+  conn.read.mock.setImplementation(createMockReader([
+    basicHeader(1, 1, {}),
+    contentFrame(1, [1]),
+  ]));
+
+  createAmqpMux(conn);
+  await sleep(0);
+  await sleep(0);
+  await sleep(0);
+  await sleep(0);
+  assertEquals(conn.read.mock.calls.length, 3);
 });
 
 test("subscribe - invokes handler with frame args", async () => {

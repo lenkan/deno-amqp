@@ -2,11 +2,8 @@ import {
   encodeOctet,
   encodeShortUint,
   encodeLongUint,
-  decodeOctet,
-  decodeShortUint,
-  decodeLongUint,
 } from "../encoding/mod.ts";
-
+import { FrameError } from "./frame_error.ts";
 export interface Frame {
   channel: number;
   type: number;
@@ -24,11 +21,12 @@ export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
     const data = new Uint8Array(length);
     const n = await r.read(data);
 
-    if (n === 0) {
-      return readBytes(length);
+    if (n === Deno.EOF) {
+      throw new FrameError("EOF");
     }
 
     if (n !== length) {
+      // TODO(lenkan): What if we simply don't have enough data yet?
       throw new Error(`Expected ${length} bytes from reader, got ${r}`);
     }
 
@@ -37,19 +35,21 @@ export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
 
   async function read(): Promise<Frame> {
     const prefix = await readBytes(7);
-
-    const prefixReader = new Deno.Buffer(prefix);
-    const type = decodeOctet(prefixReader);
-    const channel = decodeShortUint(prefixReader);
-    const length = decodeLongUint(prefixReader);
+    const prefixView = new DataView(prefix.buffer);
+    const type = prefixView.getUint8(0);
+    const channel = prefixView.getUint16(1);
+    const length = prefixView.getUint32(3);
 
     const rest = await readBytes(length + 1);
+    const endByte = rest[rest.length - 1];
 
-    if (rest[rest.length - 1] !== 206) {
-      throw new Error(`Unexpected end token ${rest[rest.length - 1]}`);
+    if (endByte !== 206) {
+      throw new FrameError("BAD_FRAME", `unexpected FRAME_END '${endByte}'`);
     }
 
-    verifyFrame(type);
+    if (![1, 2, 3, 8].includes(type)) {
+      throw new FrameError("BAD_FRAME", `unexpected frame type '${type}'`);
+    }
 
     return {
       type: type,

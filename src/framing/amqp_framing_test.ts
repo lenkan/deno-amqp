@@ -6,6 +6,7 @@ import {
   assertThrowsAsync,
 } from "../testing.ts";
 import { mock } from "../mock.ts";
+import { FrameError } from "./frame_error.ts";
 
 function createConn() {
   return mock.obj<Deno.Reader & Deno.Writer>({
@@ -57,7 +58,7 @@ test("write method frame", async () => {
   ));
 });
 
-test("read method frame", async () => {
+test("read - method frame", async () => {
   const conn = createConn();
   const read = createFrameReader(conn);
 
@@ -80,7 +81,7 @@ test("read method frame", async () => {
   });
 });
 
-test("read heartbeat frame", async () => {
+test("read - heartbeat frame", async () => {
   const conn = createConn();
   const read = createFrameReader(conn);
 
@@ -100,7 +101,7 @@ test("read heartbeat frame", async () => {
   });
 });
 
-test("throws on unknown frame type", async () => {
+test("read - throws on unknown frame type", async () => {
   const conn = createConn();
   const read = createFrameReader(conn);
 
@@ -118,10 +119,10 @@ test("throws on unknown frame type", async () => {
 
   await assertThrowsAsync(async () => {
     await read();
-  });
+  }, FrameError, "BAD_FRAME");
 });
 
-test("throws on bad frame end", async () => {
+test("read - throws on bad frame end", async () => {
   const conn = createConn();
   const read = createFrameReader(conn);
 
@@ -136,10 +137,10 @@ test("throws on bad frame end", async () => {
 
   await assertThrowsAsync(async () => {
     await read();
-  });
+  }, FrameError, "BAD_FRAME");
 });
 
-test("read throws on EOF", async () => {
+test("read - throws on EOF", async () => {
   const conn = createConn();
 
   const read = createFrameReader(conn);
@@ -148,10 +149,10 @@ test("read throws on EOF", async () => {
 
   await assertThrowsAsync(async () => {
     await read();
-  }, Error);
+  }, FrameError, "EOF");
 });
 
-test("read throws on broken reader", async () => {
+test("read - throws on broken reader", async () => {
   const conn = createConn();
 
   const read = createFrameReader(conn);

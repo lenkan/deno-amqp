@@ -52,7 +52,7 @@ export interface AmqpConnection {
   openChannel(): Promise<AmqpChannel>;
 }
 
-export function openConnection(
+export async function openConnection(
   conn: Deno.Conn,
   options: AmqpConnectionOptions,
 ): Promise<AmqpConnection> {
@@ -78,9 +78,14 @@ export function openConnection(
     isOpen = false;
   });
 
+  async function init() {
+    await conn.write(
+      new Uint8Array([...new TextEncoder().encode("AMQP"), 0, 0, 9, 1]),
+    );
+  }
+
   async function open() {
-    await conn.write(new TextEncoder().encode("AMQP"));
-    await conn.write(new Uint8Array([0, 0, 9, 1]));
+    await init();
 
     await protocol.receiveConnectionStart(0);
     await protocol.sendConnectionStartOk(0, {
@@ -142,14 +147,7 @@ export function openConnection(
     throw new Error(`Maximum channels ${channelMax} reached`);
   }
 
-  const connection: AmqpConnection = {
-    close,
-    closed,
-    openChannel: createChannel,
-  };
+  await open();
 
-  return new Promise<AmqpConnection>(async (resolve) => {
-    await open();
-    return resolve(connection);
-  });
+  return { close, closed, openChannel: createChannel };
 }

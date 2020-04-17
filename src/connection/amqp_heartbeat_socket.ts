@@ -1,17 +1,14 @@
-import { withTimeout } from "./with_timeout.ts";
 import {
   AmqpSocket,
   AmqpSocketReader,
   AmqpSocketWriter,
   OutgoingFrame,
   IncomingFrame,
-  HeartbeatFrame,
 } from "../framing/mod.ts";
 import {
   CONNECTION,
   CONNECTION_TUNE_OK,
   CONNECTION_OPEN,
-  CONNECTION_CLOSE,
   CONNECTION_CLOSE_OK,
 } from "../amqp_constants.ts";
 
@@ -30,25 +27,34 @@ class AmqpHeartbeatSocket implements AmqpSocketReader, AmqpSocketWriter {
     private socket: AmqpSocket,
   ) {}
 
-  async read(): Promise<IncomingFrame> {
-    while (true) {
-      const timeout = this.monitorHeartbeats
-        ? this.heartbeatTimeout * 1000 * 2
-        : 0;
+  private async heartbeatRead(): Promise<IncomingFrame> {
+    const timeout = this.monitorHeartbeats
+      ? this.heartbeatTimeout * 1000 * 2
+      : 0;
 
-      const timeoutMessage =
-        `missed heartbeat from server, timeout ${this.heartbeatTimeout}s`;
+    if (timeout === 0) {
+      return this.socket.read();
+    }
 
-      const frame = await withTimeout(
-        async () => this.socket.read(),
-        timeout,
-        timeoutMessage,
-      ).catch((error) => {
+    const timeoutMessage = `server heartbeat timeout ${this.heartbeatTimeout}s`;
+
+    return new Promise(async (resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(timeoutMessage));
         this.clear();
         this.socket.close();
-        throw error;
-      });
+      }, timeout);
 
+      this.socket.read()
+        .then(resolve)
+        .catch(reject)
+        .finally(() => clearInterval(timer));
+    });
+  }
+
+  async read(): Promise<IncomingFrame> {
+    while (true) {
+      const frame = await this.heartbeatRead();
       if (frame.type === "heartbeat") {
         continue;
       }
