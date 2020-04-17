@@ -31,4 +31,4 @@ function generateConnection() {
 const encoder = new TextEncoder();
 const result = encoder.encode(generateConnection());
 
-writeFileSync(`./amqp_constants.ts`, result);
+writeFileSync(`./src/amqp_constants.ts`, result);

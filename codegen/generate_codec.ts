@@ -14,8 +14,6 @@ import {
   printSendMethodDefinition,
   printMethodEncoder,
   printHeaderEncoder,
-  ClassDefinition,
-  MethodDefinition,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
@@ -78,4 +76,4 @@ function generateConnection() {
 const encoder = new TextEncoder();
 const result = encoder.encode(generateConnection());
 
-writeFileSync(`./amqp_codec.ts`, result);
+writeFileSync(`./src/amqp_codec.ts`, result);

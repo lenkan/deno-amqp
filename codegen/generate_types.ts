@@ -24,4 +24,4 @@ function generateConnection() {
 const encoder = new TextEncoder();
 const result = encoder.encode(generateConnection());
 
-writeFileSync(`./amqp_types.ts`, result);
+writeFileSync(`./src/amqp_types.ts`, result);
