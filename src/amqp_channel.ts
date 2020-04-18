@@ -29,9 +29,10 @@ export interface AmqpChannel {
   qos(args: BasicQosArgs): Promise<BasicQosOk>;
   ack(args: BasicAckArgs): Promise<void>;
   nack(args: BasicNackArgs): Promise<void>;
-  consume(args: BasicConsumeArgs, handler: BasicDeliverHandler): Promise<
-    BasicConsumeOk
-  >;
+  consume(
+    args: BasicConsumeArgs,
+    handler: BasicDeliverHandler,
+  ): Promise<BasicConsumeOk>;
   cancel(args: BasicCancelArgs): Promise<BasicCancelOk>;
   publish(
     args: BasicPublishArgs,
@@ -39,9 +40,7 @@ export interface AmqpChannel {
     data: Uint8Array,
   ): Promise<void>;
   declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk>;
-  declareExchange(args: ExchangeDeclareArgs): Promise<
-    ExchangeDeclareOk
-  >;
+  declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOk>;
 }
 
 interface Consumer {
@@ -101,9 +100,7 @@ export async function openChannel(
   async function consume(
     args: BasicConsumeArgs,
     handler: BasicDeliverHandler,
-  ): Promise<
-    BasicConsumeOk
-  > {
+  ): Promise<BasicConsumeOk> {
     const response = await protocol.sendBasicConsume(
       channelNumber,
       args,
@@ -139,15 +136,13 @@ export async function openChannel(
     );
   }
 
-  async function declareQueue(args: QueueDeclareArgs): Promise<
-    QueueDeclareOk
-  > {
+  async function declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
     return protocol.sendQueueDeclare(channelNumber, args);
   }
 
-  async function declareExchange(args: ExchangeDeclareArgs): Promise<
-    ExchangeDeclareOk
-  > {
+  async function declareExchange(
+    args: ExchangeDeclareArgs,
+  ): Promise<ExchangeDeclareOk> {
     return protocol.sendExchangeDeclare(channelNumber, args);
   }
 

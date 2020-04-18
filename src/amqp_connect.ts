@@ -50,9 +50,9 @@ export interface AmqpConnectOptions {
  * Connects to an AMQP broker specified by the options.
  * @param options Connect options
  */
-export async function connect(options: AmqpConnectOptions = {}): Promise<
-  AmqpConnection
-> {
+export async function connect(
+  options: AmqpConnectOptions = {},
+): Promise<AmqpConnection> {
   const {
     hostname = "localhost",
     port = 5672,

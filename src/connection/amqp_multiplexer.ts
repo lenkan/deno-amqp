@@ -54,9 +54,7 @@ export interface AmqpSource {
     channel: number,
     classId: T,
     methodId: U,
-  ): Promise<
-    ExtractMethod<T, U>
-  >;
+  ): Promise<ExtractMethod<T, U>>;
   receiveContent<T extends number>(
     channel: number,
     classId: T,
