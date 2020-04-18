@@ -1,4 +1,7 @@
-import { BufReader } from "https://deno.land/std@v0.41.0/io/bufio.ts";
+import {
+  BufReader,
+  BufWriter,
+} from "https://deno.land/std@v0.41.0/io/bufio.ts";
 import {
   encodeOctet,
   encodeShortUint,
@@ -13,7 +16,7 @@ export interface Frame {
 }
 
 export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
-  const reader = new BufReader(r);
+  const reader = BufReader.create(r);
 
   async function readBytes(length: number): Promise<Uint8Array> {
     const n = await reader.readFull(new Uint8Array(length));
@@ -65,5 +68,6 @@ export function createFrameWriter(
     buffer.writeSync(encodeOctet(206));
     await w.write(buffer.bytes());
   }
+
   return write;
 }
