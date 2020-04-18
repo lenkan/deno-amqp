@@ -1,14 +1,5 @@
-import {
-  BufReader,
-  BufWriter,
-} from "https://deno.land/std@v0.41.0/io/bufio.ts";
-import {
-  encodeOctet,
-  encodeShortUint,
-  encodeLongUint,
-} from "../encoding/mod.ts";
+import { BufReader } from "https://deno.land/std@v0.41.0/io/bufio.ts";
 import { FrameError } from "./frame_error.ts";
-
 export interface Frame {
   channel: number;
   type: number;
@@ -60,13 +51,14 @@ export function createFrameWriter(
   w: Deno.Writer,
 ): (frame: Frame) => Promise<void> {
   async function write(frame: Frame): Promise<void> {
-    const buffer = new Deno.Buffer();
-    buffer.writeSync(encodeOctet(frame.type));
-    buffer.writeSync(encodeShortUint(frame.channel));
-    buffer.writeSync(encodeLongUint(frame.payload.length));
-    buffer.writeSync(frame.payload);
-    buffer.writeSync(encodeOctet(206));
-    await w.write(buffer.bytes());
+    const data = new Uint8Array(7 + frame.payload.length + 1);
+    const view = new DataView(data.buffer);
+    view.setUint8(0, frame.type);
+    view.setUint16(1, frame.channel);
+    view.setUint32(3, frame.payload.length);
+    data.set(frame.payload, 7);
+    view.setUint8(7 + frame.payload.length, 206);
+    await w.write(data);
   }
 
   return write;

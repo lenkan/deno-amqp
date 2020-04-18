@@ -11,7 +11,9 @@ import { FrameError } from "./frame_error.ts";
 function createConn() {
   return mock.obj<Deno.Reader & Deno.Writer>({
     read: mock.fn(),
-    write: mock.fn(() => {}),
+    write: mock.fn(async (p: Uint8Array) => {
+      return p.length;
+    }),
   });
 }
 
@@ -32,13 +34,11 @@ function createEofReader() {
   };
 }
 
-test("write method frame", async () => {
+test("write - method frame", async () => {
   const conn = createConn();
   const write = createFrameWriter(conn);
 
-  conn.write.mock.reset();
-
-  write(
+  await write(
     {
       type: 1,
       channel: 0,
