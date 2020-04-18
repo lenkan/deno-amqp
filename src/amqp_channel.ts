@@ -16,6 +16,8 @@ import {
   ExchangeDeclareArgs,
   ExchangeDeclareOk,
   BasicDeliver,
+  QueueDeleteArgs,
+  QueueDeleteOk,
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
@@ -41,6 +43,7 @@ export interface AmqpChannel {
   ): Promise<void>;
   declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk>;
   declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOk>;
+  deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk>;
 }
 
 interface Consumer {
@@ -51,7 +54,7 @@ interface Consumer {
 export async function openChannel(
   channelNumber: number,
   protocol: AmqpProtocol,
-) {
+): Promise<AmqpChannel> {
   const consumers: Consumer[] = [];
   const cancelDelivery = protocol.subscribeBasicDeliver(
     channelNumber,
@@ -140,6 +143,10 @@ export async function openChannel(
     return protocol.sendQueueDeclare(channelNumber, args);
   }
 
+  async function deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
+    return protocol.sendQueueDelete(channelNumber, args);
+  }
+
   async function declareExchange(
     args: ExchangeDeclareArgs,
   ): Promise<ExchangeDeclareOk> {
@@ -151,6 +158,7 @@ export async function openChannel(
     close,
     declareExchange,
     declareQueue,
+    deleteQueue,
     ack,
     nack,
     cancel,
