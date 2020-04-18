@@ -1,36 +1,28 @@
+import { BufReader } from "https://deno.land/std@v0.41.0/io/bufio.ts";
 import {
   encodeOctet,
   encodeShortUint,
   encodeLongUint,
 } from "../encoding/mod.ts";
 import { FrameError } from "./frame_error.ts";
+
 export interface Frame {
   channel: number;
   type: number;
   payload: Uint8Array;
 }
 
-function verifyFrame(type: number) {
-  if (![1, 2, 3, 8].includes(type)) {
-    throw new Error(`Unknown frame type '${type}'`);
-  }
-}
-
 export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
+  const reader = new BufReader(r);
+
   async function readBytes(length: number): Promise<Uint8Array> {
-    const data = new Uint8Array(length);
-    const n = await r.read(data);
+    const n = await reader.readFull(new Uint8Array(length));
 
     if (n === Deno.EOF) {
       throw new FrameError("EOF");
     }
 
-    if (n !== length) {
-      // TODO(lenkan): What if we simply don't have enough data yet?
-      throw new Error(`Expected ${length} bytes from reader, got ${r}`);
-    }
-
-    return data;
+    return n;
   }
 
   async function read(): Promise<Frame> {
