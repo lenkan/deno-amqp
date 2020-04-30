@@ -30,7 +30,7 @@ function createMockReader(data: Uint8Array) {
 
 function createEofReader() {
   return function mockRead(p: Uint8Array) {
-    return Promise.resolve(Deno.EOF);
+    return Promise.resolve(null);
   };
 }
 
@@ -47,15 +47,18 @@ test("write - method frame", async () => {
   );
 
   assertEquals(conn.write.mock.calls.length, 1);
-  assertEquals(conn.write.mock.calls[0][0], arrayOf(
-    ...[1],
-    ...[0, 0],
-    ...[0, 0, 0, 5],
-    ...[0, 10],
-    ...[0, 11],
-    ...[123],
-    ...[206],
-  ));
+  assertEquals(
+    conn.write.mock.calls[0][0],
+    arrayOf(
+      ...[1],
+      ...[0, 0],
+      ...[0, 0, 0, 5],
+      ...[0, 10],
+      ...[0, 11],
+      ...[123],
+      ...[206],
+    ),
+  );
 });
 
 test("read - method frame", async () => {
@@ -117,9 +120,13 @@ test("read - throws on unknown frame type", async () => {
 
   conn.read.mock.setImplementation(createMockReader(data));
 
-  await assertThrowsAsync(async () => {
-    await read();
-  }, FrameError, "BAD_FRAME");
+  await assertThrowsAsync(
+    async () => {
+      await read();
+    },
+    FrameError,
+    "BAD_FRAME",
+  );
 });
 
 test("read - throws on bad frame end", async () => {
@@ -135,9 +142,13 @@ test("read - throws on bad frame end", async () => {
 
   conn.read.mock.setImplementation(createMockReader(data));
 
-  await assertThrowsAsync(async () => {
-    await read();
-  }, FrameError, "BAD_FRAME");
+  await assertThrowsAsync(
+    async () => {
+      await read();
+    },
+    FrameError,
+    "BAD_FRAME",
+  );
 });
 
 test("read - throws on EOF", async () => {
@@ -147,9 +158,13 @@ test("read - throws on EOF", async () => {
 
   conn.read.mock.setImplementation(createEofReader());
 
-  await assertThrowsAsync(async () => {
-    await read();
-  }, FrameError, "EOF");
+  await assertThrowsAsync(
+    async () => {
+      await read();
+    },
+    FrameError,
+    "EOF",
+  );
 });
 
 test("read - throws on broken reader", async () => {
@@ -161,7 +176,11 @@ test("read - throws on broken reader", async () => {
     throw new Error("Damn");
   });
 
-  await assertThrowsAsync(async () => {
-    await read();
-  }, Error, "Damn");
+  await assertThrowsAsync(
+    async () => {
+      await read();
+    },
+    Error,
+    "Damn",
+  );
 });

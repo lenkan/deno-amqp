@@ -23,13 +23,17 @@ const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
 function printMethodNameFunction(spec: Spec) {
   return `
 const methodNames: Record<number, Record<number, string>> = {
-  ${spec.classes.map((clazz) => {
-    return `[${clazz.id}]: {
-      ${clazz.methods.map((method) => {
-      return `[${method.id}]: "${clazz.name}.${method.name}"`;
-    })}
+  ${
+    spec.classes.map((clazz) => {
+      return `[${clazz.id}]: {
+      ${
+        clazz.methods.map((method) => {
+          return `[${method.id}]: "${clazz.name}.${method.name}"`;
+        })
+      }
     }`;
-  })}
+    })
+  }
 }
 
 export function getMethodName(classId: number, methodId: number): string | undefined {

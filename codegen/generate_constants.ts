@@ -19,9 +19,11 @@ function generateConnection() {
       return [
         `export const ${constantName(c.name)} = ${c.id} as const`,
         ...c.methods.map((m) =>
-          `export const ${constantName(
-            c.name + "_" + m.name,
-          )} = ${m.id} as const`
+          `export const ${
+            constantName(
+              c.name + "_" + m.name,
+            )
+          } = ${m.id} as const`
         ),
       ];
     }),

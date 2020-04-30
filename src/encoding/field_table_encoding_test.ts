@@ -38,14 +38,17 @@ test("encode table - with array", () => {
   };
 
   const encoded = enc.encodeTable(table);
-  assertEquals(encoded, arrayOf(
-    ...[0, 0, 0, 19],
-    ...[1, 97],
-    ...[65, 0, 0, 0, 12],
-    ...[98, 123],
-    ...[116, 1],
-    ...[83, 0, 0, 0, 3, 97, 98, 99],
-  ));
+  assertEquals(
+    encoded,
+    arrayOf(
+      ...[0, 0, 0, 19],
+      ...[1, 97],
+      ...[65, 0, 0, 0, 12],
+      ...[98, 123],
+      ...[116, 1],
+      ...[83, 0, 0, 0, 3, 97, 98, 99],
+    ),
+  );
 });
 
 test("decode table - with array", () => {

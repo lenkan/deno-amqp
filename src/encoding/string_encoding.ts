@@ -19,7 +19,7 @@ export function encodeShortString(value: string) {
   return new Uint8Array([encoded.length, ...encoded]);
 }
 
-export function decodeShortString(r: Deno.SyncReader): string {
+export function decodeShortString(r: Deno.ReaderSync): string {
   const size = decodeOctet(r);
   const data = readBytesSync(r, size);
   const value = textDecoder.decode(data);
@@ -39,7 +39,7 @@ export function encodeLongString(value: string) {
   return buffer.bytes();
 }
 
-export function decodeLongString(r: Deno.SyncReader): string {
+export function decodeLongString(r: Deno.ReaderSync): string {
   const size = decodeLongUint(r);
   const data = readBytesSync(r, size);
   return textDecoder.decode(data);

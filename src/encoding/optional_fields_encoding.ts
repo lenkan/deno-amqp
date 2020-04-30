@@ -96,7 +96,7 @@ export function encodeFlags(flags: boolean[]) {
   return buffer.bytes();
 }
 
-export function decodeFlags(r: Deno.SyncReader) {
+export function decodeFlags(r: Deno.ReaderSync) {
   let bits = readBitField(decodeShortUint(r));
 
   const flags = bits.slice(0, 15);
@@ -130,7 +130,7 @@ export function encodeOptionalFields(fields: AmqpOptionalField[]): Uint8Array {
 }
 
 export function decodeOptionalFields(
-  r: Deno.SyncReader,
+  r: Deno.ReaderSync,
   types: AmqpFieldType[],
 ): AmqpOptionalFieldValue[] {
   const fields: AmqpOptionalFieldValue[] = [];

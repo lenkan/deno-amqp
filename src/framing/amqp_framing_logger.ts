@@ -11,8 +11,10 @@ export function createLoggingReader(
   return async () => {
     const frame = await reader();
     if (options.loglevel === "debug") {
-      const prefix = `RECV(${frame.channel}) ${frame.type} ${frame.payload
-        .slice(0, 8)}`;
+      const prefix = `RECV(${frame.channel}) ${frame.type} ${
+        frame.payload
+          .slice(0, 8)
+      }`;
       console.log(prefix);
     }
     return frame;
@@ -25,8 +27,10 @@ export function createLoggingWriter(
 ) {
   return async (frame: Frame) => {
     if (options.loglevel === "debug") {
-      const prefix = `SEND(${frame.channel}) ${frame.type} ${frame.payload
-        .slice(0, 8)}`;
+      const prefix = `SEND(${frame.channel}) ${frame.type} ${
+        frame.payload
+          .slice(0, 8)
+      }`;
       console.log(prefix);
     }
     return writer(frame);

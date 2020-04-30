@@ -99,15 +99,18 @@ function content(data: Uint8Array = new Uint8Array(0)) {
   };
 }
 
-test("does not return heartbeat frames", withHeartbeat(async (conn, socket) => {
-  conn.read.mock.setImplementation(createMockReader([
-    heartbeat(),
-    content(),
-  ]));
+test(
+  "does not return heartbeat frames",
+  withHeartbeat(async (conn, socket) => {
+    conn.read.mock.setImplementation(createMockReader([
+      heartbeat(),
+      content(),
+    ]));
 
-  const frame = await socket.read();
-  assertEquals(frame, content());
-}));
+    const frame = await socket.read();
+    assertEquals(frame, content());
+  }),
+);
 
 test(
   "throws error if reading times out",
@@ -119,9 +122,13 @@ test(
 
     conn.read.mock.setImplementation(() => sleeper.then(() => content()));
 
-    await assertThrowsAsync(async () => {
-      await socket.read();
-    }, Error, "server heartbeat timeout 0.1s");
+    await assertThrowsAsync(
+      async () => {
+        await socket.read();
+      },
+      Error,
+      "server heartbeat timeout 0.1s",
+    );
 
     await sleeper;
   }),
@@ -193,21 +200,28 @@ test(
       throw new Error("Damn");
     });
 
-    await assertThrowsAsync(async () => {
-      await socket.read();
-    }, Error, "Damn");
+    await assertThrowsAsync(
+      async () => {
+        await socket.read();
+      },
+      Error,
+      "Damn",
+    );
   }),
 );
 
-test("sends heartbeat on interval", withHeartbeat(async (conn, socket) => {
-  await socket.write(tuneOk({ heartbeat: 0.1 }));
-  conn.write.mock.reset();
+test(
+  "sends heartbeat on interval",
+  withHeartbeat(async (conn, socket) => {
+    await socket.write(tuneOk({ heartbeat: 0.1 }));
+    conn.write.mock.reset();
 
-  await sleep(100);
-  assertEquals(conn.write.mock.calls.length, 1);
-  assertEquals(conn.write.mock.calls[0][0], heartbeat());
+    await sleep(100);
+    assertEquals(conn.write.mock.calls.length, 1);
+    assertEquals(conn.write.mock.calls[0][0], heartbeat());
 
-  await sleep(200);
-  assertEquals(conn.write.mock.calls.length, 2);
-  assertEquals(conn.write.mock.calls[1][0], heartbeat());
-}));
+    await sleep(200);
+    assertEquals(conn.write.mock.calls.length, 2);
+    assertEquals(conn.write.mock.calls[1][0], heartbeat());
+  }),
+);

@@ -100,7 +100,7 @@ export function encodeFields(fields: AmqpField[]): Uint8Array {
 }
 
 export function decodeField(
-  r: Deno.SyncReader,
+  r: Deno.ReaderSync,
   type: Exclude<AmqpFieldType, "bit">,
 ) {
   switch (type) {
@@ -125,7 +125,7 @@ export function decodeField(
 }
 
 export function decodeFields(
-  reader: Deno.SyncReader,
+  reader: Deno.ReaderSync,
   types: AmqpFieldType[],
 ): AmqpFieldValue[] {
   const values: AmqpFieldValue[] = [];

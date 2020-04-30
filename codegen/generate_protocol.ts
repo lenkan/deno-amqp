@@ -65,9 +65,11 @@ function printSendMethodFunction(
       async ${name}(channel: number, args: t.${argsName}): Promise<${returnType}> {
         await this.mux.send(channel, ${clazz.id}, ${method.id}, args);
         return Promise.race([
-          ${responses.map((res) => {
-      return `this.mux.receive(channel, ${clazz.id}, ${res.id})`;
-    }).join(",")}
+          ${
+      responses.map((res) => {
+        return `this.mux.receive(channel, ${clazz.id}, ${res.id})`;
+      }).join(",")
+    }
         ])
       }
     `;
@@ -88,9 +90,11 @@ function printReceiveMethodFunction(
   const name = `receive${pascalName}`;
 
   if (!method.content) {
-    const returnType = `t.${pascalCase(clazz.name)}${pascalCase(
-      method.name,
-    )}`;
+    const returnType = `t.${pascalCase(clazz.name)}${
+      pascalCase(
+        method.name,
+      )
+    }`;
     return `
       async ${name}(channel: number): Promise<${returnType}> {
         return this.mux.receive(channel, ${clazz.id}, ${method.id});
@@ -131,21 +135,27 @@ function printAmqpProtocolClass() {
 export class AmqpProtocol {
   constructor(private mux: AmqpMultiplexer) {}
 
-  ${spec.classes.flatMap((c) =>
-    c.methods.filter((m) => isClientMethod(c, m)).map((m) =>
-      printSendMethodFunction(c, m)
-    )
-  ).join("\n")}
-  ${spec.classes.flatMap((c) =>
-    c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
-      printReceiveMethodFunction(c, m)
-    )
-  ).join("\n")}
-  ${spec.classes.flatMap((c) =>
-    c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
-      printSubscribeMethodFunction(c, m)
-    )
-  ).join("\n")}
+  ${
+    spec.classes.flatMap((c) =>
+      c.methods.filter((m) => isClientMethod(c, m)).map((m) =>
+        printSendMethodFunction(c, m)
+      )
+    ).join("\n")
+  }
+  ${
+    spec.classes.flatMap((c) =>
+      c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
+        printReceiveMethodFunction(c, m)
+      )
+    ).join("\n")
+  }
+  ${
+    spec.classes.flatMap((c) =>
+      c.methods.filter((m) => isServerMethod(c, m)).map((m) =>
+        printSubscribeMethodFunction(c, m)
+      )
+    ).join("\n")
+  }
 }
   `;
 }

@@ -1,4 +1,4 @@
-import { BufReader } from "https://deno.land/std@v0.41.0/io/bufio.ts";
+import { BufReader } from "https://deno.land/std@v0.42.0/io/bufio.ts";
 import { FrameError } from "./frame_error.ts";
 export interface Frame {
   channel: number;
@@ -12,7 +12,7 @@ export function createFrameReader(r: Deno.Reader): () => Promise<Frame> {
   async function readBytes(length: number): Promise<Uint8Array> {
     const n = await reader.readFull(new Uint8Array(length));
 
-    if (n === Deno.EOF) {
+    if (n === null) {
       throw new FrameError("EOF");
     }
 

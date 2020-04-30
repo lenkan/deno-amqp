@@ -15,7 +15,7 @@ function padArray<T>(array: T[], size: number, value: T) {
   return array.concat(...padding);
 }
 
-function readBytesSync(r: Deno.SyncReader, length: number): Uint8Array {
+function readBytesSync(r: Deno.ReaderSync, length: number): Uint8Array {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 
@@ -68,7 +68,7 @@ export function encodeBits(
   return new Uint8Array(bytes);
 }
 
-export function decodeBits(r: Deno.SyncReader, length: number) {
+export function decodeBits(r: Deno.ReaderSync, length: number) {
   const bytes = Math.ceil(length / 8);
   const data = readBytesSync(r, bytes);
   const bits: boolean[] = [];

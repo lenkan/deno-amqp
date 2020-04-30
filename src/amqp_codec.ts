@@ -2015,7 +2015,7 @@ function encodeConfirmSelectOk(args: t.ConfirmSelectOkArgs): Uint8Array {
   ]);
 }
 
-function decodeConnectionStart(r: Deno.SyncReader): t.ConnectionStart {
+function decodeConnectionStart(r: Deno.ReaderSync): t.ConnectionStart {
   const fields = enc.decodeFields(
     r,
     ["octet", "octet", "table", "longstr", "longstr"],
@@ -2030,7 +2030,7 @@ function decodeConnectionStart(r: Deno.SyncReader): t.ConnectionStart {
   return args;
 }
 
-function decodeConnectionStartOk(r: Deno.SyncReader): t.ConnectionStartOk {
+function decodeConnectionStartOk(r: Deno.ReaderSync): t.ConnectionStartOk {
   const fields = enc.decodeFields(
     r,
     ["table", "shortstr", "longstr", "shortstr"],
@@ -2044,19 +2044,19 @@ function decodeConnectionStartOk(r: Deno.SyncReader): t.ConnectionStartOk {
   return args;
 }
 
-function decodeConnectionSecure(r: Deno.SyncReader): t.ConnectionSecure {
+function decodeConnectionSecure(r: Deno.ReaderSync): t.ConnectionSecure {
   const fields = enc.decodeFields(r, ["longstr"]);
   const args = { challenge: fields[0] as string };
   return args;
 }
 
-function decodeConnectionSecureOk(r: Deno.SyncReader): t.ConnectionSecureOk {
+function decodeConnectionSecureOk(r: Deno.ReaderSync): t.ConnectionSecureOk {
   const fields = enc.decodeFields(r, ["longstr"]);
   const args = { response: fields[0] as string };
   return args;
 }
 
-function decodeConnectionTune(r: Deno.SyncReader): t.ConnectionTune {
+function decodeConnectionTune(r: Deno.ReaderSync): t.ConnectionTune {
   const fields = enc.decodeFields(r, ["short", "long", "short"]);
   const args = {
     channelMax: fields[0] as number,
@@ -2066,7 +2066,7 @@ function decodeConnectionTune(r: Deno.SyncReader): t.ConnectionTune {
   return args;
 }
 
-function decodeConnectionTuneOk(r: Deno.SyncReader): t.ConnectionTuneOk {
+function decodeConnectionTuneOk(r: Deno.ReaderSync): t.ConnectionTuneOk {
   const fields = enc.decodeFields(r, ["short", "long", "short"]);
   const args = {
     channelMax: fields[0] as number,
@@ -2076,7 +2076,7 @@ function decodeConnectionTuneOk(r: Deno.SyncReader): t.ConnectionTuneOk {
   return args;
 }
 
-function decodeConnectionOpen(r: Deno.SyncReader): t.ConnectionOpen {
+function decodeConnectionOpen(r: Deno.ReaderSync): t.ConnectionOpen {
   const fields = enc.decodeFields(r, ["shortstr", "shortstr", "bit"]);
   const args = {
     virtualHost: fields[0] as string,
@@ -2086,13 +2086,13 @@ function decodeConnectionOpen(r: Deno.SyncReader): t.ConnectionOpen {
   return args;
 }
 
-function decodeConnectionOpenOk(r: Deno.SyncReader): t.ConnectionOpenOk {
+function decodeConnectionOpenOk(r: Deno.ReaderSync): t.ConnectionOpenOk {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { knownHosts: fields[0] as string };
   return args;
 }
 
-function decodeConnectionClose(r: Deno.SyncReader): t.ConnectionClose {
+function decodeConnectionClose(r: Deno.ReaderSync): t.ConnectionClose {
   const fields = enc.decodeFields(r, ["short", "shortstr", "short", "short"]);
   const args = {
     replyCode: fields[0] as number,
@@ -2103,26 +2103,26 @@ function decodeConnectionClose(r: Deno.SyncReader): t.ConnectionClose {
   return args;
 }
 
-function decodeConnectionCloseOk(r: Deno.SyncReader): t.ConnectionCloseOk {
+function decodeConnectionCloseOk(r: Deno.ReaderSync): t.ConnectionCloseOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeConnectionBlocked(r: Deno.SyncReader): t.ConnectionBlocked {
+function decodeConnectionBlocked(r: Deno.ReaderSync): t.ConnectionBlocked {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { reason: fields[0] as string };
   return args;
 }
 
-function decodeConnectionUnblocked(r: Deno.SyncReader): t.ConnectionUnblocked {
+function decodeConnectionUnblocked(r: Deno.ReaderSync): t.ConnectionUnblocked {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
 function decodeConnectionUpdateSecret(
-  r: Deno.SyncReader,
+  r: Deno.ReaderSync,
 ): t.ConnectionUpdateSecret {
   const fields = enc.decodeFields(r, ["longstr", "shortstr"]);
   const args = { newSecret: fields[0] as string, reason: fields[1] as string };
@@ -2130,38 +2130,38 @@ function decodeConnectionUpdateSecret(
 }
 
 function decodeConnectionUpdateSecretOk(
-  r: Deno.SyncReader,
+  r: Deno.ReaderSync,
 ): t.ConnectionUpdateSecretOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeChannelOpen(r: Deno.SyncReader): t.ChannelOpen {
+function decodeChannelOpen(r: Deno.ReaderSync): t.ChannelOpen {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { outOfBand: fields[0] as string };
   return args;
 }
 
-function decodeChannelOpenOk(r: Deno.SyncReader): t.ChannelOpenOk {
+function decodeChannelOpenOk(r: Deno.ReaderSync): t.ChannelOpenOk {
   const fields = enc.decodeFields(r, ["longstr"]);
   const args = { channelId: fields[0] as string };
   return args;
 }
 
-function decodeChannelFlow(r: Deno.SyncReader): t.ChannelFlow {
+function decodeChannelFlow(r: Deno.ReaderSync): t.ChannelFlow {
   const fields = enc.decodeFields(r, ["bit"]);
   const args = { active: fields[0] as boolean };
   return args;
 }
 
-function decodeChannelFlowOk(r: Deno.SyncReader): t.ChannelFlowOk {
+function decodeChannelFlowOk(r: Deno.ReaderSync): t.ChannelFlowOk {
   const fields = enc.decodeFields(r, ["bit"]);
   const args = { active: fields[0] as boolean };
   return args;
 }
 
-function decodeChannelClose(r: Deno.SyncReader): t.ChannelClose {
+function decodeChannelClose(r: Deno.ReaderSync): t.ChannelClose {
   const fields = enc.decodeFields(r, ["short", "shortstr", "short", "short"]);
   const args = {
     replyCode: fields[0] as number,
@@ -2172,13 +2172,13 @@ function decodeChannelClose(r: Deno.SyncReader): t.ChannelClose {
   return args;
 }
 
-function decodeChannelCloseOk(r: Deno.SyncReader): t.ChannelCloseOk {
+function decodeChannelCloseOk(r: Deno.ReaderSync): t.ChannelCloseOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeAccessRequest(r: Deno.SyncReader): t.AccessRequest {
+function decodeAccessRequest(r: Deno.ReaderSync): t.AccessRequest {
   const fields = enc.decodeFields(
     r,
     ["shortstr", "bit", "bit", "bit", "bit", "bit"],
@@ -2194,13 +2194,13 @@ function decodeAccessRequest(r: Deno.SyncReader): t.AccessRequest {
   return args;
 }
 
-function decodeAccessRequestOk(r: Deno.SyncReader): t.AccessRequestOk {
+function decodeAccessRequestOk(r: Deno.ReaderSync): t.AccessRequestOk {
   const fields = enc.decodeFields(r, ["short"]);
   const args = { ticket: fields[0] as number };
   return args;
 }
 
-function decodeExchangeDeclare(r: Deno.SyncReader): t.ExchangeDeclare {
+function decodeExchangeDeclare(r: Deno.ReaderSync): t.ExchangeDeclare {
   const fields = enc.decodeFields(
     r,
     [
@@ -2229,13 +2229,13 @@ function decodeExchangeDeclare(r: Deno.SyncReader): t.ExchangeDeclare {
   return args;
 }
 
-function decodeExchangeDeclareOk(r: Deno.SyncReader): t.ExchangeDeclareOk {
+function decodeExchangeDeclareOk(r: Deno.ReaderSync): t.ExchangeDeclareOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeExchangeDelete(r: Deno.SyncReader): t.ExchangeDelete {
+function decodeExchangeDelete(r: Deno.ReaderSync): t.ExchangeDelete {
   const fields = enc.decodeFields(r, ["short", "shortstr", "bit", "bit"]);
   const args = {
     ticket: fields[0] as number,
@@ -2246,13 +2246,13 @@ function decodeExchangeDelete(r: Deno.SyncReader): t.ExchangeDelete {
   return args;
 }
 
-function decodeExchangeDeleteOk(r: Deno.SyncReader): t.ExchangeDeleteOk {
+function decodeExchangeDeleteOk(r: Deno.ReaderSync): t.ExchangeDeleteOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeExchangeBind(r: Deno.SyncReader): t.ExchangeBind {
+function decodeExchangeBind(r: Deno.ReaderSync): t.ExchangeBind {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
@@ -2268,13 +2268,13 @@ function decodeExchangeBind(r: Deno.SyncReader): t.ExchangeBind {
   return args;
 }
 
-function decodeExchangeBindOk(r: Deno.SyncReader): t.ExchangeBindOk {
+function decodeExchangeBindOk(r: Deno.ReaderSync): t.ExchangeBindOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeExchangeUnbind(r: Deno.SyncReader): t.ExchangeUnbind {
+function decodeExchangeUnbind(r: Deno.ReaderSync): t.ExchangeUnbind {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
@@ -2290,13 +2290,13 @@ function decodeExchangeUnbind(r: Deno.SyncReader): t.ExchangeUnbind {
   return args;
 }
 
-function decodeExchangeUnbindOk(r: Deno.SyncReader): t.ExchangeUnbindOk {
+function decodeExchangeUnbindOk(r: Deno.ReaderSync): t.ExchangeUnbindOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeQueueDeclare(r: Deno.SyncReader): t.QueueDeclare {
+function decodeQueueDeclare(r: Deno.ReaderSync): t.QueueDeclare {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "bit", "bit", "bit", "bit", "bit", "table"],
@@ -2314,7 +2314,7 @@ function decodeQueueDeclare(r: Deno.SyncReader): t.QueueDeclare {
   return args;
 }
 
-function decodeQueueDeclareOk(r: Deno.SyncReader): t.QueueDeclareOk {
+function decodeQueueDeclareOk(r: Deno.ReaderSync): t.QueueDeclareOk {
   const fields = enc.decodeFields(r, ["shortstr", "long", "long"]);
   const args = {
     queue: fields[0] as string,
@@ -2324,7 +2324,7 @@ function decodeQueueDeclareOk(r: Deno.SyncReader): t.QueueDeclareOk {
   return args;
 }
 
-function decodeQueueBind(r: Deno.SyncReader): t.QueueBind {
+function decodeQueueBind(r: Deno.ReaderSync): t.QueueBind {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
@@ -2340,13 +2340,13 @@ function decodeQueueBind(r: Deno.SyncReader): t.QueueBind {
   return args;
 }
 
-function decodeQueueBindOk(r: Deno.SyncReader): t.QueueBindOk {
+function decodeQueueBindOk(r: Deno.ReaderSync): t.QueueBindOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeQueuePurge(r: Deno.SyncReader): t.QueuePurge {
+function decodeQueuePurge(r: Deno.ReaderSync): t.QueuePurge {
   const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
   const args = {
     ticket: fields[0] as number,
@@ -2356,13 +2356,13 @@ function decodeQueuePurge(r: Deno.SyncReader): t.QueuePurge {
   return args;
 }
 
-function decodeQueuePurgeOk(r: Deno.SyncReader): t.QueuePurgeOk {
+function decodeQueuePurgeOk(r: Deno.ReaderSync): t.QueuePurgeOk {
   const fields = enc.decodeFields(r, ["long"]);
   const args = { messageCount: fields[0] as number };
   return args;
 }
 
-function decodeQueueDelete(r: Deno.SyncReader): t.QueueDelete {
+function decodeQueueDelete(r: Deno.ReaderSync): t.QueueDelete {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "bit", "bit", "bit"],
@@ -2377,13 +2377,13 @@ function decodeQueueDelete(r: Deno.SyncReader): t.QueueDelete {
   return args;
 }
 
-function decodeQueueDeleteOk(r: Deno.SyncReader): t.QueueDeleteOk {
+function decodeQueueDeleteOk(r: Deno.ReaderSync): t.QueueDeleteOk {
   const fields = enc.decodeFields(r, ["long"]);
   const args = { messageCount: fields[0] as number };
   return args;
 }
 
-function decodeQueueUnbind(r: Deno.SyncReader): t.QueueUnbind {
+function decodeQueueUnbind(r: Deno.ReaderSync): t.QueueUnbind {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "shortstr", "table"],
@@ -2398,13 +2398,13 @@ function decodeQueueUnbind(r: Deno.SyncReader): t.QueueUnbind {
   return args;
 }
 
-function decodeQueueUnbindOk(r: Deno.SyncReader): t.QueueUnbindOk {
+function decodeQueueUnbindOk(r: Deno.ReaderSync): t.QueueUnbindOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeBasicQos(r: Deno.SyncReader): t.BasicQos {
+function decodeBasicQos(r: Deno.ReaderSync): t.BasicQos {
   const fields = enc.decodeFields(r, ["long", "short", "bit"]);
   const args = {
     prefetchSize: fields[0] as number,
@@ -2414,13 +2414,13 @@ function decodeBasicQos(r: Deno.SyncReader): t.BasicQos {
   return args;
 }
 
-function decodeBasicQosOk(r: Deno.SyncReader): t.BasicQosOk {
+function decodeBasicQosOk(r: Deno.ReaderSync): t.BasicQosOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeBasicConsume(r: Deno.SyncReader): t.BasicConsume {
+function decodeBasicConsume(r: Deno.ReaderSync): t.BasicConsume {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "bit", "bit", "bit", "bit", "table"],
@@ -2438,13 +2438,13 @@ function decodeBasicConsume(r: Deno.SyncReader): t.BasicConsume {
   return args;
 }
 
-function decodeBasicConsumeOk(r: Deno.SyncReader): t.BasicConsumeOk {
+function decodeBasicConsumeOk(r: Deno.ReaderSync): t.BasicConsumeOk {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { consumerTag: fields[0] as string };
   return args;
 }
 
-function decodeBasicCancel(r: Deno.SyncReader): t.BasicCancel {
+function decodeBasicCancel(r: Deno.ReaderSync): t.BasicCancel {
   const fields = enc.decodeFields(r, ["shortstr", "bit"]);
   const args = {
     consumerTag: fields[0] as string,
@@ -2453,13 +2453,13 @@ function decodeBasicCancel(r: Deno.SyncReader): t.BasicCancel {
   return args;
 }
 
-function decodeBasicCancelOk(r: Deno.SyncReader): t.BasicCancelOk {
+function decodeBasicCancelOk(r: Deno.ReaderSync): t.BasicCancelOk {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { consumerTag: fields[0] as string };
   return args;
 }
 
-function decodeBasicPublish(r: Deno.SyncReader): t.BasicPublish {
+function decodeBasicPublish(r: Deno.ReaderSync): t.BasicPublish {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "bit", "bit"],
@@ -2474,7 +2474,7 @@ function decodeBasicPublish(r: Deno.SyncReader): t.BasicPublish {
   return args;
 }
 
-function decodeBasicReturn(r: Deno.SyncReader): t.BasicReturn {
+function decodeBasicReturn(r: Deno.ReaderSync): t.BasicReturn {
   const fields = enc.decodeFields(
     r,
     ["short", "shortstr", "shortstr", "shortstr"],
@@ -2488,7 +2488,7 @@ function decodeBasicReturn(r: Deno.SyncReader): t.BasicReturn {
   return args;
 }
 
-function decodeBasicDeliver(r: Deno.SyncReader): t.BasicDeliver {
+function decodeBasicDeliver(r: Deno.ReaderSync): t.BasicDeliver {
   const fields = enc.decodeFields(
     r,
     ["shortstr", "longlong", "bit", "shortstr", "shortstr"],
@@ -2503,7 +2503,7 @@ function decodeBasicDeliver(r: Deno.SyncReader): t.BasicDeliver {
   return args;
 }
 
-function decodeBasicGet(r: Deno.SyncReader): t.BasicGet {
+function decodeBasicGet(r: Deno.ReaderSync): t.BasicGet {
   const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
   const args = {
     ticket: fields[0] as number,
@@ -2513,7 +2513,7 @@ function decodeBasicGet(r: Deno.SyncReader): t.BasicGet {
   return args;
 }
 
-function decodeBasicGetOk(r: Deno.SyncReader): t.BasicGetOk {
+function decodeBasicGetOk(r: Deno.ReaderSync): t.BasicGetOk {
   const fields = enc.decodeFields(
     r,
     ["longlong", "bit", "shortstr", "shortstr", "long"],
@@ -2528,13 +2528,13 @@ function decodeBasicGetOk(r: Deno.SyncReader): t.BasicGetOk {
   return args;
 }
 
-function decodeBasicGetEmpty(r: Deno.SyncReader): t.BasicGetEmpty {
+function decodeBasicGetEmpty(r: Deno.ReaderSync): t.BasicGetEmpty {
   const fields = enc.decodeFields(r, ["shortstr"]);
   const args = { clusterId: fields[0] as string };
   return args;
 }
 
-function decodeBasicAck(r: Deno.SyncReader): t.BasicAck {
+function decodeBasicAck(r: Deno.ReaderSync): t.BasicAck {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
     deliveryTag: fields[0] as number,
@@ -2543,7 +2543,7 @@ function decodeBasicAck(r: Deno.SyncReader): t.BasicAck {
   return args;
 }
 
-function decodeBasicReject(r: Deno.SyncReader): t.BasicReject {
+function decodeBasicReject(r: Deno.ReaderSync): t.BasicReject {
   const fields = enc.decodeFields(r, ["longlong", "bit"]);
   const args = {
     deliveryTag: fields[0] as number,
@@ -2552,25 +2552,25 @@ function decodeBasicReject(r: Deno.SyncReader): t.BasicReject {
   return args;
 }
 
-function decodeBasicRecoverAsync(r: Deno.SyncReader): t.BasicRecoverAsync {
+function decodeBasicRecoverAsync(r: Deno.ReaderSync): t.BasicRecoverAsync {
   const fields = enc.decodeFields(r, ["bit"]);
   const args = { requeue: fields[0] as boolean };
   return args;
 }
 
-function decodeBasicRecover(r: Deno.SyncReader): t.BasicRecover {
+function decodeBasicRecover(r: Deno.ReaderSync): t.BasicRecover {
   const fields = enc.decodeFields(r, ["bit"]);
   const args = { requeue: fields[0] as boolean };
   return args;
 }
 
-function decodeBasicRecoverOk(r: Deno.SyncReader): t.BasicRecoverOk {
+function decodeBasicRecoverOk(r: Deno.ReaderSync): t.BasicRecoverOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeBasicNack(r: Deno.SyncReader): t.BasicNack {
+function decodeBasicNack(r: Deno.ReaderSync): t.BasicNack {
   const fields = enc.decodeFields(r, ["longlong", "bit", "bit"]);
   const args = {
     deliveryTag: fields[0] as number,
@@ -2580,49 +2580,49 @@ function decodeBasicNack(r: Deno.SyncReader): t.BasicNack {
   return args;
 }
 
-function decodeTxSelect(r: Deno.SyncReader): t.TxSelect {
+function decodeTxSelect(r: Deno.ReaderSync): t.TxSelect {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeTxSelectOk(r: Deno.SyncReader): t.TxSelectOk {
+function decodeTxSelectOk(r: Deno.ReaderSync): t.TxSelectOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeTxCommit(r: Deno.SyncReader): t.TxCommit {
+function decodeTxCommit(r: Deno.ReaderSync): t.TxCommit {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeTxCommitOk(r: Deno.SyncReader): t.TxCommitOk {
+function decodeTxCommitOk(r: Deno.ReaderSync): t.TxCommitOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeTxRollback(r: Deno.SyncReader): t.TxRollback {
+function decodeTxRollback(r: Deno.ReaderSync): t.TxRollback {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeTxRollbackOk(r: Deno.SyncReader): t.TxRollbackOk {
+function decodeTxRollbackOk(r: Deno.ReaderSync): t.TxRollbackOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
 }
 
-function decodeConfirmSelect(r: Deno.SyncReader): t.ConfirmSelect {
+function decodeConfirmSelect(r: Deno.ReaderSync): t.ConfirmSelect {
   const fields = enc.decodeFields(r, ["bit"]);
   const args = { nowait: fields[0] as boolean };
   return args;
 }
 
-function decodeConfirmSelectOk(r: Deno.SyncReader): t.ConfirmSelectOk {
+function decodeConfirmSelectOk(r: Deno.ReaderSync): t.ConfirmSelectOk {
   const fields = enc.decodeFields(r, []);
   const args = {};
   return args;
@@ -2731,7 +2731,7 @@ function encodeConfirmHeader(header: ConfirmHeader): Uint8Array {
   return w.bytes();
 }
 
-function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
+function decodeConnectionHeader(r: Deno.ReaderSync): ConnectionHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2740,7 +2740,7 @@ function decodeConnectionHeader(r: Deno.SyncReader): ConnectionHeader {
   return { classId: 10, size, props };
 }
 
-function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
+function decodeChannelHeader(r: Deno.ReaderSync): ChannelHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2749,7 +2749,7 @@ function decodeChannelHeader(r: Deno.SyncReader): ChannelHeader {
   return { classId: 20, size, props };
 }
 
-function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
+function decodeAccessHeader(r: Deno.ReaderSync): AccessHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2758,7 +2758,7 @@ function decodeAccessHeader(r: Deno.SyncReader): AccessHeader {
   return { classId: 30, size, props };
 }
 
-function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
+function decodeExchangeHeader(r: Deno.ReaderSync): ExchangeHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2767,7 +2767,7 @@ function decodeExchangeHeader(r: Deno.SyncReader): ExchangeHeader {
   return { classId: 40, size, props };
 }
 
-function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
+function decodeQueueHeader(r: Deno.ReaderSync): QueueHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2776,7 +2776,7 @@ function decodeQueueHeader(r: Deno.SyncReader): QueueHeader {
   return { classId: 50, size, props };
 }
 
-function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
+function decodeBasicHeader(r: Deno.ReaderSync): BasicHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(
@@ -2818,7 +2818,7 @@ function decodeBasicHeader(r: Deno.SyncReader): BasicHeader {
   return { classId: 60, size, props };
 }
 
-function decodeTxHeader(r: Deno.SyncReader): TxHeader {
+function decodeTxHeader(r: Deno.ReaderSync): TxHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);
@@ -2827,7 +2827,7 @@ function decodeTxHeader(r: Deno.SyncReader): TxHeader {
   return { classId: 90, size, props };
 }
 
-function decodeConfirmHeader(r: Deno.SyncReader): ConfirmHeader {
+function decodeConfirmHeader(r: Deno.ReaderSync): ConfirmHeader {
   const weight = enc.decodeShortUint(r);
   const size = enc.decodeLongLongUint(r);
   const fields = enc.decodeOptionalFields(r, []);

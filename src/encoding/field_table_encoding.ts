@@ -21,14 +21,13 @@ function fromCharCode(code: number) {
   return new TextDecoder().decode(new Uint8Array([code]));
 }
 
-function viewOf(r: Deno.SyncReader, length: number): DataView {
+function viewOf(r: Deno.ReaderSync, length: number): DataView {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 
   if (typeof result !== "number" || result !== length) {
     throw new Error(
-      `Not enough data in buffer (expected: ${length}, got: ${result
-        .toString()})`,
+      `Not enough data in buffer (expected: ${length}, got: ${result})`,
     );
   }
 
@@ -193,7 +192,7 @@ function encodeTableField(value: unknown): Uint8Array {
   );
 }
 
-function decodeTableFieldArray(r: Deno.SyncReader): unknown[] {
+function decodeTableFieldArray(r: Deno.ReaderSync): unknown[] {
   const length = decodeLongUint(r);
   const data = new Uint8Array(length);
   const n = r.readSync(data);
@@ -222,12 +221,12 @@ function fromBigInt(value: bigint): number {
   return num;
 }
 
-function readByteArray(r: Deno.SyncReader) {
+function readByteArray(r: Deno.ReaderSync) {
   const length = viewOf(r, 4).getUint32(0);
   return readBytes(r, length);
 }
 
-function readBytes(r: Deno.SyncReader, length: number) {
+function readBytes(r: Deno.ReaderSync, length: number) {
   const data = new Uint8Array(length);
   if (r.readSync(data) !== length) {
     throw new Error(`Not enough data in reader`);
@@ -293,7 +292,7 @@ export function encodeTable(table: Record<string, unknown>) {
   return new Uint8Array([...encodeLongUint(result.length), ...result]);
 }
 
-export function decodeTable(r: Deno.SyncReader): Record<string, unknown> {
+export function decodeTable(r: Deno.ReaderSync): Record<string, unknown> {
   const length = decodeLongUint(r);
   const data = new Uint8Array(length);
   const n = r.readSync(data);

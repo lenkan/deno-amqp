@@ -39,7 +39,7 @@ export async function readBytes(
   return data;
 }
 
-export function readBytesSync(r: Deno.SyncReader, length: number): Uint8Array {
+export function readBytesSync(r: Deno.ReaderSync, length: number): Uint8Array {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 

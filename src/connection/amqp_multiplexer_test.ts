@@ -162,9 +162,13 @@ test("receive content - throws error if not enough content", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(async () => {
-    await mux.receiveContent(1, 60);
-  }, Error, "EOF");
+  await assertThrowsAsync(
+    async () => {
+      await mux.receiveContent(1, 60);
+    },
+    Error,
+    "EOF",
+  );
 });
 
 test("receive content - throws error if no header", async () => {
@@ -175,9 +179,13 @@ test("receive content - throws error if no header", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(async () => {
-    await mux.receiveContent(1, 60);
-  }, Error, "EOF");
+  await assertThrowsAsync(
+    async () => {
+      await mux.receiveContent(1, 60);
+    },
+    Error,
+    "EOF",
+  );
 });
 
 test("receive content - can receive content on multiple channels", async () => {
@@ -249,9 +257,13 @@ test("receive - throws error if EOF", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(async () => {
-    await mux.receive(1, 10, 10);
-  }, Error, "EOF");
+  await assertThrowsAsync(
+    async () => {
+      await mux.receive(1, 10, 10);
+    },
+    Error,
+    "EOF",
+  );
 });
 
 test("receive - resolves with frame args", async () => {
@@ -321,9 +333,13 @@ test("receive - rejects on connection close", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(async () => {
-    await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
-  }, Error, "Connection closed by server - 541 Some reason");
+  await assertThrowsAsync(
+    async () => {
+      await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
+    },
+    Error,
+    "Connection closed by server - 541 Some reason",
+  );
 });
 
 test("receive - rejects on connection close with caused by method", async () => {
