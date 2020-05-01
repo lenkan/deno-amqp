@@ -1,7 +1,7 @@
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { assertEquals } from "./testing.ts";
 import { QueueDeclareOk } from "./amqp_types.ts";
-import { createResolvable } from "./utils.ts";
+import { createResolvable } from "./resolvable.ts";
 import { mock } from "./mock.ts";
 import { AmqpMultiplexer } from "./connection/mod.ts";
 

@@ -4,7 +4,7 @@ import { createSocket } from "./framing/mod.ts";
 import { createMux } from "./connection/mod.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { serializeConnectionError } from "./connection/error_handling.ts";
-import { createResolvable } from "./utils.ts";
+import { createResolvable } from "./resolvable.ts";
 
 export interface AmqpConnectionOptions {
   username: string;

@@ -60,7 +60,7 @@ export type MockInterface<T> = {
 
 export const mock: MockFactory = {
   fn: createMock,
-  obj<T>(obj: T) {
-    return obj as MockInterface<T>;
+  obj<T>(obj: MockInterface<T>) {
+    return obj;
   },
 };

@@ -9,7 +9,7 @@ import {
   assertEquals,
   assertThrowsAsync,
 } from "https://deno.land/std@v0.42.0/testing/asserts.ts";
-import { createResolvable } from "../src/utils.ts";
+import { createResolvable } from "../src/resolvable.ts";
 
 interface AmqpChannelTest {
   (conn: AmqpConnection, channel: AmqpChannel): Promise<void>;
