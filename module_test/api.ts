@@ -59,12 +59,18 @@ export interface AmqpConnectionTest {
   (conn: AmqpConnection): Promise<void>;
 }
 
+function tryCheckEnv(name: string) {
+  try {
+    return !!Deno.env.get(name);
+  } catch (e) {}
+}
+
 export function withConnection(
   tester: AmqpConnectionTest,
 ): () => Promise<void> {
   return async () => {
     const connection = await connect({
-      loglevel: !!Deno.env.get("DEBUG") ? "debug" : "none",
+      loglevel: tryCheckEnv("DEBUG") ? "debug" : "none",
     });
 
     try {
