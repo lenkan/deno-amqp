@@ -24,7 +24,7 @@ jobs:
         run: deno test src/
 
       - name: Start rabbitmq
-        uses: nijel/rabbitmq-action@v1.0.0
+        uses: lenkan/rabbitmq-action@v1.1.0
         with:
           rabbitmq version: "3-management"
 
