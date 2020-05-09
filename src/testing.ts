@@ -6,7 +6,7 @@ export {
   assertArrayContains,
   assertMatch,
   assert,
-} from "https://deno.land/std@v0.42.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.50.0/testing/asserts.ts";
 export const { test } = Deno;
 
 export function arrayOf(...a: number[]) {

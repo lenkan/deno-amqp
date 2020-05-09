@@ -1,4 +1,4 @@
-import { BufReader } from "https://deno.land/std@v0.42.0/io/bufio.ts";
+import { BufReader } from "https://deno.land/std@v0.50.0/io/bufio.ts";
 import { FrameError } from "./frame_error.ts";
 export interface Frame {
   channel: number;
