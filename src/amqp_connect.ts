@@ -1,4 +1,4 @@
-import { AmqpConnection, openConnection } from "./amqp_connection.ts";
+import { AmqpConnection } from "./amqp_connection.ts";
 
 /**
  * Options for the connection to an AMQP broker.
@@ -65,10 +65,15 @@ export async function connect(
 
   const conn = await Deno.connect({ port, hostname });
 
-  const connection = await openConnection(
-    conn,
-    { username, password, heartbeatInterval, loglevel, vhost },
-  );
+  const connection = new AmqpConnection(conn, {
+    username,
+    password,
+    heartbeatInterval,
+    loglevel,
+    vhost,
+  });
+
+  await connection.open();
 
   return connection;
 }

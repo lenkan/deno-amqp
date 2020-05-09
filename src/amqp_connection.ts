@@ -1,10 +1,11 @@
-import { AmqpChannel, openChannel } from "./amqp_channel.ts";
+import { AmqpChannel } from "./amqp_channel.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import { createSocket } from "./framing/mod.ts";
-import { createMux } from "./connection/mod.ts";
+import { createSocket, AmqpSocket } from "./framing/mod.ts";
+import { createMux, AmqpMultiplexer } from "./connection/mod.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { serializeConnectionError } from "./connection/error_handling.ts";
-import { createResolvable } from "./resolvable.ts";
+import { createResolvable, ResolvablePromise } from "./resolvable.ts";
+import { ConnectionClose } from "./amqp_types.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -26,128 +27,130 @@ const clientProperties = Object.freeze({
   information: "https://deno.land/x/amqp/",
 });
 
-/**
- * Represents a live AMQP connection
- */
-export interface AmqpConnection {
-  /**
-   * Closes the AMQP connection.
-   */
-  close(): Promise<void>;
+export class AmqpConnection implements AmqpConnection {
+  #channelMax: number = -1;
+  #frameMax: number = -1;
+  #isOpen: boolean = false;
+  #protocol: AmqpProtocol;
+  #mux: AmqpMultiplexer;
+  #channelNumbers: number[] = [];
+  #username: string;
+  #password: string;
+  #vhost: string;
+  #heartbeatInterval?: number;
+  #closedPromise: ResolvablePromise<void>;
+  #conn: Deno.Conn;
+  #socket: AmqpSocket;
 
-  /**
-   * Returns a promise that is settled when the connection is closed.
-   *
-   * If the connection is unexpectedly closed by the server, it will reject with an error.
-   * If the connection is successfully closed by the this client, it will resolve once the close handshake
-   * has completed successfully.
-   *
-   * This can be useful to detect if the server has crashed or otherwise encountered an irrecoverable exception.
-   */
-  closed(): Promise<void>;
+  constructor(conn: Deno.Conn, options: AmqpConnectionOptions) {
+    this.#conn = conn;
+    this.#socket = createSocket(this.#conn, { loglevel: options.loglevel });
+    this.#mux = createMux(this.#socket);
+    this.#protocol = new AmqpProtocol(this.#mux);
+    this.#username = options.username;
+    this.#password = options.password;
+    this.#vhost = options.vhost || "/";
+    this.#closedPromise = createResolvable<void>();
 
-  /**
-   * Opens up a new AMQP channel for operations.
-   */
-  openChannel(): Promise<AmqpChannel>;
-}
-
-export async function openConnection(
-  conn: Deno.Conn,
-  options: AmqpConnectionOptions,
-): Promise<AmqpConnection> {
-  const { username, password, loglevel } = options;
-  const channelNumbers: number[] = [];
-  let channelMax: number = -1;
-  let frameMax: number = -1;
-  let isOpen: boolean = false;
-
-  const socket = createSocket(conn, { loglevel });
-  const mux = createMux(socket);
-
-  const protocol = new AmqpProtocol(mux);
-
-  const closedPromise = createResolvable<void>();
-
-  protocol.receiveConnectionClose(0).then(async (args) => {
-    isOpen = false;
-    await protocol.sendConnectionCloseOk(0, {});
-    closedPromise.reject(new Error(serializeConnectionError(args)));
-    conn.close();
-  }).catch(closedPromise.reject).finally(() => {
-    isOpen = false;
-  });
-
-  async function init() {
-    await conn.write(
-      new Uint8Array([...new TextEncoder().encode("AMQP"), 0, 0, 9, 1]),
-    );
+    this.#protocol.receiveConnectionClose(0)
+      .then(this.#handleClose)
+      .catch(this.#closedPromise.reject)
+      .finally(() => {
+        this.#isOpen = false;
+      });
   }
 
-  async function open() {
-    await init();
+  #handleClose = async (args: ConnectionClose) => {
+    this.#isOpen = false;
+    await this.#protocol.sendConnectionCloseOk(0, {});
+    this.#closedPromise.reject(new Error(serializeConnectionError(args)));
+    this.#conn.close();
+  };
 
-    await protocol.receiveConnectionStart(0);
-    await protocol.sendConnectionStartOk(0, {
+  /**
+   * Open this connection.
+   */
+  async open() {
+    await this.#conn.write(
+      new Uint8Array([...new TextEncoder().encode("AMQP"), 0, 0, 9, 1]),
+    );
+
+    await this.#protocol.receiveConnectionStart(0);
+    await this.#protocol.sendConnectionStartOk(0, {
       clientProperties,
-      response: credentials(username, password),
+      response: credentials(this.#username, this.#password),
     });
 
-    await protocol.receiveConnectionTune(0).then(
+    await this.#protocol.receiveConnectionTune(0).then(
       async (args) => {
-        const interval = options.heartbeatInterval !== undefined
-          ? options.heartbeatInterval
+        const interval = this.#heartbeatInterval !== undefined
+          ? this.#heartbeatInterval
           : args.heartbeat;
 
-        channelMax = args.channelMax;
-        frameMax = args.frameMax;
+        this.#channelMax = args.channelMax;
+        this.#frameMax = args.frameMax;
 
-        await protocol.sendConnectionTuneOk(0, {
+        await this.#protocol.sendConnectionTuneOk(0, {
           heartbeat: interval,
-          channelMax: channelMax,
-          frameMax: frameMax,
+          channelMax: this.#channelMax,
+          frameMax: this.#frameMax,
         });
       },
     );
 
-    await protocol.sendConnectionOpen(0, {
-      virtualHost: options.vhost || "/",
+    await this.#protocol.sendConnectionOpen(0, {
+      virtualHost: this.#vhost,
     });
-    isOpen = true;
+    this.#isOpen = true;
   }
 
-  async function close() {
-    if (isOpen) {
-      await protocol.sendConnectionClose(0, {
-        classId: 0,
-        methodId: 0,
-        replyCode: HARD_ERROR_CONNECTION_FORCED,
-      });
-      conn.close();
-    }
-    isOpen = false;
-    closedPromise.resolve();
-  }
+  /**
+   * Creates and opens a new channel
+   */
+  async openChannel(): Promise<AmqpChannel> {
+    for (
+      let channelNumber = 1;
+      channelNumber < this.#channelMax;
+      ++channelNumber
+    ) {
+      if (!this.#channelNumbers.find((num) => num === channelNumber)) {
+        this.#channelNumbers.push(channelNumber);
 
-  async function closed() {
-    return await closedPromise;
-  }
-
-  async function createChannel(): Promise<AmqpChannel> {
-    for (let channelNumber = 1; channelNumber < channelMax; ++channelNumber) {
-      if (!channelNumbers.find((num) => num === channelNumber)) {
-        channelNumbers.push(channelNumber);
-
-        const channel = await openChannel(channelNumber, protocol);
+        await this.#protocol.sendChannelOpen(channelNumber, {});
+        const channel = new AmqpChannel(channelNumber, this.#protocol);
 
         return channel;
       }
     }
 
-    throw new Error(`Maximum channels ${channelMax} reached`);
+    throw new Error(`Maximum channels ${this.#channelMax} reached`);
   }
 
-  await open();
+  /**
+   * Gracefully close this connection.
+   */
+  async close() {
+    if (this.#isOpen) {
+      await this.#protocol.sendConnectionClose(0, {
+        classId: 0,
+        methodId: 0,
+        replyCode: HARD_ERROR_CONNECTION_FORCED,
+      });
+      this.#conn.close();
+    }
+    this.#isOpen = false;
+    this.#closedPromise.resolve();
+  }
 
-  return { close, closed, openChannel: createChannel };
+  /**
+   * Returns a promise that is settled when this connection is closed.
+   * 
+   * If the connection is gracefully closed, the promise will _resolve_.
+   * 
+   * If the connection is unexpectedly closed by the server or from an error, the promise
+   * will _reject_ with the reason.
+   */
+  async closed() {
+    return await this.#closedPromise;
+  }
 }
