@@ -9,7 +9,16 @@ async function runBench(name: string) {
 
   const now = Date.now();
   const process = Deno.run(
-    { cmd: ["deno", "run", "--allow-net", path] },
+    {
+      cmd: [
+        "deno",
+        "run",
+        "--allow-net",
+        "--allow-write",
+        "--allow-read",
+        path,
+      ],
+    },
   );
 
   const status = await process.status();
@@ -22,17 +31,9 @@ async function runBench(name: string) {
 }
 
 for (const file of files) {
-  const results: number[] = [];
-  const path = await Deno.realPath("./benchmark/" + file.name);
-
-  for (let i = 0; i < 10; i++) {
-    const time = await runBench(file.name);
-    console.log(`${file.name} - ${time}ms`);
-    results.push(time);
-  }
-
-  await Deno.writeTextFile(
-    path.replace(".ts", "_result"),
-    results.map((t) => `${t}ms`).join("\n"),
-  );
+  await runBench(file.name).then(() => {
+    console.log(`${file.name} - OK`);
+  }).catch((err) => {
+    console.log(`${file.name} - Error - ${err.message}`);
+  });
 }
