@@ -32,62 +32,44 @@ export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
 }
 
-export interface AmqpChannel {
-  close(args?: ChannelCloseArgs): Promise<ChannelCloseOk>;
-  qos(args: BasicQosArgs): Promise<BasicQosOk>;
-  ack(args: BasicAckArgs): Promise<void>;
-  nack(args: BasicNackArgs): Promise<void>;
-  consume(
-    args: BasicConsumeArgs,
-    handler: BasicDeliverHandler,
-  ): Promise<BasicConsumeOk>;
-  cancel(args: BasicCancelArgs): Promise<BasicCancelOk>;
-  publish(
-    args: BasicPublishArgs,
-    props: BasicProperties,
-    data: Uint8Array,
-  ): Promise<void>;
-  declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk>;
-  bindQueue(args: QueueBindArgs): Promise<QueueBindOk>;
-  unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk>;
-  declareExchange(args: ExchangeDeclareArgs): Promise<ExchangeDeclareOk>;
-  deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk>;
-  deleteExchange(args: ExchangeDeleteArgs): Promise<ExchangeDeleteOk>;
-}
-
 interface Consumer {
   tag: string;
   handler: BasicDeliverHandler;
 }
 
-export async function openChannel(
-  channelNumber: number,
-  protocol: AmqpProtocol,
-): Promise<AmqpChannel> {
-  const consumers: Consumer[] = [];
-  const cancelDelivery = protocol.subscribeBasicDeliver(
-    channelNumber,
-    (args, props, data) => {
-      consumers.forEach((consumer) => {
-        if (consumer.tag === args.consumerTag) {
-          consumer.handler(args, props, data);
-        }
-      });
-    },
-  );
+export class AmqpChannel {
+  #consumers: Consumer[] = [];
+  #channelNumber: number;
+  #cancelDelivery: () => void;
+  #protocol: AmqpProtocol;
 
-  protocol.subscribeChannelClose(channelNumber, (args) => {
-    return protocol.sendChannelCloseOk(channelNumber, {});
-  });
+  constructor(channelNumber: number, protocol: AmqpProtocol) {
+    this.#protocol = protocol;
+    this.#channelNumber = channelNumber;
+    this.#cancelDelivery = protocol.subscribeBasicDeliver(
+      channelNumber,
+      (args, props, data) => {
+        this.#consumers.forEach((consumer) => {
+          if (consumer.tag === args.consumerTag) {
+            consumer.handler(args, props, data);
+          }
+        });
+      },
+    );
 
-  function handleClose() {
-    cancelDelivery();
-    consumers.splice(0, consumers.length);
+    protocol.subscribeChannelClose(channelNumber, (args) => {
+      return protocol.sendChannelCloseOk(channelNumber, {});
+    });
   }
 
-  async function close(args?: ChannelCloseArgs): Promise<ChannelCloseOk> {
-    handleClose();
-    const result = await protocol.sendChannelClose(channelNumber, {
+  #handleClose = () => {
+    this.#cancelDelivery();
+    this.#consumers.splice(0, this.#consumers.length);
+  };
+
+  async close(args?: ChannelCloseArgs): Promise<ChannelCloseOk> {
+    this.#handleClose();
+    const result = await this.#protocol.sendChannelClose(this.#channelNumber, {
       classId: args?.classId || 0,
       methodId: args?.methodId || 0,
       replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
@@ -97,99 +79,82 @@ export async function openChannel(
     return result;
   }
 
-  async function qos(args: BasicQosArgs): Promise<BasicQosOk> {
-    return protocol.sendBasicQos(channelNumber, args);
+  async qos(args: BasicQosArgs): Promise<BasicQosOk> {
+    return this.#protocol.sendBasicQos(this.#channelNumber, args);
   }
 
-  async function ack(args: BasicAckArgs) {
-    await protocol.sendBasicAck(channelNumber, args);
+  async ack(args: BasicAckArgs) {
+    await this.#protocol.sendBasicAck(this.#channelNumber, args);
   }
 
-  async function nack(args: BasicNackArgs) {
-    await protocol.sendBasicNack(channelNumber, args);
+  async nack(args: BasicNackArgs) {
+    await this.#protocol.sendBasicNack(this.#channelNumber, args);
   }
 
-  async function consume(
+  async consume(
     args: BasicConsumeArgs,
     handler: BasicDeliverHandler,
   ): Promise<BasicConsumeOk> {
-    const response = await protocol.sendBasicConsume(
-      channelNumber,
+    const response = await this.#protocol.sendBasicConsume(
+      this.#channelNumber,
       args,
     );
-    consumers.push({ tag: response.consumerTag, handler });
+    this.#consumers.push({ tag: response.consumerTag, handler });
     return response;
   }
 
-  async function cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
-    const response = await protocol.sendBasicCancel(
-      channelNumber,
+  async cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
+    const response = await this.#protocol.sendBasicCancel(
+      this.#channelNumber,
       args,
     );
 
-    const index = consumers.findIndex((c) => c.tag === args.consumerTag);
+    const index = this.#consumers.findIndex((c) => c.tag === args.consumerTag);
     if (index !== -1) {
-      consumers.splice(index, index + 1);
+      this.#consumers.splice(index, index + 1);
     }
 
     return response;
   }
 
-  async function publish(
+  async publish(
     args: BasicPublishArgs,
     props: BasicProperties,
     data: Uint8Array,
   ): Promise<void> {
-    await protocol.sendBasicPublish(
-      channelNumber,
+    await this.#protocol.sendBasicPublish(
+      this.#channelNumber,
       args,
       props,
       data,
     );
   }
 
-  async function declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
-    return protocol.sendQueueDeclare(channelNumber, args);
+  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
+    return this.#protocol.sendQueueDeclare(this.#channelNumber, args);
   }
 
-  async function deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
-    return protocol.sendQueueDelete(channelNumber, args);
+  async deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
+    return this.#protocol.sendQueueDelete(this.#channelNumber, args);
   }
 
-  async function bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
-    return protocol.sendQueueBind(channelNumber, args);
+  async bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
+    return this.#protocol.sendQueueBind(this.#channelNumber, args);
   }
 
-  async function unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
-    return protocol.sendQueueUnbind(channelNumber, args);
+  async unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
+    return this.#protocol.sendQueueUnbind(this.#channelNumber, args);
   }
 
-  async function deleteExchange(
+  async deleteExchange(
     args: ExchangeDeleteArgs,
   ): Promise<ExchangeDeleteOk> {
-    return protocol.sendExchangeDelete(channelNumber, args);
+    return this.#protocol.sendExchangeDelete(this.#channelNumber, args);
   }
 
-  async function declareExchange(
+  async declareExchange(
     args: ExchangeDeclareArgs,
   ): Promise<ExchangeDeclareOk> {
-    return protocol.sendExchangeDeclare(channelNumber, args);
+    return this.#protocol.sendExchangeDeclare(this.#channelNumber, args);
   }
-
-  await protocol.sendChannelOpen(channelNumber, {});
-  return {
-    close,
-    declareExchange,
-    declareQueue,
-    deleteQueue,
-    bindQueue,
-    unbindQueue,
-    deleteExchange,
-    ack,
-    nack,
-    cancel,
-    consume,
-    publish,
-    qos,
-  };
 }
