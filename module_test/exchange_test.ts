@@ -2,8 +2,14 @@ import {
   assertEquals,
   assertThrowsAsync,
   assertStrContains,
+  assertNotEquals,
 } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
-import { getExchange, randomString, withConnection } from "./api.ts";
+import {
+  getExchange,
+  randomString,
+  withConnection,
+  getExchangeBindings,
+} from "./api.ts";
 
 Deno.test(
   "declare exchange",
@@ -82,5 +88,64 @@ Deno.test(
     const exchange = await getExchange(exName);
 
     assertEquals(exchange, null);
+  }),
+);
+
+Deno.test(
+  "bind exchange without declare",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const source = `exchange.source.${randomString(10)}`;
+    const destination = `exchange.destination.${randomString(10)}`;
+
+    await assertThrowsAsync(
+      async () => {
+        await channel.bindExchange({ source, destination });
+      },
+      Error,
+      `Channel 1 closed by server - 404 NOT_FOUND - no exchange '${source}' in vhost '/' - caused by 'exchange.bind'`,
+    );
+  }),
+);
+
+Deno.test(
+  "bind after declare only source",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const source = `exchange.source.${randomString(10)}`;
+    const destination = `exchange.destination.${randomString(10)}`;
+
+    await channel.declareExchange({ exchange: source });
+    await assertThrowsAsync(
+      async () => {
+        await channel.bindExchange({ source, destination });
+      },
+      Error,
+      `Channel 1 closed by server - 404 NOT_FOUND - no exchange '${destination}' in vhost '/' - caused by 'exchange.bind'`,
+    );
+  }),
+);
+
+Deno.test(
+  "bind after declare source and destination",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const source = `exchange.source.${randomString(10)}`;
+    const destination = `exchange.destination.${randomString(10)}`;
+
+    await channel.declareExchange({ exchange: source });
+    await channel.declareExchange({ exchange: destination });
+    await channel.bindExchange({ source, destination });
+
+    await getExchangeBindings(source).then((bindings) => {
+      const binding = bindings.find((b: any) => b.destination === destination);
+      assertNotEquals(binding, undefined);
+    });
+
+    await channel.unbindExchange({ source, destination });
+    await getExchangeBindings(source).then((bindings) => {
+      const binding = bindings.find((b: any) => b.destination === destination);
+      assertEquals(binding, undefined);
+    });
   }),
 );

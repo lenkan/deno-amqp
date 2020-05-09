@@ -24,6 +24,12 @@ import {
   QueueBindOk,
   QueueUnbindOk,
   QueueUnbindArgs,
+  QueuePurgeArgs,
+  QueuePurgeOk,
+  ExchangeBindArgs,
+  ExchangeBindOk,
+  ExchangeUnbindArgs,
+  ExchangeUnbindOk,
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
@@ -146,6 +152,10 @@ export class AmqpChannel {
     return this.#protocol.sendQueueUnbind(this.#channelNumber, args);
   }
 
+  async purgeQueue(args: QueuePurgeArgs): Promise<QueuePurgeOk> {
+    return this.#protocol.sendQueuePurge(this.#channelNumber, args);
+  }
+
   async deleteExchange(
     args: ExchangeDeleteArgs,
   ): Promise<ExchangeDeleteOk> {
@@ -156,5 +166,13 @@ export class AmqpChannel {
     args: ExchangeDeclareArgs,
   ): Promise<ExchangeDeclareOk> {
     return this.#protocol.sendExchangeDeclare(this.#channelNumber, args);
+  }
+
+  async bindExchange(args: ExchangeBindArgs): Promise<ExchangeBindOk> {
+    return this.#protocol.sendExchangeBind(this.#channelNumber, args);
+  }
+
+  async unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
+    return this.#protocol.sendExchangeUnbind(this.#channelNumber, args);
   }
 }

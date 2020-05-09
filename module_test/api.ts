@@ -55,6 +55,11 @@ export async function getExchange(name: string): Promise<Exchange | null> {
   return handleResponse(res);
 }
 
+export async function getExchangeBindings(name: string) {
+  const res = await fetch(`${url}/exchanges/%2F/${name}/bindings/source`);
+  return handleResponse(res);
+}
+
 export interface AmqpConnectionTest {
   (conn: AmqpConnection): Promise<void>;
 }
