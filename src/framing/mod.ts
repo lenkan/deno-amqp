@@ -7,7 +7,6 @@ import {
 } from "./amqp_framing_logger.ts";
 import {
   AmqpSocket,
-  AmqpSocketCloser,
   AmqpSocketReader,
   AmqpSocketWriter,
   IncomingFrame,
@@ -22,7 +21,6 @@ import { createAmqpEncoder, createAmqpDecoder } from "./amqp_encoding.ts";
 
 export {
   AmqpSocket,
-  AmqpSocketCloser,
   AmqpSocketReader,
   AmqpSocketWriter,
   IncomingFrame,
@@ -53,6 +51,5 @@ export function createSocket(
     read: createAmqpDecoder(
       createLoggingReader(createFrameReader(conn), options),
     ),
-    close: () => conn.close(),
   };
 }

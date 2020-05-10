@@ -13,6 +13,7 @@ export function createMux(conn: AmqpSocket): AmqpMultiplexer {
 }
 
 export {
+  createHeartbeatSocket,
   AmqpMultiplexer,
   AmqpSink,
   AmqpSource,

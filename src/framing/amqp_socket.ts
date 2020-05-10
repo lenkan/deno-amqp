@@ -12,12 +12,7 @@ export interface AmqpSocketReader {
   read(): Promise<IncomingFrame>;
 }
 
-export interface AmqpSocketCloser {
-  close(): void;
-}
-
-export interface AmqpSocket
-  extends AmqpSocketWriter, AmqpSocketReader, AmqpSocketCloser {
+export interface AmqpSocket extends AmqpSocketWriter, AmqpSocketReader {
 }
 
 export interface HeaderFrame {
