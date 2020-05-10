@@ -38,6 +38,13 @@ export interface AmqpConnectOptions {
   heartbeatInterval?: number;
 
   /**
+   * Sets the maximum frame size in number of bytes.
+   * 
+   * This is negotiated with the broker during the connection handshake.
+   */
+  frameMax?: number;
+
+  /**
    * **UNSTABLE**
    * Controls the log level. Currently setting it to 'debug' will print received and sent frames on byte level.
    *
@@ -61,6 +68,7 @@ export async function connect(
     heartbeatInterval,
     loglevel = "none",
     vhost = "/",
+    frameMax,
   } = options;
 
   const conn = await Deno.connect({ port, hostname });
@@ -69,6 +77,7 @@ export async function connect(
     username,
     password,
     heartbeatInterval,
+    frameMax,
     loglevel,
     vhost,
   });

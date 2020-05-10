@@ -1,4 +1,5 @@
 import { AmqpConnection, connect } from "../mod.ts";
+import { AmqpConnectOptions } from "../src/amqp_connect.ts";
 
 export interface Queue {
   name: string;
@@ -72,10 +73,12 @@ function tryCheckEnv(name: string) {
 
 export function withConnection(
   tester: AmqpConnectionTest,
+  options: AmqpConnectOptions = {},
 ): () => Promise<void> {
   return async () => {
     const connection = await connect({
       loglevel: tryCheckEnv("DEBUG") ? "debug" : "none",
+      ...options,
     });
 
     try {

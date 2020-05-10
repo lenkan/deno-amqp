@@ -12,6 +12,7 @@ export interface AmqpConnectionOptions {
   password: string;
   vhost?: string;
   heartbeatInterval?: number;
+  frameMax?: number;
   loglevel: "debug" | "none";
 }
 
@@ -49,6 +50,7 @@ export class AmqpConnection implements AmqpConnection {
     this.#protocol = new AmqpProtocol(this.#mux);
     this.#username = options.username;
     this.#password = options.password;
+    this.#frameMax = options.frameMax !== undefined ? options.frameMax : -1;
     this.#vhost = options.vhost || "/";
     this.#closedPromise = createResolvable<void>();
 
@@ -88,7 +90,7 @@ export class AmqpConnection implements AmqpConnection {
           : args.heartbeat;
 
         this.#channelMax = args.channelMax;
-        this.#frameMax = args.frameMax;
+        this.#frameMax = this.#frameMax < 0 ? args.frameMax : this.#frameMax;
 
         await this.#protocol.sendConnectionTuneOk(0, {
           heartbeat: interval,
