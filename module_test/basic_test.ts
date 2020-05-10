@@ -186,7 +186,7 @@ Deno.test(
 );
 
 Deno.test(
-  "publish unroutable message",
+  "publish mandatory unroutable message",
   withConnection(async (conn) => {
     const channel = await conn.openChannel();
     const routingKey = `q.${randomString(10)}`;
@@ -208,5 +208,23 @@ Deno.test(
     assertEquals(args.routingKey, routingKey);
     assertEquals(args.replyCode, SOFT_ERROR_NO_ROUTE);
     assertEquals(args.replyText, "NO_ROUTE");
+  }),
+);
+
+Deno.test(
+  "publish to non-existing exchange closes channel",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const exchange = `e.${randomString(10)}`;
+
+    await channel.publish({ exchange, routingKey: "" }, {}, new Uint8Array());
+
+    await assertThrowsAsync(
+      async () => {
+        await channel.closed();
+      },
+      Error,
+      `Channel 1 closed by server - 404 NOT_FOUND - no exchange '${exchange}' in vhost '/' - caused by 'basic.publish'`,
+    );
   }),
 );

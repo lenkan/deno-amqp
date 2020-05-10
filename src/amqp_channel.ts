@@ -35,6 +35,11 @@ import {
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
+import { ResolvablePromise, createResolvable } from "./resolvable.ts";
+import {
+  serializeChannelError,
+  serializeConnectionError,
+} from "./connection/error_handling.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
@@ -63,8 +68,13 @@ export class AmqpChannel {
   #subscribers: Subscriber[] = [];
   #channelNumber: number;
   #protocol: AmqpProtocol;
+  #closedPromise: ResolvablePromise<void> = createResolvable();
+  #isOpen: boolean = true;
 
-  constructor(channelNumber: number, protocol: AmqpProtocol) {
+  constructor(
+    channelNumber: number,
+    protocol: AmqpProtocol,
+  ) {
     this.#protocol = protocol;
     this.#channelNumber = channelNumber;
 
@@ -78,12 +88,43 @@ export class AmqpChannel {
       this.#handleReturn,
     );
 
-    protocol.subscribeChannelClose(channelNumber, this.#handleClose);
+    protocol.receiveChannelClose(channelNumber)
+      .then(this.#handleClose)
+      .catch(this.#handleCloseError)
+      .finally(() => {
+        this.#isOpen = false;
+      });
+
+    protocol.receiveConnectionClose(0)
+      .then(this.#handleConnectionClose)
+      .catch(this.#handleCloseError)
+      .finally(() => {
+        this.#isOpen = false;
+      });
   }
 
-  #handleClose = async (_args: ChannelClose) => {
-    await this.#protocol.sendChannelCloseOk(this.#channelNumber, {});
+  #handleCloseError = async (error: Error) => {
     this.#cleanup();
+    this.#closedPromise.reject(error);
+  };
+
+  #handleClose = async (args: ChannelClose) => {
+    if (this.#isOpen) {
+      await this.#protocol.sendChannelCloseOk(this.#channelNumber, {});
+      this.#cleanup();
+      this.#closedPromise.reject(
+        new Error(serializeChannelError(this.#channelNumber, args)),
+      );
+    }
+  };
+
+  #handleConnectionClose = async (args: ChannelClose) => {
+    if (this.#isOpen) {
+      this.#cleanup();
+      this.#closedPromise.reject(
+        new Error(serializeConnectionError(args)),
+      );
+    }
   };
 
   #handleDeliver = (
@@ -117,6 +158,25 @@ export class AmqpChannel {
     this.#cancelReturnSubscription();
     this.#subscribers.splice(0, this.#subscribers.length);
   };
+
+  async closed() {
+    return await this.#closedPromise;
+  }
+
+  async close() {
+    await this.#protocol.sendChannelClose(
+      this.#channelNumber,
+      {
+        classId: 0,
+        methodId: 0,
+        replyCode: HARD_ERROR_CONNECTION_FORCED,
+        replyText: "Channel closed by client",
+      },
+    );
+    this.#cleanup();
+    this.#closedPromise.resolve();
+    this.#isOpen = false;
+  }
 
   async qos(args: BasicQosArgs): Promise<BasicQosOk> {
     return this.#protocol.sendBasicQos(this.#channelNumber, args);
