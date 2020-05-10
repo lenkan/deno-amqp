@@ -8,6 +8,8 @@ import {
 } from "https://deno.land/std@v0.50.0/testing/asserts.ts";
 import { createResolvable } from "../src/resolvable.ts";
 import { withConnection, randomString } from "./api.ts";
+import { BasicReturn } from "../src/amqp_types.ts";
+import { SOFT_ERROR_NO_ROUTE } from "../src/amqp_constants.ts";
 
 function cleanObj<T extends object>(o: T): T {
   return Object.keys(o).reduce<T>((res: any, key) => {
@@ -180,5 +182,31 @@ Deno.test(
     assertEquals(args.redelivered, false);
     assertEquals(cleanObj(props), { timestamp: now });
     assertEquals(JSON.parse(decodeText(content)), { foo: "bar" });
+  }),
+);
+
+Deno.test(
+  "publish unroutable message",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const routingKey = `q.${randomString(10)}`;
+
+    // This message will be "returned" because it is not routable anywhere
+    await channel.publish(
+      { routingKey, mandatory: true },
+      {},
+      new Uint8Array(),
+    );
+
+    const args = await new Promise<BasicReturn>((resolve) => {
+      channel.on("return", (args, props, data) => {
+        resolve(args);
+      });
+    });
+
+    assertEquals(args.exchange, "");
+    assertEquals(args.routingKey, routingKey);
+    assertEquals(args.replyCode, SOFT_ERROR_NO_ROUTE);
+    assertEquals(args.replyText, "NO_ROUTE");
   }),
 );

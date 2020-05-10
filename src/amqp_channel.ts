@@ -30,6 +30,8 @@ import {
   ExchangeBindOk,
   ExchangeUnbindArgs,
   ExchangeUnbindOk,
+  ChannelClose,
+  BasicReturn,
 } from "./amqp_types.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
@@ -38,52 +40,83 @@ export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
 }
 
-interface Consumer {
-  tag: string;
+export interface BasicReturnHandler {
+  (args: BasicReturn, props: BasicProperties, data: Uint8Array): void;
+}
+
+interface BasicReturnSubscriber {
+  type: "return";
+  handler: BasicReturnHandler;
+}
+
+interface BasicDeliverSubscriber {
+  type: "deliver";
+  tag?: string;
   handler: BasicDeliverHandler;
 }
 
+type Subscriber = BasicReturnSubscriber | BasicDeliverSubscriber;
+
 export class AmqpChannel {
-  #consumers: Consumer[] = [];
+  #cancelDeliverSubscription: () => void;
+  #cancelReturnSubscription: () => void;
+  #subscribers: Subscriber[] = [];
   #channelNumber: number;
-  #cancelDelivery: () => void;
   #protocol: AmqpProtocol;
 
   constructor(channelNumber: number, protocol: AmqpProtocol) {
     this.#protocol = protocol;
     this.#channelNumber = channelNumber;
-    this.#cancelDelivery = protocol.subscribeBasicDeliver(
+
+    this.#cancelDeliverSubscription = protocol.subscribeBasicDeliver(
       channelNumber,
-      (args, props, data) => {
-        this.#consumers.forEach((consumer) => {
-          if (consumer.tag === args.consumerTag) {
-            consumer.handler(args, props, data);
-          }
-        });
-      },
+      this.#handleDeliver,
     );
 
-    protocol.subscribeChannelClose(channelNumber, (args) => {
-      return protocol.sendChannelCloseOk(channelNumber, {});
-    });
+    this.#cancelReturnSubscription = protocol.subscribeBasicReturn(
+      channelNumber,
+      this.#handleReturn,
+    );
+
+    protocol.subscribeChannelClose(channelNumber, this.#handleClose);
   }
 
-  #handleClose = () => {
-    this.#cancelDelivery();
-    this.#consumers.splice(0, this.#consumers.length);
+  #handleClose = async (_args: ChannelClose) => {
+    await this.#protocol.sendChannelCloseOk(this.#channelNumber, {});
+    this.#cleanup();
   };
 
-  async close(args?: ChannelCloseArgs): Promise<ChannelCloseOk> {
-    this.#handleClose();
-    const result = await this.#protocol.sendChannelClose(this.#channelNumber, {
-      classId: args?.classId || 0,
-      methodId: args?.methodId || 0,
-      replyCode: args?.replyCode || HARD_ERROR_CONNECTION_FORCED,
-      replyText: args?.replyText || "",
+  #handleDeliver = (
+    args: BasicDeliver,
+    props: BasicProperties,
+    data: Uint8Array,
+  ) => {
+    this.#subscribers.forEach((subscriber) => {
+      if (
+        subscriber.type === "deliver" && subscriber.tag === args.consumerTag
+      ) {
+        subscriber.handler(args, props, data);
+      }
     });
+  };
 
-    return result;
-  }
+  #handleReturn = (
+    args: BasicReturn,
+    props: BasicProperties,
+    data: Uint8Array,
+  ) => {
+    this.#subscribers.forEach((subscriber) => {
+      if (subscriber.type === "return") {
+        subscriber.handler(args, props, data);
+      }
+    });
+  };
+
+  #cleanup = () => {
+    this.#cancelDeliverSubscription();
+    this.#cancelReturnSubscription();
+    this.#subscribers.splice(0, this.#subscribers.length);
+  };
 
   async qos(args: BasicQosArgs): Promise<BasicQosOk> {
     return this.#protocol.sendBasicQos(this.#channelNumber, args);
@@ -105,7 +138,11 @@ export class AmqpChannel {
       this.#channelNumber,
       args,
     );
-    this.#consumers.push({ tag: response.consumerTag, handler });
+
+    this.#subscribers.push(
+      { type: "deliver", tag: response.consumerTag, handler },
+    );
+
     return response;
   }
 
@@ -115,9 +152,11 @@ export class AmqpChannel {
       args,
     );
 
-    const index = this.#consumers.findIndex((c) => c.tag === args.consumerTag);
+    const index = this.#subscribers.findIndex((sub) =>
+      sub.type === "deliver" && sub.tag === args.consumerTag
+    );
     if (index !== -1) {
-      this.#consumers.splice(index, index + 1);
+      this.#subscribers.splice(index, index + 1);
     }
 
     return response;
@@ -174,5 +213,41 @@ export class AmqpChannel {
 
   async unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
     return this.#protocol.sendExchangeUnbind(this.#channelNumber, args);
+  }
+
+  on(event: "deliver", handler: BasicDeliverHandler): void;
+  on(event: "return", handler: BasicReturnHandler): void;
+  on(
+    event: "return" | "deliver",
+    handler: BasicReturnHandler | BasicDeliverHandler,
+  ): void {
+    switch (event) {
+      case "return":
+        this.#subscribers.push(
+          { type: "return", handler: handler as BasicReturnHandler },
+        );
+        break;
+      case "deliver":
+        this.#subscribers.push(
+          { type: "deliver", handler: handler as BasicDeliverHandler },
+        );
+        break;
+      default:
+        throw new Error(`Unknown event '${event}'`);
+    }
+  }
+
+  off(event: "deliver", handler: BasicDeliverHandler): void;
+  off(event: "return", handler: BasicReturnHandler): void;
+  off(
+    event: "deliver" | "return",
+    handler: BasicDeliverHandler | BasicReturnHandler,
+  ): void {
+    const index = this.#subscribers.findIndex((sub) =>
+      sub.type === event && sub.handler === handler
+    );
+    if (index !== -1) {
+      this.#subscribers.splice(index, index + 1);
+    }
   }
 }
