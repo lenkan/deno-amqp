@@ -1,4 +1,4 @@
-import { createFrameReader, write } from "./amqp_socket.ts";
+import { AmqpSocket } from "./amqp_socket.ts";
 import {
   test,
   assertEquals,
@@ -9,8 +9,10 @@ import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 
 function createConn() {
-  return mock.obj<Deno.Reader>({
+  return mock.obj<Deno.Reader & Deno.Writer & Deno.Closer>({
     read: mock.fn(),
+    write: mock.fn(async () => {}),
+    close: mock.fn(),
   });
 }
 
@@ -32,7 +34,9 @@ function createEofReader() {
 }
 
 test("write - method frame", async () => {
-  const result = write(
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+  const result = socket.write(
     {
       type: "method",
       channel: 0,
@@ -41,7 +45,7 @@ test("write - method frame", async () => {
   );
 
   assertEquals(
-    result,
+    conn.write.mock.calls[0][0],
     arrayOf(
       ...[1],
       ...[0, 0],
@@ -81,7 +85,7 @@ test("write - method frame", async () => {
 
 test("read - method frame", async () => {
   const conn = createConn();
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   const payload = [
     ...[0, 10],
@@ -123,7 +127,7 @@ test("read - method frame", async () => {
 
   conn.read.mock.setImplementation(createMockReader(data));
 
-  const frame = await read();
+  const frame = await socket.read();
   assertEquals(frame, {
     type: "method",
     channel: 0,
@@ -143,7 +147,7 @@ test("read - method frame", async () => {
 
 test("read - heartbeat frame", async () => {
   const conn = createConn();
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   const data = arrayOf(
     ...[8],
@@ -153,7 +157,7 @@ test("read - heartbeat frame", async () => {
   );
   conn.read.mock.setImplementation(createMockReader(data));
 
-  const frame = await read();
+  const frame = await socket.read();
   assertEquals(frame, {
     type: "heartbeat",
     channel: 0,
@@ -163,7 +167,7 @@ test("read - heartbeat frame", async () => {
 
 test("read - throws on unknown frame type", async () => {
   const conn = createConn();
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   const data = arrayOf(
     ...[4],
@@ -179,7 +183,7 @@ test("read - throws on unknown frame type", async () => {
 
   await assertThrowsAsync(
     async () => {
-      await read();
+      await socket.read();
     },
     FrameError,
     "BAD_FRAME",
@@ -188,7 +192,7 @@ test("read - throws on unknown frame type", async () => {
 
 test("read - throws on bad frame end", async () => {
   const conn = createConn();
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   const data = arrayOf(
     ...[8],
@@ -201,7 +205,7 @@ test("read - throws on bad frame end", async () => {
 
   await assertThrowsAsync(
     async () => {
-      await read();
+      await socket.read();
     },
     FrameError,
     "BAD_FRAME",
@@ -210,14 +214,13 @@ test("read - throws on bad frame end", async () => {
 
 test("read - throws on EOF", async () => {
   const conn = createConn();
-
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   conn.read.mock.setImplementation(createEofReader());
 
   await assertThrowsAsync(
     async () => {
-      await read();
+      await socket.read();
     },
     FrameError,
     "EOF",
@@ -226,8 +229,7 @@ test("read - throws on EOF", async () => {
 
 test("read - throws on broken reader", async () => {
   const conn = createConn();
-
-  const read = createFrameReader(conn);
+  const socket = new AmqpSocket(conn);
 
   conn.read.mock.setImplementation(() => {
     throw new Error("Damn");
@@ -235,7 +237,7 @@ test("read - throws on broken reader", async () => {
 
   await assertThrowsAsync(
     async () => {
-      await read();
+      await socket.read();
     },
     Error,
     "Damn",
