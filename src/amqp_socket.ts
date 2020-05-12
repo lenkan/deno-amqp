@@ -122,8 +122,9 @@ function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
 }
 
 interface AmqpSocketOptions {
-  heartbeat: number;
-  frameMax: number;
+  readTimeout?: number;
+  sendTimeout?: number;
+  frameMax?: number;
 }
 
 export class AmqpSocket
@@ -132,7 +133,8 @@ export class AmqpSocket
   #reader: BufReader;
   #readTimer: number | null = null;
   #sendTimer: number | null = null;
-  #heartbeatInterval: number = -1;
+  #sendTimeout: number = 0;
+  #readTimeout: number = 0;
   #frameMax: number = -1;
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
@@ -153,42 +155,48 @@ export class AmqpSocket
       this.#sendTimer = null;
     }
 
-    if (this.#heartbeatInterval > 0) {
+    if (this.#sendTimeout > 0) {
       this.#sendTimer = setTimeout(() => {
         this.#conn.write(HEARTBEAT_FRAME);
         this.#resetSendTimer();
-      }, this.#heartbeatInterval * 1000);
+      }, this.#sendTimeout);
     }
   };
 
-  #readWithTimeout = async (timeout?: number): Promise<IncomingFrame> => {
+  #readWithTimeout = async (): Promise<IncomingFrame> => {
     this.#resetReadTimer();
 
-    if (timeout === undefined || timeout === 0) {
+    if (this.#readTimeout <= 0) {
       return this.#readFrame();
     }
 
-    const timeoutMessage = `server heartbeat timeout ${timeout}ms`;
+    const timeoutMessage = `server heartbeat timeout ${this.#readTimeout}ms`;
 
     const promise = new Promise<IncomingFrame>(async (resolve, reject) => {
       this.#readTimer = setTimeout(() => {
         reject(new Error(timeoutMessage));
         this.close();
-      }, timeout);
+      }, this.#readTimeout);
 
       this.#readFrame()
         .then(resolve)
-        .catch(reject);
+        .catch(reject)
+        .finally(this.#clear);
     });
-
-    promise.finally(this.#resetReadTimer);
 
     return promise;
   };
 
   tune(options: AmqpSocketOptions) {
-    this.#heartbeatInterval = options.heartbeat;
-    this.#frameMax = options.frameMax;
+    this.#readTimeout = options.readTimeout !== undefined
+      ? options.readTimeout
+      : this.#readTimeout;
+    this.#sendTimeout = options.sendTimeout !== undefined
+      ? options.sendTimeout
+      : this.#sendTimeout;
+    this.#frameMax = options.frameMax !== undefined
+      ? options.frameMax
+      : this.#frameMax;
     this.#resetSendTimer();
   }
 
@@ -199,8 +207,12 @@ export class AmqpSocket
   }
 
   async write(frame: OutgoingFrame): Promise<void> {
-    if (frame.type === "content" && frame.payload.length > this.#frameMax - 8) {
-      this.#resetSendTimer();
+    this.#resetSendTimer();
+    if (
+      frame.type === "content" &&
+      this.#frameMax > 8 &&
+      frame.payload.length > this.#frameMax - 8
+    ) {
       await Promise.all(
         splitArray(frame.payload, this.#frameMax - 8).map((chunk) => {
           this.#conn.write(encodeFrame({
@@ -213,8 +225,6 @@ export class AmqpSocket
 
       return;
     }
-
-    this.#resetSendTimer();
 
     await this.#conn.write(encodeFrame(frame));
   }
@@ -281,18 +291,15 @@ export class AmqpSocket
   };
 
   #clear = () => {
-    this.#heartbeatInterval = 0;
+    this.#readTimeout = 0;
+    this.#sendTimeout = 0;
     this.#resetReadTimer();
     this.#resetSendTimer();
   };
 
   async read(): Promise<IncomingFrame> {
     while (true) {
-      const timeout = this.#heartbeatInterval > 0
-        ? this.#heartbeatInterval * 1000 * 2
-        : 0;
-
-      const frame = await this.#readWithTimeout(timeout);
+      const frame = await this.#readWithTimeout();
 
       if (
         frame.type === "method" && frame.payload.classId === 10 &&

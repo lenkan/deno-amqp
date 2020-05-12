@@ -7,12 +7,17 @@ import {
 } from "./testing.ts";
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
+import { createResolvable } from "./resolvable.ts";
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function createConn() {
   return mock.obj<Deno.Reader & Deno.Writer & Deno.Closer>({
     read: mock.fn(),
     write: mock.fn(async () => {}),
-    close: mock.fn(),
+    close: mock.fn(() => {}),
   });
 }
 
@@ -36,7 +41,7 @@ function createEofReader() {
 test("write - method frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
-  const result = socket.write(
+  await socket.write(
     {
       type: "method",
       channel: 0,
@@ -83,11 +88,82 @@ test("write - method frame", async () => {
   );
 });
 
+test("write - content frame", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+  await socket.write(
+    {
+      type: "content",
+      channel: 1,
+      payload: new Uint8Array([1, 2, 3]),
+    },
+  );
+
+  assertEquals(
+    conn.write.mock.calls[0][0],
+    arrayOf(
+      ...[3],
+      ...[0, 1],
+      ...[0, 0, 0, 3],
+      ...[1, 2, 3],
+      ...[206],
+    ),
+  );
+});
+
+test("write - content frame - too big", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+  socket.tune({
+    frameMax: 8 + 2, // prefix(7) + payload(2) + end(1)
+  });
+
+  await socket.write(
+    {
+      type: "content",
+      channel: 1,
+      payload: new Uint8Array([1, 2, 3]),
+    },
+  );
+
+  assertEquals(
+    conn.write.mock.calls[0][0],
+    arrayOf(
+      ...[3],
+      ...[0, 1],
+      ...[0, 0, 0, 2],
+      ...[1, 2],
+      ...[206],
+    ),
+  );
+
+  assertEquals(
+    conn.write.mock.calls[1][0],
+    arrayOf(
+      ...[3],
+      ...[0, 1],
+      ...[0, 0, 0, 1],
+      ...[3],
+      ...[206],
+    ),
+  );
+});
+
+function wrap(type: number, channel: number, payload: Uint8Array) {
+  return arrayOf(
+    ...[type],
+    ...[0, channel],
+    ...[0, 0, 0, payload.length],
+    ...payload,
+    206,
+  );
+}
+
 test("read - method frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
 
-  const payload = [
+  const payload = arrayOf(
     ...[0, 10],
     ...[0, 10],
     ...[
@@ -116,14 +192,9 @@ test("read - method frame", async () => {
       85,
       83,
     ],
-  ];
-  const data = arrayOf(
-    ...[1],
-    ...[0, 0],
-    ...[0, 0, 0, payload.length],
-    ...payload,
-    206,
   );
+
+  const data = wrap(1, 0, payload);
 
   conn.read.mock.setImplementation(createMockReader(data));
 
@@ -234,6 +305,91 @@ test("read - throws on broken reader", async () => {
   conn.read.mock.setImplementation(() => {
     throw new Error("Damn");
   });
+
+  await assertThrowsAsync(
+    async () => {
+      await socket.read();
+    },
+    Error,
+    "Damn",
+  );
+});
+
+test("heartbeat - sends heartbeat on interval", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  socket.tune({ sendTimeout: 10 });
+
+  await sleep(11);
+  assertEquals(conn.write.mock.calls.length, 1);
+
+  await sleep(11);
+  assertEquals(conn.write.mock.calls.length, 2);
+
+  socket.tune({ sendTimeout: 0 });
+});
+
+test("heartbeat - times out read after double", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  const resolvable = createResolvable<number | null>();
+  conn.read.mock.setImplementation(
+    async (...args: any): Promise<number | null> => {
+      return await resolvable;
+    },
+  );
+
+  socket.tune({ readTimeout: 10, frameMax: 0 });
+
+  await assertThrowsAsync(
+    async () => {
+      await socket.read();
+    },
+    Error,
+    "server heartbeat timeout 10ms",
+  );
+});
+
+test("heartbeat - does not crash if reading throws _after_ timeout", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  const resolvable = createResolvable<number | null>();
+  conn.read.mock.setImplementation(
+    async (...args: any): Promise<number | null> => {
+      return await resolvable;
+    },
+  );
+
+  socket.tune({ readTimeout: 10, frameMax: 0 });
+
+  await assertThrowsAsync(
+    async () => {
+      await socket.read();
+    },
+    Error,
+    "server heartbeat timeout 10ms",
+  );
+
+  resolvable.reject(new Error("Damn"));
+});
+
+test("heartbeat - does not crash if reading throws _before_ timeout", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  const resolvable = createResolvable<number | null>();
+  conn.read.mock.setImplementation(
+    async (...args: any): Promise<number | null> => {
+      throw new Error("Damn");
+    },
+  );
+
+  socket.tune({ readTimeout: 0.01, frameMax: 0 });
+
+  resolvable.reject(new Error("Damn"));
 
   await assertThrowsAsync(
     async () => {

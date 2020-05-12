@@ -116,7 +116,8 @@ export class AmqpConnection implements AmqpConnection {
 
     this.#socket.tune({
       frameMax,
-      heartbeat: heartbeatInterval,
+      sendTimeout: heartbeatInterval * 1000,
+      readTimeout: heartbeatInterval * 1000 * 2,
     });
 
     await this.#protocol.sendConnectionOpen(0, {
