@@ -78,6 +78,7 @@ export function withConnection(
   return async () => {
     const connection = await connect({
       loglevel: tryCheckEnv("DEBUG") ? "debug" : "none",
+      heartbeatInterval: 0,
       ...options,
     });
 

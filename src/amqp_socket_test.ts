@@ -1,19 +1,16 @@
-import { createFrameReader, createFrameWriter } from "./amqp_framing.ts";
+import { createFrameReader, write } from "./amqp_socket.ts";
 import {
   test,
   assertEquals,
   arrayOf,
   assertThrowsAsync,
-} from "../testing.ts";
-import { mock } from "../mock.ts";
+} from "./testing.ts";
+import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 
 function createConn() {
-  return mock.obj<Deno.Reader & Deno.Writer>({
+  return mock.obj<Deno.Reader>({
     read: mock.fn(),
-    write: mock.fn(async (p: Uint8Array) => {
-      return p.length;
-    }),
   });
 }
 
@@ -35,27 +32,48 @@ function createEofReader() {
 }
 
 test("write - method frame", async () => {
-  const conn = createConn();
-  const write = createFrameWriter(conn);
-
-  await write(
+  const result = write(
     {
-      type: 1,
+      type: "method",
       channel: 0,
-      payload: arrayOf(0, 10, 0, 11, 123),
+      payload: { classId: 10, methodId: 10, args: { serverProperties: {} } },
     },
   );
 
-  assertEquals(conn.write.mock.calls.length, 1);
   assertEquals(
-    conn.write.mock.calls[0][0],
+    result,
     arrayOf(
       ...[1],
       ...[0, 0],
-      ...[0, 0, 0, 5],
+      ...[0, 0, 0, 28],
       ...[0, 10],
-      ...[0, 11],
-      ...[123],
+      ...[0, 10],
+      ...[
+        0,
+        9,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        80,
+        76,
+        65,
+        73,
+        78,
+        0,
+        0,
+        0,
+        5,
+        101,
+        110,
+        95,
+        85,
+        83,
+      ],
       ...[206],
     ),
   );
@@ -65,22 +83,61 @@ test("read - method frame", async () => {
   const conn = createConn();
   const read = createFrameReader(conn);
 
+  const payload = [
+    ...[0, 10],
+    ...[0, 10],
+    ...[
+      0,
+      9,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      5,
+      80,
+      76,
+      65,
+      73,
+      78,
+      0,
+      0,
+      0,
+      5,
+      101,
+      110,
+      95,
+      85,
+      83,
+    ],
+  ];
   const data = arrayOf(
     ...[1],
     ...[0, 0],
-    ...[0, 0, 0, 5],
-    ...[0, 10],
-    ...[0, 11],
-    ...[123],
-    ...[206],
+    ...[0, 0, 0, payload.length],
+    ...payload,
+    206,
   );
+
   conn.read.mock.setImplementation(createMockReader(data));
 
   const frame = await read();
   assertEquals(frame, {
-    type: 1,
+    type: "method",
     channel: 0,
-    payload: arrayOf(0, 10, 0, 11, 123),
+    payload: {
+      classId: 10,
+      methodId: 10,
+      args: {
+        locales: "en_US",
+        mechanisms: "PLAIN",
+        serverProperties: {},
+        versionMajor: 0,
+        versionMinor: 9,
+      },
+    },
   });
 });
 
@@ -98,7 +155,7 @@ test("read - heartbeat frame", async () => {
 
   const frame = await read();
   assertEquals(frame, {
-    type: 8,
+    type: "heartbeat",
     channel: 0,
     payload: arrayOf(),
   });

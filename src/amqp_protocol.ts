@@ -1,4 +1,4 @@
-import { AmqpMultiplexer } from "./connection/mod.ts";
+import { AmqpMultiplexer } from "./amqp_multiplexer.ts";
 import * as t from "./amqp_types.ts";
 
 export class AmqpProtocol {

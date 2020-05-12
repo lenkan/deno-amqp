@@ -39,7 +39,7 @@ import { ResolvablePromise, createResolvable } from "./resolvable.ts";
 import {
   serializeChannelError,
   serializeConnectionError,
-} from "./connection/error_handling.ts";
+} from "./error_handling.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;

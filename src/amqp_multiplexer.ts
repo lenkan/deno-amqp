@@ -2,13 +2,13 @@ import {
   Header,
   ReceiveMethod,
   SendMethod,
-} from "../amqp_codec.ts";
+} from "./amqp_codec.ts";
 import {
   CONNECTION_CLOSE,
   CONNECTION,
   CHANNEL,
   CHANNEL_CLOSE,
-} from "../amqp_constants.ts";
+} from "./amqp_constants.ts";
 import {
   serializeConnectionError,
   serializeChannelError,
@@ -17,7 +17,7 @@ import {
   IncomingFrame,
   AmqpSocketReader,
   AmqpSocketWriter,
-} from "../framing/mod.ts";
+} from "./amqp_socket.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,

@@ -3,15 +3,15 @@ import {
   assertEquals,
   arrayOf,
   assertThrowsAsync,
-} from "../testing.ts";
+} from "./testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
-import { IncomingFrame, HeaderFrame, ContentFrame } from "../framing/mod.ts";
+import { IncomingFrame, HeaderFrame, ContentFrame } from "./amqp_socket.ts";
 import {
   ConnectionStart,
   ChannelCloseArgs,
   ConnectionCloseArgs,
   BasicProperties,
-} from "../amqp_types.ts";
+} from "./amqp_types.ts";
 import {
   QUEUE,
   QUEUE_DECLARE_OK,
@@ -22,8 +22,8 @@ import {
   CONNECTION,
   CONNECTION_CLOSE,
   HARD_ERROR_INTERNAL_ERROR,
-} from "../amqp_constants.ts";
-import { mock } from "../mock.ts";
+} from "./amqp_constants.ts";
+import { mock } from "./mock.ts";
 
 function createSocket() {
   return {

@@ -1,33 +1,15 @@
 import { AmqpChannel } from "./amqp_channel.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import {
-  createSocket,
-  AmqpSocket,
-  Frame,
-  OutgoingFrame,
-  IncomingFrame,
-  AmqpSocketWriter,
-  AmqpSocketReader,
-} from "./framing/mod.ts";
-import {
-  createMux,
-  AmqpMultiplexer,
-  createHeartbeatSocket,
-} from "./connection/mod.ts";
+import { AmqpSocket } from "./amqp_socket.ts";
+import { createAmqpMux } from "./amqp_multiplexer.ts";
 import { AmqpProtocol } from "./amqp_protocol.ts";
-import { serializeConnectionError } from "./connection/error_handling.ts";
+import { serializeConnectionError } from "./error_handling.ts";
 import { createResolvable, ResolvablePromise } from "./resolvable.ts";
 import {
   ConnectionClose,
   ConnectionStart,
   ConnectionTune,
 } from "./amqp_types.ts";
-
-const HEARTBEAT_FRAME: OutgoingFrame = {
-  type: "heartbeat",
-  channel: 0,
-  payload: new Uint8Array([]),
-};
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -76,32 +58,20 @@ function tune(ours: number | undefined, theirs: number) {
 
 export class AmqpConnection implements AmqpConnection {
   #channelMax: number = -1;
-  #frameMax: number = -1;
-  #heartbeatInterval: number = -1;
   #isOpen: boolean = false;
   #protocol: AmqpProtocol;
-  #mux: AmqpMultiplexer;
   #channelNumbers: number[] = [];
   #username: string;
   #password: string;
   #vhost: string;
   #closedPromise: ResolvablePromise<void>;
-  #conn: Deno.Conn;
-  #socket: AmqpSocketReader & AmqpSocketWriter;
   #options: AmqpConnectionOptions;
-  #sendTimer: number | null = null;
+  #socket: AmqpSocket;
 
   constructor(conn: Deno.Conn, options: AmqpConnectionOptions) {
-    this.#conn = conn;
     this.#options = options;
-    this.#socket = createSocket(this.#conn, { loglevel: options.loglevel });
-    this.#mux = createMux({
-      read: this.#read,
-      write: this.#write,
-      close: () => this.#conn.close(),
-    });
-
-    this.#protocol = new AmqpProtocol(this.#mux);
+    this.#socket = new AmqpSocket(conn);
+    this.#protocol = new AmqpProtocol(createAmqpMux(this.#socket));
     this.#username = options.username;
     this.#password = options.password;
     this.#vhost = options.vhost || "/";
@@ -119,7 +89,7 @@ export class AmqpConnection implements AmqpConnection {
     this.#isOpen = false;
     await this.#protocol.sendConnectionCloseOk(0, {});
     this.#closedPromise.reject(new Error(serializeConnectionError(args)));
-    this.#conn.close();
+    this.#socket.close();
   };
 
   #handleStart = async (args: ConnectionStart) => {
@@ -130,17 +100,23 @@ export class AmqpConnection implements AmqpConnection {
   };
 
   #handleTune = async (args: ConnectionTune) => {
-    this.#heartbeatInterval = tune(
+    const heartbeatInterval = tune(
       this.#options.heartbeatInterval,
       args.heartbeat,
     );
+
     this.#channelMax = tune(undefined, args.channelMax);
-    this.#frameMax = tune(this.#options.frameMax, args.frameMax);
+    const frameMax = tune(this.#options.frameMax, args.frameMax);
 
     await this.#protocol.sendConnectionTuneOk(0, {
-      heartbeat: this.#heartbeatInterval,
+      heartbeat: heartbeatInterval,
       channelMax: this.#channelMax,
-      frameMax: this.#frameMax,
+      frameMax,
+    });
+
+    this.#socket.tune({
+      frameMax,
+      heartbeat: heartbeatInterval,
     });
 
     await this.#protocol.sendConnectionOpen(0, {
@@ -148,80 +124,11 @@ export class AmqpConnection implements AmqpConnection {
     });
   };
 
-  #write = async (frame: OutgoingFrame) => {
-    if (frame.type === "content") {
-      for (const chunk of splitArray(frame.payload, this.#frameMax)) {
-        this.#socket.write({
-          type: "content",
-          channel: frame.channel,
-          payload: chunk,
-        });
-      }
-
-      return;
-    }
-
-    this.#socket.write(frame);
-  };
-
-  #clearSendTimer = () => {
-    if (this.#sendTimer !== null) {
-      clearTimeout(this.#sendTimer);
-      this.#sendTimer = null;
-    }
-  };
-
-  #resetSendTimer = () => {
-    this.#clearSendTimer();
-
-    if (this.#heartbeatInterval > 0) {
-      this.#sendTimer = setTimeout(() => {
-        this.#socket.write(HEARTBEAT_FRAME);
-        this.#resetSendTimer();
-      }, this.#heartbeatInterval * 1000);
-    }
-  };
-
-  #readTimeout = (timeout: number): Promise<IncomingFrame> => {
-    if (timeout === 0) {
-      return this.#socket.read();
-    }
-
-    const timeoutMessage =
-      `server heartbeat timeout ${this.#heartbeatInterval}s`;
-
-    return new Promise(async (resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error(timeoutMessage));
-        this.#conn.close();
-      }, timeout);
-
-      this.#socket.read()
-        .then(resolve)
-        .catch(reject)
-        .finally(() => clearInterval(timer));
-    });
-  };
-
-  #read = async (): Promise<IncomingFrame> => {
-    while (true) {
-      const timeout = this.#isOpen ? this.#heartbeatInterval * 1000 * 2 : 0;
-      const frame = await this.#readTimeout(timeout);
-      if (frame.type === "heartbeat") {
-        continue;
-      }
-
-      return frame;
-    }
-  };
-
   /**
    * Open this connection.
    */
   async open() {
-    await this.#conn.write(
-      new Uint8Array([...new TextEncoder().encode("AMQP"), 0, 0, 9, 1]),
-    );
+    await this.#socket.start();
 
     await this.#protocol.receiveConnectionStart(0).then(this.#handleStart);
     await this.#protocol.receiveConnectionTune(0).then(this.#handleTune);
@@ -261,7 +168,7 @@ export class AmqpConnection implements AmqpConnection {
         methodId: 0,
         replyCode: HARD_ERROR_CONNECTION_FORCED,
       });
-      this.#conn.close();
+      this.#socket.close();
     }
     this.#isOpen = false;
     this.#closedPromise.resolve();
