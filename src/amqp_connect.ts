@@ -1,4 +1,5 @@
 import { AmqpConnection } from "./amqp_connection.ts";
+import { AmqpSocket } from "./amqp_socket.ts";
 
 /**
  * Options for the connection to an AMQP broker.
@@ -72,8 +73,9 @@ export async function connect(
   } = options;
 
   const conn = await Deno.connect({ port, hostname });
+  const socket = new AmqpSocket(conn);
 
-  const connection = new AmqpConnection(conn, {
+  const connection = new AmqpConnection(socket, {
     username,
     password,
     heartbeatInterval,

@@ -83,6 +83,28 @@ export function resolveTypescriptType(type: string) {
   }
 }
 
+export function resolveEncoderType(type: string) {
+  switch (type) {
+    case "longlong":
+    case "timestamp":
+      return "uint64";
+    case "long":
+      return "uint32";
+    case "short":
+      return "uint16";
+    case "octet":
+      return "uint8";
+    case "bit":
+      return "bit";
+    case "shortstr":
+    case "longstr":
+    case "table":
+      return type;
+    default:
+      throw new Error(`Unknown type '${type}'`);
+  }
+}
+
 export function constantName(name: string) {
   return name.replace(/-/g, "_").toUpperCase();
 }
@@ -224,67 +246,25 @@ export function getDefaultValue(a: ArgumentDefinition) {
   return JSON.stringify(a["default-value"]);
 }
 
-export function printEncodeMethodFunction(
-  spec: Spec,
-  clazz: ClassDefinition,
-  method: MethodDefinition,
-) {
-  const name = `encode${pascalCase(clazz.name) + pascalCase(method.name)}`;
-  const argsName = `${pascalCase(clazz.name) + pascalCase(method.name)}Args`;
-  const hasNowait = !!method.arguments.find((arg) => arg.name === "nowait");
-  const argsType = hasNowait ? `WithNowait<t.${argsName}>` : `t.${argsName}`;
+export function printMethodEncode(spec: Spec, method: MethodDefinition) {
+  return method.arguments.map((arg) => {
+    const type = resolveEncoderType(resolveType(spec, arg));
+    const name = camelCase(arg.name);
+    const defaultValue = getDefaultValue(arg);
+    const value = arg["default-value"] !== undefined
+      ? `method.args.${name} !== undefined ? method.args.${name} : ${defaultValue}`
+      : `method.args.${name}`;
 
-  return `
-function ${name}(args: ${argsType}): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: ${clazz.id} },
-    { type: "short", value: ${method.id} },
-    ${
-    method.arguments.map((arg) => {
-      const type = resolveType(spec, arg);
-      const name = camelCase(arg.name);
-      const defaultValue = getDefaultValue(arg);
-      const value = arg["default-value"] !== undefined
-        ? `args.${name} !== undefined ? args.${name} : ${defaultValue}`
-        : `args.${name}`;
-
-      return `{ type: "${type}" as const, value: ${value} }`;
-    }).join(",")
-  }
-  ]);
-}
-  `;
-}
-
-export function printDecodeMethodFunction(
-  spec: Spec,
-  clazz: ClassDefinition,
-  method: MethodDefinition,
-) {
-  const name = `decode${pascalCase(clazz.name) + pascalCase(method.name)}`;
-  const returnName = `${pascalCase(clazz.name) + pascalCase(method.name)}`;
-  return `
-function ${name}(r: Deno.ReaderSync): t.${returnName} {
-  const fields = enc.decodeFields(r, [${
-    method.arguments.map((a) => '"' + resolveType(spec, a) + '"').join(",")
-  }]);
-  const args = { ${
-    method.arguments.map((a, i) => {
-      const type = resolveType(spec, a);
-      return `${camelCase(a.name)}: fields[${i}] as ${
-        resolveTypescriptType(
-          type,
-        )
-      }`;
-    }).join(",")
-  }}
-  return args;
-}`;
+    return `encoder.write("${type}", ${value})`;
+  }).join(`\n`);
 }
 
 export function printMethodEncoder(spec: Spec) {
   return `
 function encodeMethod(method: SendMethod): Uint8Array {
+  const encoder = new enc.AmqpEncoder();
+  encoder.write("uint16", method.classId);
+  encoder.write("uint16", method.methodId);
   switch(method.classId) {
     ${
     spec.classes.map((clazz) => {
@@ -293,14 +273,17 @@ function encodeMethod(method: SendMethod): Uint8Array {
         switch(method.methodId) {
           ${
         clazz.methods.map((method) => {
-          const name = `encode${pascalCase(clazz.name) +
-            pascalCase(method.name)}`;
-          return `case ${method.id}: return ${name}(method.args);`;
+          return `
+          case ${method.id}:
+            ${printMethodEncode(spec, method)}
+            break;
+          `;
         }).join("\n")
       }
           default:
             throw new Error("Unknown method " + method!.methodId + " for class '${clazz.name}'")
         }
+        break;
       }
      `;
     }).join("\n")
@@ -308,6 +291,7 @@ function encodeMethod(method: SendMethod): Uint8Array {
     default:
       throw new Error("Unknown class " + method!.classId);
   }
+  return encoder.result();
 }
   `;
 }
@@ -315,9 +299,9 @@ function encodeMethod(method: SendMethod): Uint8Array {
 export function printMethodDecoder(spec: Spec) {
   return `
 function decodeMethod(data: Uint8Array): ReceiveMethod {
-  const r = new Deno.Buffer(data);
-  const classId = enc.decodeShortUint(r);
-  const methodId = enc.decodeShortUint(r);
+  const decoder = new enc.AmqpDecoder(data);
+  const classId = decoder.read("uint16");
+  const methodId = decoder.read("uint16");
   switch(classId) {
     ${
     spec.classes.map((clazz) => {
@@ -326,9 +310,21 @@ function decodeMethod(data: Uint8Array): ReceiveMethod {
         switch(methodId) {
           ${
         clazz.methods.map((method) => {
-          const name = `decode${pascalCase(clazz.name) +
-            pascalCase(method.name)}`;
-          return `case ${method.id}: return { classId, methodId, args: ${name}(r) };`;
+          return `
+          case ${method.id}: 
+            return { 
+              classId, 
+              methodId, 
+              args: {
+                ${
+            method.arguments.map((arg) => {
+              const name = camelCase(arg.name);
+              const type = resolveEncoderType(resolveType(spec, arg));
+              return `${name}: decoder.read("${type}"),`;
+            }).join("\n")
+          }
+              }
+          };`;
         }).join("\n")
       }
           default:
@@ -345,72 +341,62 @@ function decodeMethod(data: Uint8Array): ReceiveMethod {
   `;
 }
 
-export function printEncodeHeaderFunction(
+export function printEncodeHeader(
   clazz: ClassDefinition,
 ) {
-  const name = `encode${pascalCase(clazz.name)}Header`;
-  const argName = `${pascalCase(clazz.name)}Header`;
   return `
-function ${name}(header: ${argName}): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short",  value: ${clazz.id} },
-    { type: "short",  value: 0 }, // weight unused
-    { type: "longlong",  value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([
+  encoder.write("flags", [
     ${
     (clazz.properties || []).map((prop) => {
       const name = camelCase(prop.name);
-      return `{ type: "${prop.type}", value: header.props.${name} }`;
+      const type = resolveEncoderType(prop.type);
+      if (type === "bit") {
+        return `header.props.${name}`;
+      } else {
+        return `header.props.${name} !== undefined`;
+      }
     }).join(",")
   }
-  ]));
-  return w.bytes();
-}
-  `;
-}
+  ]);
 
-export function printDecodeHeaderFunction(
-  clazz: ClassDefinition,
-) {
-  const name = `decode${pascalCase(clazz.name)}Header`;
-  return `
-function ${name}(r: Deno.ReaderSync): ${pascalCase(clazz.name)}Header {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r); 
-  const fields = enc.decodeOptionalFields(r, [${
-    (clazz.properties || []).map(
-      (p) => '"' + p.type + '"',
-    ).join(",")
-  }]);
-  const props = { ${
-    (clazz.properties || []).map((p, i) =>
-      `${camelCase(p.name)}: fields[${i}] as ${resolveTypescriptType(p.type)}`
-    ).join(",")
-  }};
+  ${
+    (clazz.properties || []).map((prop) => {
+      const name = camelCase(prop.name);
+      const type = resolveEncoderType(prop.type);
+      if (type === "bit") {
+        return "";
+      }
 
-  return { classId: ${clazz.id}, size, props };
-}
+      return `
+      if(header.props.${name} !== undefined) {
+        encoder.write("${type}", header.props.${name});
+      }
+    `;
+    }).join("\n")
+  }
   `;
 }
 
 export function printHeaderEncoder(spec: Spec) {
   return `
 function encodeHeader(header: Header) : Uint8Array {
+  const encoder = new enc.AmqpEncoder();
+  encoder.write("uint16", header.classId);
+  encoder.write("uint16", 0);
+  encoder.write("uint64", header.size);
   switch(header.classId) {
     ${
     spec.classes.map((clazz) => {
-      return `case ${clazz.id}: return encode${
-        pascalCase(
-          clazz.name,
-        )
-      }Header(header);`;
+      return `case ${clazz.id}: 
+        ${printEncodeHeader(clazz)}
+         break;`;
     }).join("\n")
   }
     default:
       throw new Error("Unknown class " + header!.classId);
   }
+
+  return encoder.result();
 }
   `;
 }
@@ -418,16 +404,29 @@ function encodeHeader(header: Header) : Uint8Array {
 export function printHeaderDecoder(spec: Spec) {
   return `
 function decodeHeader(data: Uint8Array) : Header {
-  const r = new Deno.Buffer(data);
-  const classId = enc.decodeShortUint(r);
+  const decoder = new enc.AmqpDecoder(data);
+  const classId = decoder.read("uint16");
+  // weight unused
+  decoder.read("uint16");
+  const size = decoder.read("uint64");
+  const flags = decoder.read("flags");
   switch(classId) {
     ${
     spec.classes.map((clazz) => {
-      return `case ${clazz.id}: return decode${
-        pascalCase(
-          clazz.name,
-        )
-      }Header(r);`;
+      return `case ${clazz.id}: 
+      return {
+        classId,
+        size,
+        props: {
+          ${
+        (clazz.properties || []).map((prop, index) => {
+          const name = camelCase(prop.name);
+          const type = resolveEncoderType(prop.type);
+          return `${name}: flags[${index}] ? decoder.read("${type}") : undefined`;
+        }).join(",\n")
+      }
+        }
+      };`;
     }).join("\n")
   }
     default:

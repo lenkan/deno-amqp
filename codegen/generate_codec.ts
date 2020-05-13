@@ -4,11 +4,7 @@ import {
   printReceiveMethodUnion,
   printHeaderUnion,
   printHeaderDefinition,
-  printEncodeMethodFunction,
-  printDecodeMethodFunction,
   printMethodDecoder,
-  printEncodeHeaderFunction,
-  printDecodeHeaderFunction,
   printHeaderDecoder,
   printSendMethodUnion,
   printSendMethodDefinition,
@@ -62,14 +58,6 @@ function generateConnection() {
     printReceiveMethodUnion(spec),
     printSendMethodUnion(spec),
     printHeaderUnion(spec),
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printEncodeMethodFunction(spec, clazz, m))
-    ),
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printDecodeMethodFunction(spec, clazz, m))
-    ),
-    ...spec.classes.flatMap(printEncodeHeaderFunction),
-    ...spec.classes.flatMap(printDecodeHeaderFunction),
     `export ${printMethodDecoder(spec)}`,
     `export ${printMethodEncoder(spec)}`,
     `export ${printHeaderDecoder(spec)}`,

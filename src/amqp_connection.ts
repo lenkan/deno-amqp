@@ -68,9 +68,9 @@ export class AmqpConnection implements AmqpConnection {
   #options: AmqpConnectionOptions;
   #socket: AmqpSocket;
 
-  constructor(conn: Deno.Conn, options: AmqpConnectionOptions) {
+  constructor(socket: AmqpSocket, options: AmqpConnectionOptions) {
     this.#options = options;
-    this.#socket = new AmqpSocket(conn);
+    this.#socket = socket;
     this.#protocol = new AmqpProtocol(createAmqpMux(this.#socket));
     this.#username = options.username;
     this.#password = options.password;

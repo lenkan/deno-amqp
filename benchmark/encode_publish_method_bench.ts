@@ -8,10 +8,10 @@ function randomString() {
     Math.random().toString(36).substring(2, 15);
 }
 
-const randomStrings = Array.from({ length: 10 }).map(randomString);
+const randomStrings = Array.from({ length: 100000 }).map(randomString);
 
 await benchmark("encode_publish_method", () => {
-  for (let i = 0; i < 10000; ++i) {
+  for (let i = 0; i < 100000; ++i) {
     encodeMethod({
       classId: BASIC,
       methodId: BASIC_PUBLISH,
@@ -27,7 +27,7 @@ await benchmark("encode_publish_method", () => {
 });
 
 await benchmark("encode_basic_properties", () => {
-  for (let i = 0; i < 10000; ++i) {
+  for (let i = 0; i < 100000; ++i) {
     encodeHeader({
       classId: BASIC,
       size: 123,

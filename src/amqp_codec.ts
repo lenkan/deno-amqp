@@ -1078,1799 +1078,149 @@ export type Header =
   | BasicHeader
   | TxHeader
   | ConfirmHeader;
-
-function encodeConnectionStart(args: t.ConnectionStartArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 10 },
-    {
-      type: "octet" as const,
-      value: args.versionMajor !== undefined ? args.versionMajor : 0,
-    },
-    {
-      type: "octet" as const,
-      value: args.versionMinor !== undefined ? args.versionMinor : 9,
-    },
-    { type: "table" as const, value: args.serverProperties },
-    {
-      type: "longstr" as const,
-      value: args.mechanisms !== undefined ? args.mechanisms : "PLAIN",
-    },
-    {
-      type: "longstr" as const,
-      value: args.locales !== undefined ? args.locales : "en_US",
-    },
-  ]);
-}
-
-function encodeConnectionStartOk(args: t.ConnectionStartOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 11 },
-    { type: "table" as const, value: args.clientProperties },
-    {
-      type: "shortstr" as const,
-      value: args.mechanism !== undefined ? args.mechanism : "PLAIN",
-    },
-    { type: "longstr" as const, value: args.response },
-    {
-      type: "shortstr" as const,
-      value: args.locale !== undefined ? args.locale : "en_US",
-    },
-  ]);
-}
-
-function encodeConnectionSecure(args: t.ConnectionSecureArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 20 },
-    { type: "longstr" as const, value: args.challenge },
-  ]);
-}
-
-function encodeConnectionSecureOk(args: t.ConnectionSecureOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 21 },
-    { type: "longstr" as const, value: args.response },
-  ]);
-}
-
-function encodeConnectionTune(args: t.ConnectionTuneArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 30 },
-    {
-      type: "short" as const,
-      value: args.channelMax !== undefined ? args.channelMax : 0,
-    },
-    {
-      type: "long" as const,
-      value: args.frameMax !== undefined ? args.frameMax : 0,
-    },
-    {
-      type: "short" as const,
-      value: args.heartbeat !== undefined ? args.heartbeat : 0,
-    },
-  ]);
-}
-
-function encodeConnectionTuneOk(args: t.ConnectionTuneOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 31 },
-    {
-      type: "short" as const,
-      value: args.channelMax !== undefined ? args.channelMax : 0,
-    },
-    {
-      type: "long" as const,
-      value: args.frameMax !== undefined ? args.frameMax : 0,
-    },
-    {
-      type: "short" as const,
-      value: args.heartbeat !== undefined ? args.heartbeat : 0,
-    },
-  ]);
-}
-
-function encodeConnectionOpen(args: t.ConnectionOpenArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 40 },
-    {
-      type: "shortstr" as const,
-      value: args.virtualHost !== undefined ? args.virtualHost : "/",
-    },
-    {
-      type: "shortstr" as const,
-      value: args.capabilities !== undefined ? args.capabilities : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.insist !== undefined ? args.insist : false,
-    },
-  ]);
-}
-
-function encodeConnectionOpenOk(args: t.ConnectionOpenOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 41 },
-    {
-      type: "shortstr" as const,
-      value: args.knownHosts !== undefined ? args.knownHosts : "",
-    },
-  ]);
-}
-
-function encodeConnectionClose(args: t.ConnectionCloseArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 50 },
-    { type: "short" as const, value: args.replyCode },
-    {
-      type: "shortstr" as const,
-      value: args.replyText !== undefined ? args.replyText : "",
-    },
-    { type: "short" as const, value: args.classId },
-    { type: "short" as const, value: args.methodId },
-  ]);
-}
-
-function encodeConnectionCloseOk(args: t.ConnectionCloseOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 51 },
-  ]);
-}
-
-function encodeConnectionBlocked(args: t.ConnectionBlockedArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 60 },
-    {
-      type: "shortstr" as const,
-      value: args.reason !== undefined ? args.reason : "",
-    },
-  ]);
-}
-
-function encodeConnectionUnblocked(
-  args: t.ConnectionUnblockedArgs,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 61 },
-  ]);
-}
-
-function encodeConnectionUpdateSecret(
-  args: t.ConnectionUpdateSecretArgs,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 70 },
-    { type: "longstr" as const, value: args.newSecret },
-    { type: "shortstr" as const, value: args.reason },
-  ]);
-}
-
-function encodeConnectionUpdateSecretOk(
-  args: t.ConnectionUpdateSecretOkArgs,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 71 },
-  ]);
-}
-
-function encodeChannelOpen(args: t.ChannelOpenArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 10 },
-    {
-      type: "shortstr" as const,
-      value: args.outOfBand !== undefined ? args.outOfBand : "",
-    },
-  ]);
-}
-
-function encodeChannelOpenOk(args: t.ChannelOpenOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 11 },
-    {
-      type: "longstr" as const,
-      value: args.channelId !== undefined ? args.channelId : "",
-    },
-  ]);
-}
-
-function encodeChannelFlow(args: t.ChannelFlowArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 20 },
-    { type: "bit" as const, value: args.active },
-  ]);
-}
-
-function encodeChannelFlowOk(args: t.ChannelFlowOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 21 },
-    { type: "bit" as const, value: args.active },
-  ]);
-}
-
-function encodeChannelClose(args: t.ChannelCloseArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 40 },
-    { type: "short" as const, value: args.replyCode },
-    {
-      type: "shortstr" as const,
-      value: args.replyText !== undefined ? args.replyText : "",
-    },
-    { type: "short" as const, value: args.classId },
-    { type: "short" as const, value: args.methodId },
-  ]);
-}
-
-function encodeChannelCloseOk(args: t.ChannelCloseOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 41 },
-  ]);
-}
-
-function encodeAccessRequest(args: t.AccessRequestArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 30 },
-    { type: "short", value: 10 },
-    {
-      type: "shortstr" as const,
-      value: args.realm !== undefined ? args.realm : "/data",
-    },
-    {
-      type: "bit" as const,
-      value: args.exclusive !== undefined ? args.exclusive : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.passive !== undefined ? args.passive : true,
-    },
-    {
-      type: "bit" as const,
-      value: args.active !== undefined ? args.active : true,
-    },
-    {
-      type: "bit" as const,
-      value: args.write !== undefined ? args.write : true,
-    },
-    { type: "bit" as const, value: args.read !== undefined ? args.read : true },
-  ]);
-}
-
-function encodeAccessRequestOk(args: t.AccessRequestOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 30 },
-    { type: "short", value: 11 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 1,
-    },
-  ]);
-}
-
-function encodeExchangeDeclare(
-  args: WithNowait<t.ExchangeDeclareArgs>,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 10 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    {
-      type: "shortstr" as const,
-      value: args.type !== undefined ? args.type : "direct",
-    },
-    {
-      type: "bit" as const,
-      value: args.passive !== undefined ? args.passive : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.durable !== undefined ? args.durable : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.autoDelete !== undefined ? args.autoDelete : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.internal !== undefined ? args.internal : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeExchangeDeclareOk(args: t.ExchangeDeclareOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 11 },
-  ]);
-}
-
-function encodeExchangeDelete(
-  args: WithNowait<t.ExchangeDeleteArgs>,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 20 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    {
-      type: "bit" as const,
-      value: args.ifUnused !== undefined ? args.ifUnused : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-  ]);
-}
-
-function encodeExchangeDeleteOk(args: t.ExchangeDeleteOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 21 },
-  ]);
-}
-
-function encodeExchangeBind(args: WithNowait<t.ExchangeBindArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 30 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    { type: "shortstr" as const, value: args.destination },
-    { type: "shortstr" as const, value: args.source },
-    {
-      type: "shortstr" as const,
-      value: args.routingKey !== undefined ? args.routingKey : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeExchangeBindOk(args: t.ExchangeBindOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 31 },
-  ]);
-}
-
-function encodeExchangeUnbind(
-  args: WithNowait<t.ExchangeUnbindArgs>,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 40 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    { type: "shortstr" as const, value: args.destination },
-    { type: "shortstr" as const, value: args.source },
-    {
-      type: "shortstr" as const,
-      value: args.routingKey !== undefined ? args.routingKey : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeExchangeUnbindOk(args: t.ExchangeUnbindOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 51 },
-  ]);
-}
-
-function encodeQueueDeclare(args: WithNowait<t.QueueDeclareArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 10 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.passive !== undefined ? args.passive : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.durable !== undefined ? args.durable : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.exclusive !== undefined ? args.exclusive : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.autoDelete !== undefined ? args.autoDelete : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeQueueDeclareOk(args: t.QueueDeclareOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 11 },
-    { type: "shortstr" as const, value: args.queue },
-    { type: "long" as const, value: args.messageCount },
-    { type: "long" as const, value: args.consumerCount },
-  ]);
-}
-
-function encodeQueueBind(args: WithNowait<t.QueueBindArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 20 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    {
-      type: "shortstr" as const,
-      value: args.routingKey !== undefined ? args.routingKey : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeQueueBindOk(args: t.QueueBindOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 21 },
-  ]);
-}
-
-function encodeQueuePurge(args: WithNowait<t.QueuePurgeArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 30 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-  ]);
-}
-
-function encodeQueuePurgeOk(args: t.QueuePurgeOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 31 },
-    { type: "long" as const, value: args.messageCount },
-  ]);
-}
-
-function encodeQueueDelete(args: WithNowait<t.QueueDeleteArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 40 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.ifUnused !== undefined ? args.ifUnused : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.ifEmpty !== undefined ? args.ifEmpty : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-  ]);
-}
-
-function encodeQueueDeleteOk(args: t.QueueDeleteOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 41 },
-    { type: "long" as const, value: args.messageCount },
-  ]);
-}
-
-function encodeQueueUnbind(args: t.QueueUnbindArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 50 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    {
-      type: "shortstr" as const,
-      value: args.routingKey !== undefined ? args.routingKey : "",
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeQueueUnbindOk(args: t.QueueUnbindOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 51 },
-  ]);
-}
-
-function encodeBasicQos(args: t.BasicQosArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 10 },
-    {
-      type: "long" as const,
-      value: args.prefetchSize !== undefined ? args.prefetchSize : 0,
-    },
-    {
-      type: "short" as const,
-      value: args.prefetchCount !== undefined ? args.prefetchCount : 0,
-    },
-    {
-      type: "bit" as const,
-      value: args.global !== undefined ? args.global : false,
-    },
-  ]);
-}
-
-function encodeBasicQosOk(args: t.BasicQosOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 11 },
-  ]);
-}
-
-function encodeBasicConsume(args: WithNowait<t.BasicConsumeArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 20 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    {
-      type: "shortstr" as const,
-      value: args.consumerTag !== undefined ? args.consumerTag : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.noLocal !== undefined ? args.noLocal : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.noAck !== undefined ? args.noAck : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.exclusive !== undefined ? args.exclusive : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-    {
-      type: "table" as const,
-      value: args.arguments !== undefined ? args.arguments : {},
-    },
-  ]);
-}
-
-function encodeBasicConsumeOk(args: t.BasicConsumeOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 21 },
-    { type: "shortstr" as const, value: args.consumerTag },
-  ]);
-}
-
-function encodeBasicCancel(args: WithNowait<t.BasicCancelArgs>): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 30 },
-    { type: "shortstr" as const, value: args.consumerTag },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-  ]);
-}
-
-function encodeBasicCancelOk(args: t.BasicCancelOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 31 },
-    { type: "shortstr" as const, value: args.consumerTag },
-  ]);
-}
-
-function encodeBasicPublish(args: t.BasicPublishArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 40 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.exchange !== undefined ? args.exchange : "",
-    },
-    {
-      type: "shortstr" as const,
-      value: args.routingKey !== undefined ? args.routingKey : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.mandatory !== undefined ? args.mandatory : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.immediate !== undefined ? args.immediate : false,
-    },
-  ]);
-}
-
-function encodeBasicReturn(args: t.BasicReturnArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 50 },
-    { type: "short" as const, value: args.replyCode },
-    {
-      type: "shortstr" as const,
-      value: args.replyText !== undefined ? args.replyText : "",
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    { type: "shortstr" as const, value: args.routingKey },
-  ]);
-}
-
-function encodeBasicDeliver(args: t.BasicDeliverArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 60 },
-    { type: "shortstr" as const, value: args.consumerTag },
-    { type: "longlong" as const, value: args.deliveryTag },
-    {
-      type: "bit" as const,
-      value: args.redelivered !== undefined ? args.redelivered : false,
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    { type: "shortstr" as const, value: args.routingKey },
-  ]);
-}
-
-function encodeBasicGet(args: t.BasicGetArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 70 },
-    {
-      type: "short" as const,
-      value: args.ticket !== undefined ? args.ticket : 0,
-    },
-    {
-      type: "shortstr" as const,
-      value: args.queue !== undefined ? args.queue : "",
-    },
-    {
-      type: "bit" as const,
-      value: args.noAck !== undefined ? args.noAck : false,
-    },
-  ]);
-}
-
-function encodeBasicGetOk(args: t.BasicGetOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 71 },
-    { type: "longlong" as const, value: args.deliveryTag },
-    {
-      type: "bit" as const,
-      value: args.redelivered !== undefined ? args.redelivered : false,
-    },
-    { type: "shortstr" as const, value: args.exchange },
-    { type: "shortstr" as const, value: args.routingKey },
-    { type: "long" as const, value: args.messageCount },
-  ]);
-}
-
-function encodeBasicGetEmpty(args: t.BasicGetEmptyArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 72 },
-    {
-      type: "shortstr" as const,
-      value: args.clusterId !== undefined ? args.clusterId : "",
-    },
-  ]);
-}
-
-function encodeBasicAck(args: t.BasicAckArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 80 },
-    {
-      type: "longlong" as const,
-      value: args.deliveryTag !== undefined ? args.deliveryTag : 0,
-    },
-    {
-      type: "bit" as const,
-      value: args.multiple !== undefined ? args.multiple : false,
-    },
-  ]);
-}
-
-function encodeBasicReject(args: t.BasicRejectArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 90 },
-    { type: "longlong" as const, value: args.deliveryTag },
-    {
-      type: "bit" as const,
-      value: args.requeue !== undefined ? args.requeue : true,
-    },
-  ]);
-}
-
-function encodeBasicRecoverAsync(args: t.BasicRecoverAsyncArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 100 },
-    {
-      type: "bit" as const,
-      value: args.requeue !== undefined ? args.requeue : false,
-    },
-  ]);
-}
-
-function encodeBasicRecover(args: t.BasicRecoverArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 110 },
-    {
-      type: "bit" as const,
-      value: args.requeue !== undefined ? args.requeue : false,
-    },
-  ]);
-}
-
-function encodeBasicRecoverOk(args: t.BasicRecoverOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 111 },
-  ]);
-}
-
-function encodeBasicNack(args: t.BasicNackArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 120 },
-    {
-      type: "longlong" as const,
-      value: args.deliveryTag !== undefined ? args.deliveryTag : 0,
-    },
-    {
-      type: "bit" as const,
-      value: args.multiple !== undefined ? args.multiple : false,
-    },
-    {
-      type: "bit" as const,
-      value: args.requeue !== undefined ? args.requeue : true,
-    },
-  ]);
-}
-
-function encodeTxSelect(args: t.TxSelectArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 10 },
-  ]);
-}
-
-function encodeTxSelectOk(args: t.TxSelectOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 11 },
-  ]);
-}
-
-function encodeTxCommit(args: t.TxCommitArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 20 },
-  ]);
-}
-
-function encodeTxCommitOk(args: t.TxCommitOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 21 },
-  ]);
-}
-
-function encodeTxRollback(args: t.TxRollbackArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 30 },
-  ]);
-}
-
-function encodeTxRollbackOk(args: t.TxRollbackOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 31 },
-  ]);
-}
-
-function encodeConfirmSelect(
-  args: WithNowait<t.ConfirmSelectArgs>,
-): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 85 },
-    { type: "short", value: 10 },
-    {
-      type: "bit" as const,
-      value: args.nowait !== undefined ? args.nowait : false,
-    },
-  ]);
-}
-
-function encodeConfirmSelectOk(args: t.ConfirmSelectOkArgs): Uint8Array {
-  return enc.encodeFields([
-    { type: "short", value: 85 },
-    { type: "short", value: 11 },
-  ]);
-}
-
-function decodeConnectionStart(r: Deno.ReaderSync): t.ConnectionStart {
-  const fields = enc.decodeFields(
-    r,
-    ["octet", "octet", "table", "longstr", "longstr"],
-  );
-  const args = {
-    versionMajor: fields[0] as number,
-    versionMinor: fields[1] as number,
-    serverProperties: fields[2] as Record<string, unknown>,
-    mechanisms: fields[3] as string,
-    locales: fields[4] as string,
-  };
-  return args;
-}
-
-function decodeConnectionStartOk(r: Deno.ReaderSync): t.ConnectionStartOk {
-  const fields = enc.decodeFields(
-    r,
-    ["table", "shortstr", "longstr", "shortstr"],
-  );
-  const args = {
-    clientProperties: fields[0] as Record<string, unknown>,
-    mechanism: fields[1] as string,
-    response: fields[2] as string,
-    locale: fields[3] as string,
-  };
-  return args;
-}
-
-function decodeConnectionSecure(r: Deno.ReaderSync): t.ConnectionSecure {
-  const fields = enc.decodeFields(r, ["longstr"]);
-  const args = { challenge: fields[0] as string };
-  return args;
-}
-
-function decodeConnectionSecureOk(r: Deno.ReaderSync): t.ConnectionSecureOk {
-  const fields = enc.decodeFields(r, ["longstr"]);
-  const args = { response: fields[0] as string };
-  return args;
-}
-
-function decodeConnectionTune(r: Deno.ReaderSync): t.ConnectionTune {
-  const fields = enc.decodeFields(r, ["short", "long", "short"]);
-  const args = {
-    channelMax: fields[0] as number,
-    frameMax: fields[1] as number,
-    heartbeat: fields[2] as number,
-  };
-  return args;
-}
-
-function decodeConnectionTuneOk(r: Deno.ReaderSync): t.ConnectionTuneOk {
-  const fields = enc.decodeFields(r, ["short", "long", "short"]);
-  const args = {
-    channelMax: fields[0] as number,
-    frameMax: fields[1] as number,
-    heartbeat: fields[2] as number,
-  };
-  return args;
-}
-
-function decodeConnectionOpen(r: Deno.ReaderSync): t.ConnectionOpen {
-  const fields = enc.decodeFields(r, ["shortstr", "shortstr", "bit"]);
-  const args = {
-    virtualHost: fields[0] as string,
-    capabilities: fields[1] as string,
-    insist: fields[2] as boolean,
-  };
-  return args;
-}
-
-function decodeConnectionOpenOk(r: Deno.ReaderSync): t.ConnectionOpenOk {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { knownHosts: fields[0] as string };
-  return args;
-}
-
-function decodeConnectionClose(r: Deno.ReaderSync): t.ConnectionClose {
-  const fields = enc.decodeFields(r, ["short", "shortstr", "short", "short"]);
-  const args = {
-    replyCode: fields[0] as number,
-    replyText: fields[1] as string,
-    classId: fields[2] as number,
-    methodId: fields[3] as number,
-  };
-  return args;
-}
-
-function decodeConnectionCloseOk(r: Deno.ReaderSync): t.ConnectionCloseOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeConnectionBlocked(r: Deno.ReaderSync): t.ConnectionBlocked {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { reason: fields[0] as string };
-  return args;
-}
-
-function decodeConnectionUnblocked(r: Deno.ReaderSync): t.ConnectionUnblocked {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeConnectionUpdateSecret(
-  r: Deno.ReaderSync,
-): t.ConnectionUpdateSecret {
-  const fields = enc.decodeFields(r, ["longstr", "shortstr"]);
-  const args = { newSecret: fields[0] as string, reason: fields[1] as string };
-  return args;
-}
-
-function decodeConnectionUpdateSecretOk(
-  r: Deno.ReaderSync,
-): t.ConnectionUpdateSecretOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeChannelOpen(r: Deno.ReaderSync): t.ChannelOpen {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { outOfBand: fields[0] as string };
-  return args;
-}
-
-function decodeChannelOpenOk(r: Deno.ReaderSync): t.ChannelOpenOk {
-  const fields = enc.decodeFields(r, ["longstr"]);
-  const args = { channelId: fields[0] as string };
-  return args;
-}
-
-function decodeChannelFlow(r: Deno.ReaderSync): t.ChannelFlow {
-  const fields = enc.decodeFields(r, ["bit"]);
-  const args = { active: fields[0] as boolean };
-  return args;
-}
-
-function decodeChannelFlowOk(r: Deno.ReaderSync): t.ChannelFlowOk {
-  const fields = enc.decodeFields(r, ["bit"]);
-  const args = { active: fields[0] as boolean };
-  return args;
-}
-
-function decodeChannelClose(r: Deno.ReaderSync): t.ChannelClose {
-  const fields = enc.decodeFields(r, ["short", "shortstr", "short", "short"]);
-  const args = {
-    replyCode: fields[0] as number,
-    replyText: fields[1] as string,
-    classId: fields[2] as number,
-    methodId: fields[3] as number,
-  };
-  return args;
-}
-
-function decodeChannelCloseOk(r: Deno.ReaderSync): t.ChannelCloseOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeAccessRequest(r: Deno.ReaderSync): t.AccessRequest {
-  const fields = enc.decodeFields(
-    r,
-    ["shortstr", "bit", "bit", "bit", "bit", "bit"],
-  );
-  const args = {
-    realm: fields[0] as string,
-    exclusive: fields[1] as boolean,
-    passive: fields[2] as boolean,
-    active: fields[3] as boolean,
-    write: fields[4] as boolean,
-    read: fields[5] as boolean,
-  };
-  return args;
-}
-
-function decodeAccessRequestOk(r: Deno.ReaderSync): t.AccessRequestOk {
-  const fields = enc.decodeFields(r, ["short"]);
-  const args = { ticket: fields[0] as number };
-  return args;
-}
-
-function decodeExchangeDeclare(r: Deno.ReaderSync): t.ExchangeDeclare {
-  const fields = enc.decodeFields(
-    r,
-    [
-      "short",
-      "shortstr",
-      "shortstr",
-      "bit",
-      "bit",
-      "bit",
-      "bit",
-      "bit",
-      "table",
-    ],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    exchange: fields[1] as string,
-    type: fields[2] as string,
-    passive: fields[3] as boolean,
-    durable: fields[4] as boolean,
-    autoDelete: fields[5] as boolean,
-    internal: fields[6] as boolean,
-    nowait: fields[7] as boolean,
-    arguments: fields[8] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeExchangeDeclareOk(r: Deno.ReaderSync): t.ExchangeDeclareOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeExchangeDelete(r: Deno.ReaderSync): t.ExchangeDelete {
-  const fields = enc.decodeFields(r, ["short", "shortstr", "bit", "bit"]);
-  const args = {
-    ticket: fields[0] as number,
-    exchange: fields[1] as string,
-    ifUnused: fields[2] as boolean,
-    nowait: fields[3] as boolean,
-  };
-  return args;
-}
-
-function decodeExchangeDeleteOk(r: Deno.ReaderSync): t.ExchangeDeleteOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeExchangeBind(r: Deno.ReaderSync): t.ExchangeBind {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    destination: fields[1] as string,
-    source: fields[2] as string,
-    routingKey: fields[3] as string,
-    nowait: fields[4] as boolean,
-    arguments: fields[5] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeExchangeBindOk(r: Deno.ReaderSync): t.ExchangeBindOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeExchangeUnbind(r: Deno.ReaderSync): t.ExchangeUnbind {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    destination: fields[1] as string,
-    source: fields[2] as string,
-    routingKey: fields[3] as string,
-    nowait: fields[4] as boolean,
-    arguments: fields[5] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeExchangeUnbindOk(r: Deno.ReaderSync): t.ExchangeUnbindOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeQueueDeclare(r: Deno.ReaderSync): t.QueueDeclare {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "bit", "bit", "bit", "bit", "bit", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    passive: fields[2] as boolean,
-    durable: fields[3] as boolean,
-    exclusive: fields[4] as boolean,
-    autoDelete: fields[5] as boolean,
-    nowait: fields[6] as boolean,
-    arguments: fields[7] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeQueueDeclareOk(r: Deno.ReaderSync): t.QueueDeclareOk {
-  const fields = enc.decodeFields(r, ["shortstr", "long", "long"]);
-  const args = {
-    queue: fields[0] as string,
-    messageCount: fields[1] as number,
-    consumerCount: fields[2] as number,
-  };
-  return args;
-}
-
-function decodeQueueBind(r: Deno.ReaderSync): t.QueueBind {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "shortstr", "bit", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    exchange: fields[2] as string,
-    routingKey: fields[3] as string,
-    nowait: fields[4] as boolean,
-    arguments: fields[5] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeQueueBindOk(r: Deno.ReaderSync): t.QueueBindOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeQueuePurge(r: Deno.ReaderSync): t.QueuePurge {
-  const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    nowait: fields[2] as boolean,
-  };
-  return args;
-}
-
-function decodeQueuePurgeOk(r: Deno.ReaderSync): t.QueuePurgeOk {
-  const fields = enc.decodeFields(r, ["long"]);
-  const args = { messageCount: fields[0] as number };
-  return args;
-}
-
-function decodeQueueDelete(r: Deno.ReaderSync): t.QueueDelete {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "bit", "bit", "bit"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    ifUnused: fields[2] as boolean,
-    ifEmpty: fields[3] as boolean,
-    nowait: fields[4] as boolean,
-  };
-  return args;
-}
-
-function decodeQueueDeleteOk(r: Deno.ReaderSync): t.QueueDeleteOk {
-  const fields = enc.decodeFields(r, ["long"]);
-  const args = { messageCount: fields[0] as number };
-  return args;
-}
-
-function decodeQueueUnbind(r: Deno.ReaderSync): t.QueueUnbind {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "shortstr", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    exchange: fields[2] as string,
-    routingKey: fields[3] as string,
-    arguments: fields[4] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeQueueUnbindOk(r: Deno.ReaderSync): t.QueueUnbindOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeBasicQos(r: Deno.ReaderSync): t.BasicQos {
-  const fields = enc.decodeFields(r, ["long", "short", "bit"]);
-  const args = {
-    prefetchSize: fields[0] as number,
-    prefetchCount: fields[1] as number,
-    global: fields[2] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicQosOk(r: Deno.ReaderSync): t.BasicQosOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeBasicConsume(r: Deno.ReaderSync): t.BasicConsume {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "bit", "bit", "bit", "bit", "table"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    consumerTag: fields[2] as string,
-    noLocal: fields[3] as boolean,
-    noAck: fields[4] as boolean,
-    exclusive: fields[5] as boolean,
-    nowait: fields[6] as boolean,
-    arguments: fields[7] as Record<string, unknown>,
-  };
-  return args;
-}
-
-function decodeBasicConsumeOk(r: Deno.ReaderSync): t.BasicConsumeOk {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { consumerTag: fields[0] as string };
-  return args;
-}
-
-function decodeBasicCancel(r: Deno.ReaderSync): t.BasicCancel {
-  const fields = enc.decodeFields(r, ["shortstr", "bit"]);
-  const args = {
-    consumerTag: fields[0] as string,
-    nowait: fields[1] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicCancelOk(r: Deno.ReaderSync): t.BasicCancelOk {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { consumerTag: fields[0] as string };
-  return args;
-}
-
-function decodeBasicPublish(r: Deno.ReaderSync): t.BasicPublish {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "bit", "bit"],
-  );
-  const args = {
-    ticket: fields[0] as number,
-    exchange: fields[1] as string,
-    routingKey: fields[2] as string,
-    mandatory: fields[3] as boolean,
-    immediate: fields[4] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicReturn(r: Deno.ReaderSync): t.BasicReturn {
-  const fields = enc.decodeFields(
-    r,
-    ["short", "shortstr", "shortstr", "shortstr"],
-  );
-  const args = {
-    replyCode: fields[0] as number,
-    replyText: fields[1] as string,
-    exchange: fields[2] as string,
-    routingKey: fields[3] as string,
-  };
-  return args;
-}
-
-function decodeBasicDeliver(r: Deno.ReaderSync): t.BasicDeliver {
-  const fields = enc.decodeFields(
-    r,
-    ["shortstr", "longlong", "bit", "shortstr", "shortstr"],
-  );
-  const args = {
-    consumerTag: fields[0] as string,
-    deliveryTag: fields[1] as number,
-    redelivered: fields[2] as boolean,
-    exchange: fields[3] as string,
-    routingKey: fields[4] as string,
-  };
-  return args;
-}
-
-function decodeBasicGet(r: Deno.ReaderSync): t.BasicGet {
-  const fields = enc.decodeFields(r, ["short", "shortstr", "bit"]);
-  const args = {
-    ticket: fields[0] as number,
-    queue: fields[1] as string,
-    noAck: fields[2] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicGetOk(r: Deno.ReaderSync): t.BasicGetOk {
-  const fields = enc.decodeFields(
-    r,
-    ["longlong", "bit", "shortstr", "shortstr", "long"],
-  );
-  const args = {
-    deliveryTag: fields[0] as number,
-    redelivered: fields[1] as boolean,
-    exchange: fields[2] as string,
-    routingKey: fields[3] as string,
-    messageCount: fields[4] as number,
-  };
-  return args;
-}
-
-function decodeBasicGetEmpty(r: Deno.ReaderSync): t.BasicGetEmpty {
-  const fields = enc.decodeFields(r, ["shortstr"]);
-  const args = { clusterId: fields[0] as string };
-  return args;
-}
-
-function decodeBasicAck(r: Deno.ReaderSync): t.BasicAck {
-  const fields = enc.decodeFields(r, ["longlong", "bit"]);
-  const args = {
-    deliveryTag: fields[0] as number,
-    multiple: fields[1] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicReject(r: Deno.ReaderSync): t.BasicReject {
-  const fields = enc.decodeFields(r, ["longlong", "bit"]);
-  const args = {
-    deliveryTag: fields[0] as number,
-    requeue: fields[1] as boolean,
-  };
-  return args;
-}
-
-function decodeBasicRecoverAsync(r: Deno.ReaderSync): t.BasicRecoverAsync {
-  const fields = enc.decodeFields(r, ["bit"]);
-  const args = { requeue: fields[0] as boolean };
-  return args;
-}
-
-function decodeBasicRecover(r: Deno.ReaderSync): t.BasicRecover {
-  const fields = enc.decodeFields(r, ["bit"]);
-  const args = { requeue: fields[0] as boolean };
-  return args;
-}
-
-function decodeBasicRecoverOk(r: Deno.ReaderSync): t.BasicRecoverOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeBasicNack(r: Deno.ReaderSync): t.BasicNack {
-  const fields = enc.decodeFields(r, ["longlong", "bit", "bit"]);
-  const args = {
-    deliveryTag: fields[0] as number,
-    multiple: fields[1] as boolean,
-    requeue: fields[2] as boolean,
-  };
-  return args;
-}
-
-function decodeTxSelect(r: Deno.ReaderSync): t.TxSelect {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeTxSelectOk(r: Deno.ReaderSync): t.TxSelectOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeTxCommit(r: Deno.ReaderSync): t.TxCommit {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeTxCommitOk(r: Deno.ReaderSync): t.TxCommitOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeTxRollback(r: Deno.ReaderSync): t.TxRollback {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeTxRollbackOk(r: Deno.ReaderSync): t.TxRollbackOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function decodeConfirmSelect(r: Deno.ReaderSync): t.ConfirmSelect {
-  const fields = enc.decodeFields(r, ["bit"]);
-  const args = { nowait: fields[0] as boolean };
-  return args;
-}
-
-function decodeConfirmSelectOk(r: Deno.ReaderSync): t.ConfirmSelectOk {
-  const fields = enc.decodeFields(r, []);
-  const args = {};
-  return args;
-}
-
-function encodeConnectionHeader(header: ConnectionHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 10 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeChannelHeader(header: ChannelHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 20 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeAccessHeader(header: AccessHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 30 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeExchangeHeader(header: ExchangeHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 40 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeQueueHeader(header: QueueHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 50 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeBasicHeader(header: BasicHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 60 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([
-    { type: "shortstr", value: header.props.contentType },
-    { type: "shortstr", value: header.props.contentEncoding },
-    { type: "table", value: header.props.headers },
-    { type: "octet", value: header.props.deliveryMode },
-    { type: "octet", value: header.props.priority },
-    { type: "shortstr", value: header.props.correlationId },
-    { type: "shortstr", value: header.props.replyTo },
-    { type: "shortstr", value: header.props.expiration },
-    { type: "shortstr", value: header.props.messageId },
-    { type: "timestamp", value: header.props.timestamp },
-    { type: "shortstr", value: header.props.type },
-    { type: "shortstr", value: header.props.userId },
-    { type: "shortstr", value: header.props.appId },
-    { type: "shortstr", value: header.props.clusterId },
-  ]));
-  return w.bytes();
-}
-
-function encodeTxHeader(header: TxHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 90 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function encodeConfirmHeader(header: ConfirmHeader): Uint8Array {
-  const w = new Deno.Buffer();
-  w.writeSync(enc.encodeFields([
-    { type: "short", value: 85 },
-    { type: "short", value: 0 }, // weight unused
-    { type: "longlong", value: header.size },
-  ]));
-  w.writeSync(enc.encodeOptionalFields([]));
-  return w.bytes();
-}
-
-function decodeConnectionHeader(r: Deno.ReaderSync): ConnectionHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 10, size, props };
-}
-
-function decodeChannelHeader(r: Deno.ReaderSync): ChannelHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 20, size, props };
-}
-
-function decodeAccessHeader(r: Deno.ReaderSync): AccessHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 30, size, props };
-}
-
-function decodeExchangeHeader(r: Deno.ReaderSync): ExchangeHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 40, size, props };
-}
-
-function decodeQueueHeader(r: Deno.ReaderSync): QueueHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 50, size, props };
-}
-
-function decodeBasicHeader(r: Deno.ReaderSync): BasicHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(
-    r,
-    [
-      "shortstr",
-      "shortstr",
-      "table",
-      "octet",
-      "octet",
-      "shortstr",
-      "shortstr",
-      "shortstr",
-      "shortstr",
-      "timestamp",
-      "shortstr",
-      "shortstr",
-      "shortstr",
-      "shortstr",
-    ],
-  );
-  const props = {
-    contentType: fields[0] as string,
-    contentEncoding: fields[1] as string,
-    headers: fields[2] as Record<string, unknown>,
-    deliveryMode: fields[3] as number,
-    priority: fields[4] as number,
-    correlationId: fields[5] as string,
-    replyTo: fields[6] as string,
-    expiration: fields[7] as string,
-    messageId: fields[8] as string,
-    timestamp: fields[9] as number,
-    type: fields[10] as string,
-    userId: fields[11] as string,
-    appId: fields[12] as string,
-    clusterId: fields[13] as string,
-  };
-
-  return { classId: 60, size, props };
-}
-
-function decodeTxHeader(r: Deno.ReaderSync): TxHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 90, size, props };
-}
-
-function decodeConfirmHeader(r: Deno.ReaderSync): ConfirmHeader {
-  const weight = enc.decodeShortUint(r);
-  const size = enc.decodeLongLongUint(r);
-  const fields = enc.decodeOptionalFields(r, []);
-  const props = {};
-
-  return { classId: 85, size, props };
-}
-
 export function decodeMethod(data: Uint8Array): ReceiveMethod {
-  const r = new Deno.Buffer(data);
-  const classId = enc.decodeShortUint(r);
-  const methodId = enc.decodeShortUint(r);
+  const decoder = new enc.AmqpDecoder(data);
+  const classId = decoder.read("uint16");
+  const methodId = decoder.read("uint16");
   switch (classId) {
     case 10: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeConnectionStart(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              versionMajor: decoder.read("uint8"),
+              versionMinor: decoder.read("uint8"),
+              serverProperties: decoder.read("table"),
+              mechanisms: decoder.read("longstr"),
+              locales: decoder.read("longstr"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeConnectionStartOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              clientProperties: decoder.read("table"),
+              mechanism: decoder.read("shortstr"),
+              response: decoder.read("longstr"),
+              locale: decoder.read("shortstr"),
+            },
+          };
+
         case 20:
-          return { classId, methodId, args: decodeConnectionSecure(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              challenge: decoder.read("longstr"),
+            },
+          };
+
         case 21:
-          return { classId, methodId, args: decodeConnectionSecureOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              response: decoder.read("longstr"),
+            },
+          };
+
         case 30:
-          return { classId, methodId, args: decodeConnectionTune(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              channelMax: decoder.read("uint16"),
+              frameMax: decoder.read("uint32"),
+              heartbeat: decoder.read("uint16"),
+            },
+          };
+
         case 31:
-          return { classId, methodId, args: decodeConnectionTuneOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              channelMax: decoder.read("uint16"),
+              frameMax: decoder.read("uint32"),
+              heartbeat: decoder.read("uint16"),
+            },
+          };
+
         case 40:
-          return { classId, methodId, args: decodeConnectionOpen(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              virtualHost: decoder.read("shortstr"),
+              capabilities: decoder.read("shortstr"),
+              insist: decoder.read("bit"),
+            },
+          };
+
         case 41:
-          return { classId, methodId, args: decodeConnectionOpenOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              knownHosts: decoder.read("shortstr"),
+            },
+          };
+
         case 50:
-          return { classId, methodId, args: decodeConnectionClose(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              replyCode: decoder.read("uint16"),
+              replyText: decoder.read("shortstr"),
+              classId: decoder.read("uint16"),
+              methodId: decoder.read("uint16"),
+            },
+          };
+
         case 51:
-          return { classId, methodId, args: decodeConnectionCloseOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 60:
-          return { classId, methodId, args: decodeConnectionBlocked(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              reason: decoder.read("shortstr"),
+            },
+          };
+
         case 61:
-          return { classId, methodId, args: decodeConnectionUnblocked(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 70:
-          return { classId, methodId, args: decodeConnectionUpdateSecret(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              newSecret: decoder.read("longstr"),
+              reason: decoder.read("shortstr"),
+            },
+          };
+
         case 71:
-          return { classId, methodId, args: decodeConnectionUpdateSecretOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error(
             "Unknown method " + methodId + " for class 'connection'",
@@ -2881,17 +1231,59 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 20: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeChannelOpen(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              outOfBand: decoder.read("shortstr"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeChannelOpenOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              channelId: decoder.read("longstr"),
+            },
+          };
+
         case 20:
-          return { classId, methodId, args: decodeChannelFlow(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              active: decoder.read("bit"),
+            },
+          };
+
         case 21:
-          return { classId, methodId, args: decodeChannelFlowOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              active: decoder.read("bit"),
+            },
+          };
+
         case 40:
-          return { classId, methodId, args: decodeChannelClose(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              replyCode: decoder.read("uint16"),
+              replyText: decoder.read("shortstr"),
+              classId: decoder.read("uint16"),
+              methodId: decoder.read("uint16"),
+            },
+          };
+
         case 41:
-          return { classId, methodId, args: decodeChannelCloseOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error(
             "Unknown method " + methodId + " for class 'channel'",
@@ -2902,9 +1294,27 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 30: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeAccessRequest(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              realm: decoder.read("shortstr"),
+              exclusive: decoder.read("bit"),
+              passive: decoder.read("bit"),
+              active: decoder.read("bit"),
+              write: decoder.read("bit"),
+              read: decoder.read("bit"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeAccessRequestOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+            },
+          };
         default:
           throw new Error("Unknown method " + methodId + " for class 'access'");
       }
@@ -2913,21 +1323,89 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 40: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeExchangeDeclare(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              exchange: decoder.read("shortstr"),
+              type: decoder.read("shortstr"),
+              passive: decoder.read("bit"),
+              durable: decoder.read("bit"),
+              autoDelete: decoder.read("bit"),
+              internal: decoder.read("bit"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeExchangeDeclareOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 20:
-          return { classId, methodId, args: decodeExchangeDelete(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              exchange: decoder.read("shortstr"),
+              ifUnused: decoder.read("bit"),
+              nowait: decoder.read("bit"),
+            },
+          };
+
         case 21:
-          return { classId, methodId, args: decodeExchangeDeleteOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 30:
-          return { classId, methodId, args: decodeExchangeBind(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              destination: decoder.read("shortstr"),
+              source: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 31:
-          return { classId, methodId, args: decodeExchangeBindOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 40:
-          return { classId, methodId, args: decodeExchangeUnbind(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              destination: decoder.read("shortstr"),
+              source: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 51:
-          return { classId, methodId, args: decodeExchangeUnbindOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error(
             "Unknown method " + methodId + " for class 'exchange'",
@@ -2938,25 +1416,114 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 50: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeQueueDeclare(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              passive: decoder.read("bit"),
+              durable: decoder.read("bit"),
+              exclusive: decoder.read("bit"),
+              autoDelete: decoder.read("bit"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeQueueDeclareOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              queue: decoder.read("shortstr"),
+              messageCount: decoder.read("uint32"),
+              consumerCount: decoder.read("uint32"),
+            },
+          };
+
         case 20:
-          return { classId, methodId, args: decodeQueueBind(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 21:
-          return { classId, methodId, args: decodeQueueBindOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 30:
-          return { classId, methodId, args: decodeQueuePurge(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              nowait: decoder.read("bit"),
+            },
+          };
+
         case 31:
-          return { classId, methodId, args: decodeQueuePurgeOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              messageCount: decoder.read("uint32"),
+            },
+          };
+
         case 40:
-          return { classId, methodId, args: decodeQueueDelete(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              ifUnused: decoder.read("bit"),
+              ifEmpty: decoder.read("bit"),
+              nowait: decoder.read("bit"),
+            },
+          };
+
         case 41:
-          return { classId, methodId, args: decodeQueueDeleteOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              messageCount: decoder.read("uint32"),
+            },
+          };
+
         case 50:
-          return { classId, methodId, args: decodeQueueUnbind(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 51:
-          return { classId, methodId, args: decodeQueueUnbindOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error("Unknown method " + methodId + " for class 'queue'");
       }
@@ -2965,41 +1532,193 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 60: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeBasicQos(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              prefetchSize: decoder.read("uint32"),
+              prefetchCount: decoder.read("uint16"),
+              global: decoder.read("bit"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeBasicQosOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 20:
-          return { classId, methodId, args: decodeBasicConsume(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              consumerTag: decoder.read("shortstr"),
+              noLocal: decoder.read("bit"),
+              noAck: decoder.read("bit"),
+              exclusive: decoder.read("bit"),
+              nowait: decoder.read("bit"),
+              arguments: decoder.read("table"),
+            },
+          };
+
         case 21:
-          return { classId, methodId, args: decodeBasicConsumeOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              consumerTag: decoder.read("shortstr"),
+            },
+          };
+
         case 30:
-          return { classId, methodId, args: decodeBasicCancel(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              consumerTag: decoder.read("shortstr"),
+              nowait: decoder.read("bit"),
+            },
+          };
+
         case 31:
-          return { classId, methodId, args: decodeBasicCancelOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              consumerTag: decoder.read("shortstr"),
+            },
+          };
+
         case 40:
-          return { classId, methodId, args: decodeBasicPublish(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              mandatory: decoder.read("bit"),
+              immediate: decoder.read("bit"),
+            },
+          };
+
         case 50:
-          return { classId, methodId, args: decodeBasicReturn(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              replyCode: decoder.read("uint16"),
+              replyText: decoder.read("shortstr"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+            },
+          };
+
         case 60:
-          return { classId, methodId, args: decodeBasicDeliver(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              consumerTag: decoder.read("shortstr"),
+              deliveryTag: decoder.read("uint64"),
+              redelivered: decoder.read("bit"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+            },
+          };
+
         case 70:
-          return { classId, methodId, args: decodeBasicGet(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              ticket: decoder.read("uint16"),
+              queue: decoder.read("shortstr"),
+              noAck: decoder.read("bit"),
+            },
+          };
+
         case 71:
-          return { classId, methodId, args: decodeBasicGetOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              deliveryTag: decoder.read("uint64"),
+              redelivered: decoder.read("bit"),
+              exchange: decoder.read("shortstr"),
+              routingKey: decoder.read("shortstr"),
+              messageCount: decoder.read("uint32"),
+            },
+          };
+
         case 72:
-          return { classId, methodId, args: decodeBasicGetEmpty(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              clusterId: decoder.read("shortstr"),
+            },
+          };
+
         case 80:
-          return { classId, methodId, args: decodeBasicAck(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              deliveryTag: decoder.read("uint64"),
+              multiple: decoder.read("bit"),
+            },
+          };
+
         case 90:
-          return { classId, methodId, args: decodeBasicReject(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              deliveryTag: decoder.read("uint64"),
+              requeue: decoder.read("bit"),
+            },
+          };
+
         case 100:
-          return { classId, methodId, args: decodeBasicRecoverAsync(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              requeue: decoder.read("bit"),
+            },
+          };
+
         case 110:
-          return { classId, methodId, args: decodeBasicRecover(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              requeue: decoder.read("bit"),
+            },
+          };
+
         case 111:
-          return { classId, methodId, args: decodeBasicRecoverOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 120:
-          return { classId, methodId, args: decodeBasicNack(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              deliveryTag: decoder.read("uint64"),
+              multiple: decoder.read("bit"),
+              requeue: decoder.read("bit"),
+            },
+          };
         default:
           throw new Error("Unknown method " + methodId + " for class 'basic'");
       }
@@ -3008,17 +1727,46 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 90: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeTxSelect(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 11:
-          return { classId, methodId, args: decodeTxSelectOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 20:
-          return { classId, methodId, args: decodeTxCommit(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 21:
-          return { classId, methodId, args: decodeTxCommitOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 30:
-          return { classId, methodId, args: decodeTxRollback(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
+
         case 31:
-          return { classId, methodId, args: decodeTxRollbackOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error("Unknown method " + methodId + " for class 'tx'");
       }
@@ -3027,9 +1775,20 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
     case 85: {
       switch (methodId) {
         case 10:
-          return { classId, methodId, args: decodeConfirmSelect(r) };
+          return {
+            classId,
+            methodId,
+            args: {
+              nowait: decoder.read("bit"),
+            },
+          };
+
         case 11:
-          return { classId, methodId, args: decodeConfirmSelectOk(r) };
+          return {
+            classId,
+            methodId,
+            args: {},
+          };
         default:
           throw new Error(
             "Unknown method " + methodId + " for class 'confirm'",
@@ -3043,260 +1802,971 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
 }
 
 export function encodeMethod(method: SendMethod): Uint8Array {
+  const encoder = new enc.AmqpEncoder();
+  encoder.write("uint16", method.classId);
+  encoder.write("uint16", method.methodId);
   switch (method.classId) {
     case 10: {
       switch (method.methodId) {
         case 10:
-          return encodeConnectionStart(method.args);
+          encoder.write(
+            "uint8",
+            method.args.versionMajor !== undefined
+              ? method.args.versionMajor
+              : 0,
+          );
+          encoder.write(
+            "uint8",
+            method.args.versionMinor !== undefined
+              ? method.args.versionMinor
+              : 9,
+          );
+          encoder.write("table", method.args.serverProperties);
+          encoder.write(
+            "longstr",
+            method.args.mechanisms !== undefined
+              ? method.args.mechanisms
+              : "PLAIN",
+          );
+          encoder.write(
+            "longstr",
+            method.args.locales !== undefined ? method.args.locales : "en_US",
+          );
+          break;
+
         case 11:
-          return encodeConnectionStartOk(method.args);
+          encoder.write("table", method.args.clientProperties);
+          encoder.write(
+            "shortstr",
+            method.args.mechanism !== undefined
+              ? method.args.mechanism
+              : "PLAIN",
+          );
+          encoder.write("longstr", method.args.response);
+          encoder.write(
+            "shortstr",
+            method.args.locale !== undefined ? method.args.locale : "en_US",
+          );
+          break;
+
         case 20:
-          return encodeConnectionSecure(method.args);
+          encoder.write("longstr", method.args.challenge);
+          break;
+
         case 21:
-          return encodeConnectionSecureOk(method.args);
+          encoder.write("longstr", method.args.response);
+          break;
+
         case 30:
-          return encodeConnectionTune(method.args);
+          encoder.write(
+            "uint16",
+            method.args.channelMax !== undefined ? method.args.channelMax : 0,
+          );
+          encoder.write(
+            "uint32",
+            method.args.frameMax !== undefined ? method.args.frameMax : 0,
+          );
+          encoder.write(
+            "uint16",
+            method.args.heartbeat !== undefined ? method.args.heartbeat : 0,
+          );
+          break;
+
         case 31:
-          return encodeConnectionTuneOk(method.args);
+          encoder.write(
+            "uint16",
+            method.args.channelMax !== undefined ? method.args.channelMax : 0,
+          );
+          encoder.write(
+            "uint32",
+            method.args.frameMax !== undefined ? method.args.frameMax : 0,
+          );
+          encoder.write(
+            "uint16",
+            method.args.heartbeat !== undefined ? method.args.heartbeat : 0,
+          );
+          break;
+
         case 40:
-          return encodeConnectionOpen(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.virtualHost !== undefined
+              ? method.args.virtualHost
+              : "/",
+          );
+          encoder.write(
+            "shortstr",
+            method.args.capabilities !== undefined
+              ? method.args.capabilities
+              : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.insist !== undefined ? method.args.insist : false,
+          );
+          break;
+
         case 41:
-          return encodeConnectionOpenOk(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.knownHosts !== undefined ? method.args.knownHosts : "",
+          );
+          break;
+
         case 50:
-          return encodeConnectionClose(method.args);
+          encoder.write("uint16", method.args.replyCode);
+          encoder.write(
+            "shortstr",
+            method.args.replyText !== undefined ? method.args.replyText : "",
+          );
+          encoder.write("uint16", method.args.classId);
+          encoder.write("uint16", method.args.methodId);
+          break;
+
         case 51:
-          return encodeConnectionCloseOk(method.args);
+          break;
+
         case 60:
-          return encodeConnectionBlocked(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.reason !== undefined ? method.args.reason : "",
+          );
+          break;
+
         case 61:
-          return encodeConnectionUnblocked(method.args);
+          break;
+
         case 70:
-          return encodeConnectionUpdateSecret(method.args);
+          encoder.write("longstr", method.args.newSecret);
+          encoder.write("shortstr", method.args.reason);
+          break;
+
         case 71:
-          return encodeConnectionUpdateSecretOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'connection'",
           );
       }
+      break;
     }
 
     case 20: {
       switch (method.methodId) {
         case 10:
-          return encodeChannelOpen(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.outOfBand !== undefined ? method.args.outOfBand : "",
+          );
+          break;
+
         case 11:
-          return encodeChannelOpenOk(method.args);
+          encoder.write(
+            "longstr",
+            method.args.channelId !== undefined ? method.args.channelId : "",
+          );
+          break;
+
         case 20:
-          return encodeChannelFlow(method.args);
+          encoder.write("bit", method.args.active);
+          break;
+
         case 21:
-          return encodeChannelFlowOk(method.args);
+          encoder.write("bit", method.args.active);
+          break;
+
         case 40:
-          return encodeChannelClose(method.args);
+          encoder.write("uint16", method.args.replyCode);
+          encoder.write(
+            "shortstr",
+            method.args.replyText !== undefined ? method.args.replyText : "",
+          );
+          encoder.write("uint16", method.args.classId);
+          encoder.write("uint16", method.args.methodId);
+          break;
+
         case 41:
-          return encodeChannelCloseOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'channel'",
           );
       }
+      break;
     }
 
     case 30: {
       switch (method.methodId) {
         case 10:
-          return encodeAccessRequest(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.realm !== undefined ? method.args.realm : "/data",
+          );
+          encoder.write(
+            "bit",
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.passive !== undefined ? method.args.passive : true,
+          );
+          encoder.write(
+            "bit",
+            method.args.active !== undefined ? method.args.active : true,
+          );
+          encoder.write(
+            "bit",
+            method.args.write !== undefined ? method.args.write : true,
+          );
+          encoder.write(
+            "bit",
+            method.args.read !== undefined ? method.args.read : true,
+          );
+          break;
+
         case 11:
-          return encodeAccessRequestOk(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 1,
+          );
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'access'",
           );
       }
+      break;
     }
 
     case 40: {
       switch (method.methodId) {
         case 10:
-          return encodeExchangeDeclare(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write(
+            "shortstr",
+            method.args.type !== undefined ? method.args.type : "direct",
+          );
+          encoder.write(
+            "bit",
+            method.args.passive !== undefined ? method.args.passive : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.durable !== undefined ? method.args.durable : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.autoDelete !== undefined
+              ? method.args.autoDelete
+              : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.internal !== undefined ? method.args.internal : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 11:
-          return encodeExchangeDeclareOk(method.args);
+          break;
+
         case 20:
-          return encodeExchangeDelete(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write(
+            "bit",
+            method.args.ifUnused !== undefined ? method.args.ifUnused : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          break;
+
         case 21:
-          return encodeExchangeDeleteOk(method.args);
+          break;
+
         case 30:
-          return encodeExchangeBind(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write("shortstr", method.args.destination);
+          encoder.write("shortstr", method.args.source);
+          encoder.write(
+            "shortstr",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 31:
-          return encodeExchangeBindOk(method.args);
+          break;
+
         case 40:
-          return encodeExchangeUnbind(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write("shortstr", method.args.destination);
+          encoder.write("shortstr", method.args.source);
+          encoder.write(
+            "shortstr",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 51:
-          return encodeExchangeUnbindOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'exchange'",
           );
       }
+      break;
     }
 
     case 50: {
       switch (method.methodId) {
         case 10:
-          return encodeQueueDeclare(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.passive !== undefined ? method.args.passive : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.durable !== undefined ? method.args.durable : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.autoDelete !== undefined
+              ? method.args.autoDelete
+              : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 11:
-          return encodeQueueDeclareOk(method.args);
+          encoder.write("shortstr", method.args.queue);
+          encoder.write("uint32", method.args.messageCount);
+          encoder.write("uint32", method.args.consumerCount);
+          break;
+
         case 20:
-          return encodeQueueBind(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write(
+            "shortstr",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 21:
-          return encodeQueueBindOk(method.args);
+          break;
+
         case 30:
-          return encodeQueuePurge(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          break;
+
         case 31:
-          return encodeQueuePurgeOk(method.args);
+          encoder.write("uint32", method.args.messageCount);
+          break;
+
         case 40:
-          return encodeQueueDelete(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.ifUnused !== undefined ? method.args.ifUnused : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.ifEmpty !== undefined ? method.args.ifEmpty : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          break;
+
         case 41:
-          return encodeQueueDeleteOk(method.args);
+          encoder.write("uint32", method.args.messageCount);
+          break;
+
         case 50:
-          return encodeQueueUnbind(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write(
+            "shortstr",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 51:
-          return encodeQueueUnbindOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'queue'",
           );
       }
+      break;
     }
 
     case 60: {
       switch (method.methodId) {
         case 10:
-          return encodeBasicQos(method.args);
+          encoder.write(
+            "uint32",
+            method.args.prefetchSize !== undefined
+              ? method.args.prefetchSize
+              : 0,
+          );
+          encoder.write(
+            "uint16",
+            method.args.prefetchCount !== undefined
+              ? method.args.prefetchCount
+              : 0,
+          );
+          encoder.write(
+            "bit",
+            method.args.global !== undefined ? method.args.global : false,
+          );
+          break;
+
         case 11:
-          return encodeBasicQosOk(method.args);
+          break;
+
         case 20:
-          return encodeBasicConsume(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write(
+            "shortstr",
+            method.args.consumerTag !== undefined
+              ? method.args.consumerTag
+              : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.noLocal !== undefined ? method.args.noLocal : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.noAck !== undefined ? method.args.noAck : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          encoder.write(
+            "table",
+            method.args.arguments !== undefined ? method.args.arguments : {},
+          );
+          break;
+
         case 21:
-          return encodeBasicConsumeOk(method.args);
+          encoder.write("shortstr", method.args.consumerTag);
+          break;
+
         case 30:
-          return encodeBasicCancel(method.args);
+          encoder.write("shortstr", method.args.consumerTag);
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          break;
+
         case 31:
-          return encodeBasicCancelOk(method.args);
+          encoder.write("shortstr", method.args.consumerTag);
+          break;
+
         case 40:
-          return encodeBasicPublish(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.exchange !== undefined ? method.args.exchange : "",
+          );
+          encoder.write(
+            "shortstr",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.mandatory !== undefined ? method.args.mandatory : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.immediate !== undefined ? method.args.immediate : false,
+          );
+          break;
+
         case 50:
-          return encodeBasicReturn(method.args);
+          encoder.write("uint16", method.args.replyCode);
+          encoder.write(
+            "shortstr",
+            method.args.replyText !== undefined ? method.args.replyText : "",
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write("shortstr", method.args.routingKey);
+          break;
+
         case 60:
-          return encodeBasicDeliver(method.args);
+          encoder.write("shortstr", method.args.consumerTag);
+          encoder.write("uint64", method.args.deliveryTag);
+          encoder.write(
+            "bit",
+            method.args.redelivered !== undefined
+              ? method.args.redelivered
+              : false,
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write("shortstr", method.args.routingKey);
+          break;
+
         case 70:
-          return encodeBasicGet(method.args);
+          encoder.write(
+            "uint16",
+            method.args.ticket !== undefined ? method.args.ticket : 0,
+          );
+          encoder.write(
+            "shortstr",
+            method.args.queue !== undefined ? method.args.queue : "",
+          );
+          encoder.write(
+            "bit",
+            method.args.noAck !== undefined ? method.args.noAck : false,
+          );
+          break;
+
         case 71:
-          return encodeBasicGetOk(method.args);
+          encoder.write("uint64", method.args.deliveryTag);
+          encoder.write(
+            "bit",
+            method.args.redelivered !== undefined
+              ? method.args.redelivered
+              : false,
+          );
+          encoder.write("shortstr", method.args.exchange);
+          encoder.write("shortstr", method.args.routingKey);
+          encoder.write("uint32", method.args.messageCount);
+          break;
+
         case 72:
-          return encodeBasicGetEmpty(method.args);
+          encoder.write(
+            "shortstr",
+            method.args.clusterId !== undefined ? method.args.clusterId : "",
+          );
+          break;
+
         case 80:
-          return encodeBasicAck(method.args);
+          encoder.write(
+            "uint64",
+            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
+          );
+          encoder.write(
+            "bit",
+            method.args.multiple !== undefined ? method.args.multiple : false,
+          );
+          break;
+
         case 90:
-          return encodeBasicReject(method.args);
+          encoder.write("uint64", method.args.deliveryTag);
+          encoder.write(
+            "bit",
+            method.args.requeue !== undefined ? method.args.requeue : true,
+          );
+          break;
+
         case 100:
-          return encodeBasicRecoverAsync(method.args);
+          encoder.write(
+            "bit",
+            method.args.requeue !== undefined ? method.args.requeue : false,
+          );
+          break;
+
         case 110:
-          return encodeBasicRecover(method.args);
+          encoder.write(
+            "bit",
+            method.args.requeue !== undefined ? method.args.requeue : false,
+          );
+          break;
+
         case 111:
-          return encodeBasicRecoverOk(method.args);
+          break;
+
         case 120:
-          return encodeBasicNack(method.args);
+          encoder.write(
+            "uint64",
+            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
+          );
+          encoder.write(
+            "bit",
+            method.args.multiple !== undefined ? method.args.multiple : false,
+          );
+          encoder.write(
+            "bit",
+            method.args.requeue !== undefined ? method.args.requeue : true,
+          );
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'basic'",
           );
       }
+      break;
     }
 
     case 90: {
       switch (method.methodId) {
         case 10:
-          return encodeTxSelect(method.args);
+          break;
+
         case 11:
-          return encodeTxSelectOk(method.args);
+          break;
+
         case 20:
-          return encodeTxCommit(method.args);
+          break;
+
         case 21:
-          return encodeTxCommitOk(method.args);
+          break;
+
         case 30:
-          return encodeTxRollback(method.args);
+          break;
+
         case 31:
-          return encodeTxRollbackOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'tx'",
           );
       }
+      break;
     }
 
     case 85: {
       switch (method.methodId) {
         case 10:
-          return encodeConfirmSelect(method.args);
+          encoder.write(
+            "bit",
+            method.args.nowait !== undefined ? method.args.nowait : false,
+          );
+          break;
+
         case 11:
-          return encodeConfirmSelectOk(method.args);
+          break;
+
         default:
           throw new Error(
             "Unknown method " + method!.methodId + " for class 'confirm'",
           );
       }
+      break;
     }
 
     default:
       throw new Error("Unknown class " + method!.classId);
   }
+  return encoder.result();
 }
 
 export function decodeHeader(data: Uint8Array): Header {
-  const r = new Deno.Buffer(data);
-  const classId = enc.decodeShortUint(r);
+  const decoder = new enc.AmqpDecoder(data);
+  const classId = decoder.read("uint16");
+  // weight unused
+  decoder.read("uint16");
+  const size = decoder.read("uint64");
+  const flags = decoder.read("flags");
   switch (classId) {
     case 10:
-      return decodeConnectionHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 20:
-      return decodeChannelHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 30:
-      return decodeAccessHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 40:
-      return decodeExchangeHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 50:
-      return decodeQueueHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 60:
-      return decodeBasicHeader(r);
+      return {
+        classId,
+        size,
+        props: {
+          contentType: flags[0] ? decoder.read("shortstr") : undefined,
+          contentEncoding: flags[1] ? decoder.read("shortstr") : undefined,
+          headers: flags[2] ? decoder.read("table") : undefined,
+          deliveryMode: flags[3] ? decoder.read("uint8") : undefined,
+          priority: flags[4] ? decoder.read("uint8") : undefined,
+          correlationId: flags[5] ? decoder.read("shortstr") : undefined,
+          replyTo: flags[6] ? decoder.read("shortstr") : undefined,
+          expiration: flags[7] ? decoder.read("shortstr") : undefined,
+          messageId: flags[8] ? decoder.read("shortstr") : undefined,
+          timestamp: flags[9] ? decoder.read("uint64") : undefined,
+          type: flags[10] ? decoder.read("shortstr") : undefined,
+          userId: flags[11] ? decoder.read("shortstr") : undefined,
+          appId: flags[12] ? decoder.read("shortstr") : undefined,
+          clusterId: flags[13] ? decoder.read("shortstr") : undefined,
+        },
+      };
     case 90:
-      return decodeTxHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     case 85:
-      return decodeConfirmHeader(r);
+      return {
+        classId,
+        size,
+        props: {},
+      };
     default:
       throw new Error("Unknown class " + classId);
   }
 }
 
 export function encodeHeader(header: Header): Uint8Array {
+  const encoder = new enc.AmqpEncoder();
+  encoder.write("uint16", header.classId);
+  encoder.write("uint16", 0);
+  encoder.write("uint64", header.size);
   switch (header.classId) {
     case 10:
-      return encodeConnectionHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 20:
-      return encodeChannelHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 30:
-      return encodeAccessHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 40:
-      return encodeExchangeHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 50:
-      return encodeQueueHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 60:
-      return encodeBasicHeader(header);
+      encoder.write("flags", [
+        header.props.contentType !== undefined,
+        header.props.contentEncoding !== undefined,
+        header.props.headers !== undefined,
+        header.props.deliveryMode !== undefined,
+        header.props.priority !== undefined,
+        header.props.correlationId !== undefined,
+        header.props.replyTo !== undefined,
+        header.props.expiration !== undefined,
+        header.props.messageId !== undefined,
+        header.props.timestamp !== undefined,
+        header.props.type !== undefined,
+        header.props.userId !== undefined,
+        header.props.appId !== undefined,
+        header.props.clusterId !== undefined,
+      ]);
+
+      if (header.props.contentType !== undefined) {
+        encoder.write("shortstr", header.props.contentType);
+      }
+
+      if (header.props.contentEncoding !== undefined) {
+        encoder.write("shortstr", header.props.contentEncoding);
+      }
+
+      if (header.props.headers !== undefined) {
+        encoder.write("table", header.props.headers);
+      }
+
+      if (header.props.deliveryMode !== undefined) {
+        encoder.write("uint8", header.props.deliveryMode);
+      }
+
+      if (header.props.priority !== undefined) {
+        encoder.write("uint8", header.props.priority);
+      }
+
+      if (header.props.correlationId !== undefined) {
+        encoder.write("shortstr", header.props.correlationId);
+      }
+
+      if (header.props.replyTo !== undefined) {
+        encoder.write("shortstr", header.props.replyTo);
+      }
+
+      if (header.props.expiration !== undefined) {
+        encoder.write("shortstr", header.props.expiration);
+      }
+
+      if (header.props.messageId !== undefined) {
+        encoder.write("shortstr", header.props.messageId);
+      }
+
+      if (header.props.timestamp !== undefined) {
+        encoder.write("uint64", header.props.timestamp);
+      }
+
+      if (header.props.type !== undefined) {
+        encoder.write("shortstr", header.props.type);
+      }
+
+      if (header.props.userId !== undefined) {
+        encoder.write("shortstr", header.props.userId);
+      }
+
+      if (header.props.appId !== undefined) {
+        encoder.write("shortstr", header.props.appId);
+      }
+
+      if (header.props.clusterId !== undefined) {
+        encoder.write("shortstr", header.props.clusterId);
+      }
+
+      break;
     case 90:
-      return encodeTxHeader(header);
+      encoder.write("flags", []);
+
+      break;
     case 85:
-      return encodeConfirmHeader(header);
+      encoder.write("flags", []);
+
+      break;
     default:
       throw new Error("Unknown class " + header!.classId);
   }
+
+  return encoder.result();
 }

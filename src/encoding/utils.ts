@@ -49,3 +49,15 @@ export function readBytesSync(r: Deno.ReaderSync, length: number): Uint8Array {
 
   return data;
 }
+
+export function charCode(type: string) {
+  return type.charCodeAt(0);
+}
+
+export function fromCharCode(code: number) {
+  return new TextDecoder().decode(new Uint8Array([code]));
+}
+
+export function assertUnreachable(_x: never): never {
+  throw new Error(`Unreachable code executed`);
+}
