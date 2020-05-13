@@ -181,7 +181,7 @@ export class AmqpSocket
       this.#readFrame()
         .then(resolve)
         .catch(reject)
-        .finally(this.#clear);
+        .finally(this.#resetReadTimer);
     });
 
     return promise;
