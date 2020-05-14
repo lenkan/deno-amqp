@@ -5,7 +5,7 @@ import {
 import {
   assertEquals,
   assertThrowsAsync,
-} from "https://deno.land/std@v0.50.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.51.0/testing/asserts.ts";
 import { createResolvable } from "../src/resolvable.ts";
 import { withConnection, randomString } from "./api.ts";
 import { BasicReturn } from "../src/amqp_types.ts";
