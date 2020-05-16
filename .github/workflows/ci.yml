@@ -9,6 +9,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
     steps:
       - uses: actions/checkout@v2
 
@@ -22,11 +28,6 @@ jobs:
 
       - name: Run unit tests
         run: deno test src/
-
-      - name: Start rabbitmq
-        uses: lenkan/rabbitmq-action@v1.1.0
-        with:
-          rabbitmq version: "3-management"
 
       - name: Wait for rabbit
         run: deno run --allow-net module_test/wait_for_server.ts
