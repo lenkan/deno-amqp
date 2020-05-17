@@ -298,6 +298,30 @@ test("read - throws on EOF", async () => {
   );
 });
 
+test("read - closes connection on EOF", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  conn.read.mock.setImplementation(createEofReader());
+
+  await socket.read().catch((e) => {});
+
+  assertEquals(conn.close.mock.calls.length, 1);
+});
+
+test("read - closes connection on EOF after heartbeat tuning", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  conn.read.mock.setImplementation(createEofReader());
+
+  socket.tune({ readTimeout: 10 });
+
+  await socket.read().catch((e) => {});
+
+  assertEquals(conn.close.mock.calls.length, 1);
+});
+
 test("read - throws on broken reader", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
@@ -350,6 +374,24 @@ test("heartbeat - times out read after double", async () => {
     Error,
     "server heartbeat timeout 10ms",
   );
+});
+
+test("heartbeat - closes connection after time out", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  const resolvable = createResolvable<number | null>();
+  conn.read.mock.setImplementation(
+    async (...args: any): Promise<number | null> => {
+      return await resolvable;
+    },
+  );
+
+  socket.tune({ readTimeout: 10, frameMax: 0 });
+
+  await socket.read().catch((e) => {});
+
+  assertEquals(conn.close.mock.calls.length, 1);
 });
 
 test("heartbeat - does not crash if reading throws _after_ timeout", async () => {
