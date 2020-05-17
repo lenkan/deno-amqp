@@ -233,6 +233,7 @@ export class AmqpSocket
     const n = await this.#reader.readFull(new Uint8Array(length));
 
     if (n === null) {
+      this.close();
       throw new FrameError("EOF");
     }
 
