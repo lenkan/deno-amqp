@@ -8,7 +8,7 @@ import {
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 import { createResolvable } from "./resolvable.ts";
-
+import { resolve } from "https://deno.land/std@v0.51.0/path/win32.ts";
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -337,6 +337,35 @@ test("read - throws on broken reader", async () => {
     Error,
     "Damn",
   );
+});
+
+test("close - closes connection", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  socket.close();
+
+  assertEquals(conn.close.mock.calls.length, 1);
+});
+
+test("close - closes connection when waiting for read", async () => {
+  // Ensures we don't leak async ops
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  const resolvable = createResolvable<void>();
+
+  conn.read.mock.setImplementation(async (p: Uint8Array) => {
+    await resolvable;
+    return 0;
+  });
+
+  socket.tune({ readTimeout: 10 });
+
+  socket.read();
+  socket.close();
+
+  assertEquals(conn.close.mock.calls.length, 1);
 });
 
 test("heartbeat - sends heartbeat on interval", async () => {

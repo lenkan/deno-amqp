@@ -127,11 +127,116 @@ interface AmqpSocketOptions {
   frameMax?: number;
 }
 
+interface FrameReader {
+  (timeout: number): Promise<IncomingFrame>;
+  abort(): void;
+}
+
+function createReader(
+  r: Deno.Reader,
+): FrameReader {
+  const reader = BufReader.create(r);
+  let timer: null | number = null;
+
+  async function readBytes(length: number): Promise<Uint8Array> {
+    const n = await reader.readFull(new Uint8Array(length));
+
+    if (n === null) {
+      throw new FrameError("EOF");
+    }
+
+    return n;
+  }
+
+  async function readFrame(): Promise<IncomingFrame> {
+    const prefix = await readBytes(7);
+
+    const prefixView = new DataView(prefix.buffer);
+    const type = prefixView.getUint8(0);
+    const channel = prefixView.getUint16(1);
+    const length = prefixView.getUint32(3);
+
+    const rest = await readBytes(length + 1);
+
+    const endByte = rest[rest.length - 1];
+
+    if (endByte !== 206) {
+      throw new FrameError("BAD_FRAME", `unexpected FRAME_END '${endByte}'`);
+    }
+
+    const payload = rest.slice(0, rest.length - 1);
+
+    if (type === 1) {
+      return {
+        type: "method",
+        channel: channel,
+        payload: decodeMethod(payload),
+      };
+    }
+
+    if (type === 2) {
+      return {
+        type: "header",
+        channel,
+        payload: decodeHeader(payload),
+      };
+    }
+
+    if (type === 3) {
+      return {
+        type: "content",
+        channel,
+        payload,
+      };
+    }
+
+    if (type === 8) {
+      return {
+        type: "heartbeat",
+        channel,
+        payload,
+      };
+    }
+
+    throw new FrameError("BAD_FRAME", `unexpected frame type '${type}'`);
+  }
+
+  function resetTimer() {
+    if (timer !== null) {
+      clearTimeout(timer);
+    }
+  }
+
+  async function readWithTimeout(
+    timeout: number,
+  ): Promise<IncomingFrame> {
+    resetTimer();
+
+    if (timeout <= 0) {
+      return readFrame();
+    }
+
+    const timeoutMessage = `server heartbeat timeout ${timeout}ms`;
+
+    return new Promise<IncomingFrame>(async (resolve, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(timeoutMessage));
+      }, timeout);
+
+      readFrame()
+        .then(resolve)
+        .catch(reject)
+        .finally(resetTimer);
+    });
+  }
+
+  return Object.assign(readWithTimeout, { abort: resetTimer });
+}
+
 export class AmqpSocket
   implements AmqpSocketWriter, AmqpSocketReader, AmqpSocketCloser {
   #conn: Deno.Reader & Deno.Writer & Deno.Closer;
-  #reader: BufReader;
-  #readTimer: number | null = null;
+  #reader: FrameReader;
   #sendTimer: number | null = null;
   #sendTimeout: number = 0;
   #readTimeout: number = 0;
@@ -139,15 +244,8 @@ export class AmqpSocket
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
     this.#conn = conn;
-    this.#reader = BufReader.create(conn);
+    this.#reader = createReader(conn);
   }
-
-  #resetReadTimer = () => {
-    if (this.#readTimer !== null) {
-      clearTimeout(this.#readTimer);
-      this.#readTimer = null;
-    }
-  };
 
   #resetSendTimer = () => {
     if (this.#sendTimer !== null) {
@@ -161,30 +259,6 @@ export class AmqpSocket
         this.#resetSendTimer();
       }, this.#sendTimeout);
     }
-  };
-
-  #readWithTimeout = async (): Promise<IncomingFrame> => {
-    this.#resetReadTimer();
-
-    if (this.#readTimeout <= 0) {
-      return this.#readFrame();
-    }
-
-    const timeoutMessage = `server heartbeat timeout ${this.#readTimeout}ms`;
-
-    const promise = new Promise<IncomingFrame>(async (resolve, reject) => {
-      this.#readTimer = setTimeout(() => {
-        reject(new Error(timeoutMessage));
-        this.close();
-      }, this.#readTimeout);
-
-      this.#readFrame()
-        .then(resolve)
-        .catch(reject)
-        .finally(this.#resetReadTimer);
-    });
-
-    return promise;
   };
 
   tune(options: AmqpSocketOptions) {
@@ -229,94 +303,19 @@ export class AmqpSocket
     await this.#conn.write(encodeFrame(frame));
   }
 
-  #readBytes = async (length: number): Promise<Uint8Array> => {
-    const n = await this.#reader.readFull(new Uint8Array(length));
-
-    if (n === null) {
-      this.close();
-      throw new FrameError("EOF");
-    }
-
-    return n;
-  };
-
-  #readFrame = async (): Promise<IncomingFrame> => {
-    const prefix = await this.#readBytes(7);
-    const prefixView = new DataView(prefix.buffer);
-    const type = prefixView.getUint8(0);
-    const channel = prefixView.getUint16(1);
-    const length = prefixView.getUint32(3);
-
-    const rest = await this.#readBytes(length + 1);
-    const endByte = rest[rest.length - 1];
-
-    if (endByte !== 206) {
-      throw new FrameError("BAD_FRAME", `unexpected FRAME_END '${endByte}'`);
-    }
-
-    const payload = rest.slice(0, rest.length - 1);
-
-    if (type === 1) {
-      return {
-        type: "method",
-        channel: channel,
-        payload: decodeMethod(payload),
-      };
-    }
-
-    if (type === 2) {
-      return {
-        type: "header",
-        channel,
-        payload: decodeHeader(payload),
-      };
-    }
-
-    if (type === 3) {
-      return {
-        type: "content",
-        channel,
-        payload,
-      };
-    }
-
-    if (type === 8) {
-      return {
-        type: "heartbeat",
-        channel,
-        payload,
-      };
-    }
-
-    throw new FrameError("BAD_FRAME", `unexpected frame type '${type}'`);
-  };
-
   #clear = () => {
     this.#readTimeout = 0;
     this.#sendTimeout = 0;
-    this.#resetReadTimer();
+    this.#reader.abort();
     this.#resetSendTimer();
   };
 
   async read(): Promise<IncomingFrame> {
-    while (true) {
-      const frame = await this.#readWithTimeout();
-
-      if (
-        frame.type === "method" && frame.payload.classId === 10 &&
-        frame.payload.methodId === 51
-      ) {
-        this.#clear();
-      }
-
-      if (
-        frame.type === "method" && frame.payload.classId === 10 &&
-        frame.payload.methodId === 50
-      ) {
-        this.#clear();
-      }
-
-      return frame;
+    try {
+      return await this.#reader(this.#readTimeout);
+    } catch (error) {
+      this.close();
+      throw error;
     }
   }
 

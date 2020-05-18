@@ -169,6 +169,7 @@ export class AmqpConnection implements AmqpConnection {
         methodId: 0,
         replyCode: HARD_ERROR_CONNECTION_FORCED,
       });
+
       this.#socket.close();
     }
     this.#isOpen = false;
