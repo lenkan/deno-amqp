@@ -8,7 +8,7 @@ import {
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 import { createResolvable } from "./resolvable.ts";
-import { resolve } from "https://deno.land/std@v0.51.0/path/win32.ts";
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
