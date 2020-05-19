@@ -1,14 +1,12 @@
-import { BufReader } from "https://deno.land/std@v0.51.0/io/bufio.ts";
-import { FrameError } from "./frame_error.ts";
 import {
   encodeMethod,
   encodeHeader,
-  decodeMethod,
-  decodeHeader,
   Header,
   ReceiveMethod,
   SendMethod,
 } from "./amqp_codec.ts";
+import { AmqpFrameReader } from "./amqp_frame_reader.ts";
+import { OutgoingFrame, IncomingFrame } from "./amqp_frame.ts";
 
 export interface AmqpSocketWriter {
   write(frame: OutgoingFrame): Promise<void>;
@@ -21,48 +19,6 @@ export interface AmqpSocketReader {
 export interface AmqpSocketCloser {
   close(): void;
 }
-
-export interface HeaderFrame {
-  type: "header";
-  channel: number;
-  payload: Header;
-}
-
-export interface IncomingMethodFrame {
-  type: "method";
-  channel: number;
-  payload: ReceiveMethod;
-}
-
-export interface OutgoingMethodFrame {
-  type: "method";
-  channel: number;
-  payload: SendMethod;
-}
-
-export interface ContentFrame {
-  type: "content";
-  channel: number;
-  payload: Uint8Array;
-}
-
-export interface HeartbeatFrame {
-  type: "heartbeat";
-  channel: number;
-  payload: Uint8Array;
-}
-
-export type IncomingFrame =
-  | HeaderFrame
-  | HeartbeatFrame
-  | IncomingMethodFrame
-  | ContentFrame;
-
-export type OutgoingFrame =
-  | HeaderFrame
-  | HeartbeatFrame
-  | OutgoingMethodFrame
-  | ContentFrame;
 
 const TYPES = {
   method: 1,
@@ -127,116 +83,10 @@ interface AmqpSocketOptions {
   frameMax?: number;
 }
 
-interface FrameReader {
-  (timeout: number): Promise<IncomingFrame>;
-  abort(): void;
-}
-
-function createReader(
-  r: Deno.Reader,
-): FrameReader {
-  const reader = BufReader.create(r);
-  let timer: null | number = null;
-
-  async function readBytes(length: number): Promise<Uint8Array> {
-    const n = await reader.readFull(new Uint8Array(length));
-
-    if (n === null) {
-      throw new FrameError("EOF");
-    }
-
-    return n;
-  }
-
-  async function readFrame(): Promise<IncomingFrame> {
-    const prefix = await readBytes(7);
-
-    const prefixView = new DataView(prefix.buffer);
-    const type = prefixView.getUint8(0);
-    const channel = prefixView.getUint16(1);
-    const length = prefixView.getUint32(3);
-
-    const rest = await readBytes(length + 1);
-
-    const endByte = rest[rest.length - 1];
-
-    if (endByte !== 206) {
-      throw new FrameError("BAD_FRAME", `unexpected FRAME_END '${endByte}'`);
-    }
-
-    const payload = rest.slice(0, rest.length - 1);
-
-    if (type === 1) {
-      return {
-        type: "method",
-        channel: channel,
-        payload: decodeMethod(payload),
-      };
-    }
-
-    if (type === 2) {
-      return {
-        type: "header",
-        channel,
-        payload: decodeHeader(payload),
-      };
-    }
-
-    if (type === 3) {
-      return {
-        type: "content",
-        channel,
-        payload,
-      };
-    }
-
-    if (type === 8) {
-      return {
-        type: "heartbeat",
-        channel,
-        payload,
-      };
-    }
-
-    throw new FrameError("BAD_FRAME", `unexpected frame type '${type}'`);
-  }
-
-  function resetTimer() {
-    if (timer !== null) {
-      clearTimeout(timer);
-    }
-  }
-
-  async function readWithTimeout(
-    timeout: number,
-  ): Promise<IncomingFrame> {
-    resetTimer();
-
-    if (timeout <= 0) {
-      return readFrame();
-    }
-
-    const timeoutMessage = `server heartbeat timeout ${timeout}ms`;
-
-    return new Promise<IncomingFrame>(async (resolve, reject) => {
-      timer = setTimeout(() => {
-        reject(new Error(timeoutMessage));
-      }, timeout);
-
-      readFrame()
-        .then(resolve)
-        .catch(reject)
-        .finally(resetTimer);
-    });
-  }
-
-  return Object.assign(readWithTimeout, { abort: resetTimer });
-}
-
 export class AmqpSocket
   implements AmqpSocketWriter, AmqpSocketReader, AmqpSocketCloser {
   #conn: Deno.Reader & Deno.Writer & Deno.Closer;
-  #reader: FrameReader;
+  #reader: AmqpFrameReader;
   #sendTimer: number | null = null;
   #sendTimeout: number = 0;
   #readTimeout: number = 0;
@@ -244,7 +94,7 @@ export class AmqpSocket
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
     this.#conn = conn;
-    this.#reader = createReader(conn);
+    this.#reader = new AmqpFrameReader(conn);
   }
 
   #resetSendTimer = () => {
@@ -312,7 +162,7 @@ export class AmqpSocket
 
   async read(): Promise<IncomingFrame> {
     try {
-      return await this.#reader(this.#readTimeout);
+      return await this.#reader.read(this.#readTimeout);
     } catch (error) {
       this.close();
       throw error;

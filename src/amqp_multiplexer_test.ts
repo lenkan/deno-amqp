@@ -5,7 +5,7 @@ import {
   assertThrowsAsync,
 } from "./testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
-import { IncomingFrame, HeaderFrame, ContentFrame } from "./amqp_socket.ts";
+import { IncomingFrame, HeaderFrame, ContentFrame } from "./amqp_frame.ts";
 import {
   ConnectionStart,
   ChannelCloseArgs,

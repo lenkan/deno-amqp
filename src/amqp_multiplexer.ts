@@ -14,10 +14,10 @@ import {
   serializeChannelError,
 } from "./error_handling.ts";
 import {
-  IncomingFrame,
   AmqpSocketReader,
   AmqpSocketWriter,
 } from "./amqp_socket.ts";
+import { IncomingFrame } from "./amqp_frame.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
