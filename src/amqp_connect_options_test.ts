@@ -6,7 +6,7 @@ import {
 import {
   assertEquals,
   assertThrows,
-} from "https://deno.land/std@v0.51.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.53.0/testing/asserts.ts";
 
 function testUrl(
   url: string,

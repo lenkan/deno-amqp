@@ -1,4 +1,4 @@
-import { BufReader } from "https://deno.land/std@v0.51.0/io/bufio.ts";
+import { BufReader } from "https://deno.land/std@v0.53.0/io/bufio.ts";
 import { FrameError } from "./frame_error.ts";
 import {
   decodeMethod,
