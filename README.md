@@ -55,13 +55,13 @@ await connection.close();
 See [examples/](examples/). Start the example consumer by running
 
 ```
-deno --allow-net examples/consume_message.ts queue
+deno run --allow-net examples/consume_message.ts queue
 ```
 
 Then, send a message to the same queue using the default exchange using the example publisher
 
 ```
-deno --allow-net examples/publish_message.ts queue
+deno run --allow-net examples/publish_message.ts queue
 ```
 
 # Documentation
