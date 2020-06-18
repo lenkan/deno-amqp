@@ -1,9 +1,9 @@
 import {
   assertEquals,
   assertThrowsAsync,
-  assertStrContains,
+  assertStringContains,
   assertNotEquals,
-} from "https://deno.land/std@v0.53.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.57.0/testing/asserts.ts";
 import {
   getExchange,
   randomString,
@@ -37,9 +37,9 @@ Deno.test(
       Error,
     );
 
-    assertStrContains(error.message, "Channel 1 closed by server");
-    assertStrContains(error.message, "403 ACCESS_REFUSED");
-    assertStrContains(
+    assertStringContains(error.message, "Channel 1 closed by server");
+    assertStringContains(error.message, "403 ACCESS_REFUSED");
+    assertStringContains(
       error.message,
       `exchange name '${name}' contains reserved prefix`,
     );
@@ -63,9 +63,9 @@ Deno.test(
       Error,
     );
 
-    assertStrContains(error.message, "Channel 1 closed by server");
-    assertStrContains(error.message, "403 ACCESS_REFUSED");
-    assertStrContains(
+    assertStringContains(error.message, "Channel 1 closed by server");
+    assertStringContains(error.message, "403 ACCESS_REFUSED");
+    assertStringContains(
       error.message,
       `exchange name '${name}' contains reserved prefix`,
     );

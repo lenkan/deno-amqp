@@ -2,11 +2,11 @@ export {
   assertEquals,
   assertThrows,
   assertThrowsAsync,
-  assertStrContains,
+  assertStringContains,
   assertArrayContains,
   assertMatch,
   assert,
-} from "https://deno.land/std@v0.53.0/testing/asserts.ts";
+} from "https://deno.land/std@v0.57.0/testing/asserts.ts";
 export const { test } = Deno;
 
 export function arrayOf(...a: number[]) {
