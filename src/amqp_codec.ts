@@ -1909,9 +1909,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 41:
           encoder.write(
             "shortstr",
-            method.args.knownHosts !== undefined
-              ? method.args.knownHosts
-              : "",
+            method.args.knownHosts !== undefined ? method.args.knownHosts : "",
           );
           break;
 
@@ -2008,9 +2006,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "bit",
-            method.args.exclusive !== undefined
-              ? method.args.exclusive
-              : false,
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
           );
           encoder.write(
             "bit",
@@ -2116,9 +2112,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("shortstr", method.args.source);
           encoder.write(
             "shortstr",
-            method.args.routingKey !== undefined
-              ? method.args.routingKey
-              : "",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
           );
           encoder.write(
             "bit",
@@ -2142,9 +2136,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("shortstr", method.args.source);
           encoder.write(
             "shortstr",
-            method.args.routingKey !== undefined
-              ? method.args.routingKey
-              : "",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
           );
           encoder.write(
             "bit",
@@ -2188,9 +2180,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "bit",
-            method.args.exclusive !== undefined
-              ? method.args.exclusive
-              : false,
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
           );
           encoder.write(
             "bit",
@@ -2226,9 +2216,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("shortstr", method.args.exchange);
           encoder.write(
             "shortstr",
-            method.args.routingKey !== undefined
-              ? method.args.routingKey
-              : "",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
           );
           encoder.write(
             "bit",
@@ -2301,9 +2289,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("shortstr", method.args.exchange);
           encoder.write(
             "shortstr",
-            method.args.routingKey !== undefined
-              ? method.args.routingKey
-              : "",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
           );
           encoder.write(
             "table",
@@ -2371,9 +2357,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "bit",
-            method.args.exclusive !== undefined
-              ? method.args.exclusive
-              : false,
+            method.args.exclusive !== undefined ? method.args.exclusive : false,
           );
           encoder.write(
             "bit",
@@ -2412,21 +2396,15 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "shortstr",
-            method.args.routingKey !== undefined
-              ? method.args.routingKey
-              : "",
+            method.args.routingKey !== undefined ? method.args.routingKey : "",
           );
           encoder.write(
             "bit",
-            method.args.mandatory !== undefined
-              ? method.args.mandatory
-              : false,
+            method.args.mandatory !== undefined ? method.args.mandatory : false,
           );
           encoder.write(
             "bit",
-            method.args.immediate !== undefined
-              ? method.args.immediate
-              : false,
+            method.args.immediate !== undefined ? method.args.immediate : false,
           );
           break;
 
@@ -2491,9 +2469,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 80:
           encoder.write(
             "uint64",
-            method.args.deliveryTag !== undefined
-              ? method.args.deliveryTag
-              : 0,
+            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
           );
           encoder.write(
             "bit",
@@ -2529,9 +2505,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 120:
           encoder.write(
             "uint64",
-            method.args.deliveryTag !== undefined
-              ? method.args.deliveryTag
-              : 0,
+            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
           );
           encoder.write(
             "bit",
