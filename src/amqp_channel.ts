@@ -1,4 +1,4 @@
-import {
+import type {
   BasicProperties,
   BasicQosArgs,
   BasicQosOk,
@@ -33,7 +33,7 @@ import {
   ChannelClose,
   BasicReturn,
 } from "./amqp_types.ts";
-import { AmqpProtocol } from "./amqp_protocol.ts";
+import type { AmqpProtocol } from "./amqp_protocol.ts";
 import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
 import { ResolvablePromise, createResolvable } from "./resolvable.ts";
 import {

@@ -1,5 +1,5 @@
-import { AmqpMultiplexer } from "./amqp_multiplexer.ts";
-import * as t from "./amqp_types.ts";
+import type { AmqpMultiplexer } from "./amqp_multiplexer.ts";
+import type * as t from "./amqp_types.ts";
 
 export class AmqpProtocol {
   constructor(private mux: AmqpMultiplexer) {}

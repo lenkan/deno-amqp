@@ -1,5 +1,5 @@
 import * as enc from "./encoding/mod.ts";
-import * as t from "./amqp_types.ts";
+import type * as t from "./amqp_types.ts";
 
 const methodNames: Record<number, Record<number, string>> = {
   [10]: {

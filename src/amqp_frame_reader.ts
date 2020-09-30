@@ -4,7 +4,7 @@ import {
   decodeMethod,
   decodeHeader,
 } from "./amqp_codec.ts";
-import { IncomingFrame } from "./amqp_frame.ts";
+import type { IncomingFrame } from "./amqp_frame.ts";
 
 export class AmqpFrameReader {
   #timer: null | number = null;

@@ -1,5 +1,5 @@
 import { getMethodName } from "./amqp_codec.ts";
-import { ChannelClose, ConnectionClose } from "./amqp_types.ts";
+import type { ChannelClose, ConnectionClose } from "./amqp_types.ts";
 
 export function serializeChannelError(channel: number, args: ChannelClose) {
   const causedBy = getMethodName(args.classId, args.methodId);
