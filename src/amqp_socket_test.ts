@@ -115,8 +115,9 @@ test("write - content frame - too big", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
   socket.tune({
-    frameMax: 8 + 2, // prefix(7) + payload(2) + end(1)
-  });
+    frameMax: 8 + 2,
+  } // prefix(7) + payload(2) + end(1)
+  );
 
   await socket.write(
     {

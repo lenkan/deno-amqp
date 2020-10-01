@@ -6,7 +6,7 @@ import {
   SendMethod,
 } from "./amqp_codec.ts";
 import { AmqpFrameReader } from "./amqp_frame_reader.ts";
-import { OutgoingFrame, IncomingFrame } from "./amqp_frame.ts";
+import type { OutgoingFrame, IncomingFrame } from "./amqp_frame.ts";
 
 export interface AmqpSocketWriter {
   write(frame: OutgoingFrame): Promise<void>;

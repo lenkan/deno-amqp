@@ -1,15 +1,16 @@
 import { AmqpChannel } from "./amqp_channel.ts";
-import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import { AmqpSocket } from "./amqp_socket.ts";
-import { createAmqpMux } from "./amqp_multiplexer.ts";
-import { AmqpProtocol } from "./amqp_protocol.ts";
-import { serializeConnectionError } from "./error_handling.ts";
-import { createResolvable, ResolvablePromise } from "./resolvable.ts";
-import {
+import type { AmqpSocket } from "./amqp_socket.ts";
+import type {
   ConnectionClose,
   ConnectionStart,
   ConnectionTune,
 } from "./amqp_types.ts";
+
+import { AmqpProtocol } from "./amqp_protocol.ts";
+import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
+import { createAmqpMux } from "./amqp_multiplexer.ts";
+import { serializeConnectionError } from "./error_handling.ts";
+import { createResolvable, ResolvablePromise } from "./resolvable.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
