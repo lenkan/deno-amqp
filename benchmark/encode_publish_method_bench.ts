@@ -1,4 +1,4 @@
-import { encodeMethod, encodeHeader } from "../src/amqp_codec.ts";
+import { encodeHeader, encodeMethod } from "../src/amqp_codec.ts";
 import { BASIC_PUBLISH } from "../src/amqp_constants.ts";
 import { BASIC } from "../src/amqp_constants.ts";
 import { benchmark } from "./benchmark.ts";

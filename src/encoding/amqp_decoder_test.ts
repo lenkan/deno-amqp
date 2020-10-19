@@ -1,11 +1,7 @@
-import {
-  assertEquals,
-  assertThrows,
-  arrayOf,
-} from "../testing.ts";
+import { arrayOf, assertEquals, assertThrows } from "../testing.ts";
 import { AmqpDecoder } from "./amqp_decoder.ts";
 import { AmqpFieldType, AmqpFieldValue } from "./amqp_field_types.ts";
-import { padArray, charCode } from "./utils.ts";
+import { charCode, padArray } from "./utils.ts";
 
 function testDecodeBits(
   data: Uint8Array,

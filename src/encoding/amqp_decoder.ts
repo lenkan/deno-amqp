@@ -1,13 +1,13 @@
 import {
-  TableFieldType,
-  fromCharCode,
+  AmqpBitField,
   AmqpFieldType,
   AmqpFieldValue,
+  AmqpFlagsField,
   AmqpNumberField,
   AmqpStringField,
-  AmqpBitField,
-  AmqpFlagsField,
   AmqpTableField,
+  fromCharCode,
+  TableFieldType,
 } from "./amqp_field_types.ts";
 import { assertUnreachable } from "./utils.ts";
 

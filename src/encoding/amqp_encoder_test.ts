@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertThrows,
-  arrayOf,
-} from "../testing.ts";
+import { arrayOf, assertEquals, assertThrows } from "../testing.ts";
 import { AmqpEncoder } from "./amqp_encoder.ts";
 import { AmqpFieldType, AmqpFieldValue } from "./amqp_field_types.ts";
 import { charCode } from "./utils.ts";

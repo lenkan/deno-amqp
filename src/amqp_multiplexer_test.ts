@@ -1,27 +1,22 @@
-import {
-  test,
-  assertEquals,
-  arrayOf,
-  assertThrowsAsync,
-} from "./testing.ts";
+import { arrayOf, assertEquals, assertThrowsAsync, test } from "./testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
-import { IncomingFrame, HeaderFrame, ContentFrame } from "./amqp_frame.ts";
+import { ContentFrame, HeaderFrame, IncomingFrame } from "./amqp_frame.ts";
 import {
-  ConnectionStart,
+  BasicProperties,
   ChannelCloseArgs,
   ConnectionCloseArgs,
-  BasicProperties,
+  ConnectionStart,
 } from "./amqp_types.ts";
 import {
-  QUEUE,
-  QUEUE_DECLARE_OK,
   CHANNEL,
   CHANNEL_CLOSE,
-  SOFT_ERROR_ACCESS_REFUSED,
-  QUEUE_DECLARE,
   CONNECTION,
   CONNECTION_CLOSE,
   HARD_ERROR_INTERNAL_ERROR,
+  QUEUE,
+  QUEUE_DECLARE,
+  QUEUE_DECLARE_OK,
+  SOFT_ERROR_ACCESS_REFUSED,
 } from "./amqp_constants.ts";
 import { mock } from "./mock.ts";
 

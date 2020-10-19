@@ -1,15 +1,15 @@
 import {
-  Spec,
+  printHeaderDecoder,
+  printHeaderDefinition,
+  printHeaderEncoder,
+  printHeaderUnion,
+  printMethodDecoder,
+  printMethodEncoder,
   printReceiveMethodDefinition,
   printReceiveMethodUnion,
-  printHeaderUnion,
-  printHeaderDefinition,
-  printMethodDecoder,
-  printHeaderDecoder,
-  printSendMethodUnion,
   printSendMethodDefinition,
-  printMethodEncoder,
-  printHeaderEncoder,
+  printSendMethodUnion,
+  Spec,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;

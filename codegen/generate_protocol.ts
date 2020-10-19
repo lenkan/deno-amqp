@@ -1,10 +1,10 @@
 import {
-  MethodDefinition,
-  Spec,
   ClassDefinition,
-  pascalCase,
   isClientMethod,
   isServerMethod,
+  MethodDefinition,
+  pascalCase,
+  Spec,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;

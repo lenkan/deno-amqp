@@ -1,8 +1,4 @@
-import type {
-  Header,
-  ReceiveMethod,
-  SendMethod,
-} from "./amqp_codec.ts";
+import type { Header, ReceiveMethod, SendMethod } from "./amqp_codec.ts";
 
 export interface HeaderFrame {
   type: "header";

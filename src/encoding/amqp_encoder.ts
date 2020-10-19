@@ -1,15 +1,15 @@
 import {
-  AmqpStringField,
-  AmqpNumberField,
   AmqpBitField,
-  AmqpFlagsField,
-  AmqpTableField,
+  AmqpField,
   AmqpFieldType,
   AmqpFieldValue,
-  AmqpField,
+  AmqpFlagsField,
+  AmqpNumberField,
+  AmqpStringField,
+  AmqpTableField,
   TableFieldType,
 } from "./amqp_field_types.ts";
-import { padArray, charCode, assertUnreachable } from "./utils.ts";
+import { assertUnreachable, charCode, padArray } from "./utils.ts";
 
 const CHARCODE_A = charCode("A");
 const CHARCODE_Z = charCode("Z");

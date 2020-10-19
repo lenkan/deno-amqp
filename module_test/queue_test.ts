@@ -1,14 +1,14 @@
 import {
   assertEquals,
-  assertThrowsAsync,
-  assertStringContains,
   assertNotEquals,
-} from "https://deno.land/std@0.71.0/testing/asserts.ts";
+  assertStringContains,
+  assertThrowsAsync,
+} from "https://deno.land/std@0.74.0/testing/asserts.ts";
 import {
   getQueue,
+  getQueueBindings,
   randomString,
   withConnection,
-  getQueueBindings,
 } from "./api.ts";
 
 Deno.test(

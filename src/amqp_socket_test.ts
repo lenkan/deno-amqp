@@ -1,10 +1,5 @@
 import { AmqpSocket } from "./amqp_socket.ts";
-import {
-  test,
-  assertEquals,
-  arrayOf,
-  assertThrowsAsync,
-} from "./testing.ts";
+import { arrayOf, assertEquals, assertThrowsAsync, test } from "./testing.ts";
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 import { createResolvable } from "./resolvable.ts";

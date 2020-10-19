@@ -1,12 +1,12 @@
 import {
-  parseOptions,
-  AmqpConnectParameters,
   AmqpConnectOptions,
+  AmqpConnectParameters,
+  parseOptions,
 } from "./amqp_connect_options.ts";
 import {
   assertEquals,
   assertThrows,
-} from "https://deno.land/std@0.71.0/testing/asserts.ts";
+} from "https://deno.land/std@0.74.0/testing/asserts.ts";
 
 function testUrl(
   url: string,

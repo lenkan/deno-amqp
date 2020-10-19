@@ -1,7 +1,4 @@
-import {
-  Spec,
-  constantName,
-} from "./utils.ts";
+import { constantName, Spec } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
 const decoder = new TextDecoder("utf-8");

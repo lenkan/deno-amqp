@@ -1,8 +1,8 @@
 import {
-  Spec,
   printClassPropertyInterface,
   printMethodArgsInterface,
   printMethodValueInterface,
+  Spec,
 } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
