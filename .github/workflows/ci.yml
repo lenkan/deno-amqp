@@ -21,7 +21,7 @@ jobs:
       - name: Setup Deno environment
         uses: denolib/setup-deno@v2.3.0
         with:
-          deno-version: v1.4.6
+          deno-version: v1.6.3
 
       - name: Check formatting
         run: deno fmt --check

@@ -1,9 +1,9 @@
 import {
   assertEquals,
   assertNotEquals,
-  assertStringContains,
+  assertStringIncludes,
   assertThrowsAsync,
-} from "https://deno.land/std@0.74.0/testing/asserts.ts";
+} from "https://deno.land/std@0.83.0/testing/asserts.ts";
 import {
   getQueue,
   getQueueBindings,
@@ -49,7 +49,7 @@ Deno.test(
       Error,
     );
 
-    assertStringContains(
+    assertStringIncludes(
       error.message,
       `Channel 1 closed by server - 403 ACCESS_REFUSED - queue name '${name}' contains reserved prefix`,
     );
