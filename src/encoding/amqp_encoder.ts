@@ -18,7 +18,13 @@ const CHARCODE_z = charCode("z");
 const CHARCODE_underscore = charCode("_");
 const CHARCODE_dollar = charCode("$");
 const CHARCODE_hash = charCode("#");
-const validChars = [CHARCODE_dollar, CHARCODE_hash, CHARCODE_underscore];
+const CHARCODE_dash = charCode("-");
+const validChars = [
+  CHARCODE_dollar,
+  CHARCODE_hash,
+  CHARCODE_underscore,
+  CHARCODE_dash,
+];
 
 function isAlpha(code: number) {
   return (code >= CHARCODE_A && code <= CHARCODE_Z) ||

@@ -25,6 +25,25 @@ Deno.test(
 );
 
 Deno.test(
+  "declare queue - with arguments",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+    const queueName = `queue.${randomString(10)}`;
+    await channel.declareQueue({
+      queue: queueName,
+      arguments: {
+        "x-max-length": 1000000,
+        "x-max-length-bytes": 1048576000,
+      },
+    });
+
+    const queue = await getQueue(queueName);
+
+    assertEquals(queue?.name, queueName);
+  }),
+);
+
+Deno.test(
   "declare anonymous queue",
   withConnection(async (conn) => {
     const channel = await conn.openChannel();
