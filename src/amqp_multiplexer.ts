@@ -150,7 +150,7 @@ function createSocketDemux(
     subscribers.push(subscriber);
   }
 
-  async function receive(
+  function receive(
     channel: number,
     classId: number,
     methodId: number,
@@ -198,7 +198,7 @@ function createSocketDemux(
     return () => removeSubscriber(subscriber);
   }
 
-  async function receiveHeader(
+  function receiveHeader(
     channel: number,
     classId: number,
   ): Promise<Header> {
@@ -252,10 +252,11 @@ function createSocketDemux(
 }
 
 function createSocketMux(writer: AmqpSocketWriter): AmqpSink {
-  async function send(
+  function send(
     channel: number,
     classId: number,
     methodId: number,
+    // deno-lint-ignore ban-types
     args: object,
   ) {
     return writer.write(
@@ -270,6 +271,8 @@ function createSocketMux(writer: AmqpSocketWriter): AmqpSink {
   async function sendContent(
     channel: number,
     classId: number,
+    // TODO(lenkan): Fix when simplifying codebase
+    // deno-lint-ignore ban-types
     props: object,
     data: Uint8Array,
   ) {

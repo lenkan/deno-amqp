@@ -1,10 +1,4 @@
-import {
-  encodeHeader,
-  encodeMethod,
-  Header,
-  ReceiveMethod,
-  SendMethod,
-} from "./amqp_codec.ts";
+import { encodeHeader, encodeMethod } from "./amqp_codec.ts";
 import { AmqpFrameReader } from "./amqp_frame_reader.ts";
 import type { IncomingFrame, OutgoingFrame } from "./amqp_frame.ts";
 
@@ -88,9 +82,9 @@ export class AmqpSocket
   #conn: Deno.Reader & Deno.Writer & Deno.Closer;
   #reader: AmqpFrameReader;
   #sendTimer: number | null = null;
-  #sendTimeout: number = 0;
-  #readTimeout: number = 0;
-  #frameMax: number = -1;
+  #sendTimeout = 0;
+  #readTimeout = 0;
+  #frameMax = -1;
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
     this.#conn = conn;

@@ -8,14 +8,8 @@ import { randomString, withConnection } from "./api.ts";
 import { BasicReturn } from "../src/amqp_types.ts";
 import { SOFT_ERROR_NO_ROUTE } from "../src/amqp_constants.ts";
 
-function cleanObj<T extends object>(o: T): T {
-  return Object.keys(o).reduce<T>((res: any, key) => {
-    const value = (o as any)[key];
-    if (value !== undefined) {
-      res[key] = value;
-    }
-    return res;
-  }, {} as T);
+function cleanObj<T>(o: T): T {
+  return JSON.parse(JSON.stringify(o));
 }
 
 function encodeText(str: string) {

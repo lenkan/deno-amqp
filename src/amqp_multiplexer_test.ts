@@ -361,8 +361,8 @@ test("receive - rejects on connection close with caused by method", async () => 
 
 test("receive - stops reading on error", async () => {
   const conn = createSocket();
-  conn.read.mock.setImplementation(async () => {
-    throw new Error("Damn");
+  conn.read.mock.setImplementation(() => {
+    return Promise.reject(new Error("Damn"));
   });
 
   createAmqpMux(conn);

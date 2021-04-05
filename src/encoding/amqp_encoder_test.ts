@@ -21,6 +21,7 @@ function test(
     `encode ${type} - ${valueString} -> ${expected}`,
     () => {
       const encoder = new AmqpEncoder();
+      // deno-lint-ignore no-explicit-any
       encoder.write(type as any, value as any);
       assertEquals(encoder.result(), expected);
     },
@@ -38,6 +39,7 @@ function testerError(
     () => {
       const encoder = new AmqpEncoder();
       assertThrows(
+        // deno-lint-ignore no-explicit-any
         () => encoder.write(type as any, value as any),
         Error,
         message,

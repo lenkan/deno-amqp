@@ -26,6 +26,9 @@ jobs:
       - name: Check formatting
         run: deno fmt --check
 
+      - name: Lint
+        run: deno lint --unstable src/ module_test/
+
       - name: Run unit tests
         run: deno test src/
 
