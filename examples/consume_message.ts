@@ -6,7 +6,7 @@ if (!queueName) {
   Deno.exit(1);
 }
 
-const connection = await connect({ loglevel: "debug" });
+const connection = await connect({ hostname: "127.0.0.1" });
 
 const channel = await connection.openChannel();
 

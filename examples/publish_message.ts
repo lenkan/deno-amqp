@@ -2,7 +2,7 @@ import { connect } from "../mod.ts";
 
 const queueName = Deno.args[0];
 
-const connection = await connect();
+const connection = await connect({ hostname: "127.0.0.1" });
 
 const channel = await connection.openChannel();
 

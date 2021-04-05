@@ -3,6 +3,7 @@ import { connect } from "../mod.ts";
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
 async function retry<T>(func: () => Promise<T>): Promise<T> {
   let times = 30;
   while (times--) {
@@ -19,7 +20,7 @@ async function retry<T>(func: () => Promise<T>): Promise<T> {
 }
 
 try {
-  const conn = await retry(connect);
+  const conn = await retry(() => connect({ hostname: "127.0.0.1" }));
   await conn.close();
   Deno.exit(0);
 } catch (error) {

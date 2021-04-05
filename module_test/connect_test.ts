@@ -4,7 +4,7 @@ import { assertThrowsAsync } from "https://deno.land/std@0.83.0/testing/asserts.
 Deno.test(
   "connect url",
   async () => {
-    const conn = await connect("amqp://guest:guest@localhost:5672");
+    const conn = await connect("amqp://guest:guest@127.0.0.1:5672");
     await conn.close();
   },
 );
@@ -12,7 +12,7 @@ Deno.test(
 Deno.test(
   "connect url - missing port",
   async () => {
-    const conn = await connect("amqp://guest:guest@localhost");
+    const conn = await connect("amqp://guest:guest@127.0.0.1");
     await conn.close();
   },
 );
@@ -22,7 +22,7 @@ Deno.test(
   async () => {
     await assertThrowsAsync(
       async () => {
-        await connect("amqp://invaliduser:somepass@localhost:5672");
+        await connect("amqp://invaliduser:somepass@127.0.0.1:5672");
       },
       undefined,
       "EOF",
@@ -36,7 +36,7 @@ Deno.test(
   async () => {
     await assertThrowsAsync(
       async () => {
-        await connect("amqp://guest:guest@localhost:5673");
+        await connect("amqp://guest:guest@127.0.0.1:5673");
       },
       Deno.errors.ConnectionRefused,
     );
@@ -48,7 +48,7 @@ Deno.test(
   async () => {
     await assertThrowsAsync(
       async () => {
-        await connect("amqps://guest:guest@localhost:5672");
+        await connect("amqps://guest:guest@127.0.0.1:5672");
       },
       Error,
       "Unsupported protocol",

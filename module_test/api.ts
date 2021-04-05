@@ -79,6 +79,7 @@ export function withConnection(
     const connection = await connect({
       loglevel: tryCheckEnv("DEBUG") ? "debug" : "none",
       heartbeatInterval: 0,
+      hostname: "127.0.0.1",
       ...options,
     });
 
