@@ -4,7 +4,7 @@ export {
   assertMatch,
   assertThrows,
   assertThrowsAsync,
-} from "https://deno.land/std@0.83.0/testing/asserts.ts";
+} from "https://deno.land/std@0.92.0/testing/asserts.ts";
 export const { test } = Deno;
 
 export function arrayOf(...a: number[]) {
