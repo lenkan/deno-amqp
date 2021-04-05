@@ -159,6 +159,16 @@ Deno.test(...test(
 
 Deno.test(...test(
   "table",
+  { "a-b": 1 },
+  arrayOf(
+    ...[0, 0, 0, 6],
+    ...[3, 97, 45, 98],
+    ...[98, 1],
+  ),
+));
+
+Deno.test(...test(
+  "table",
   { a: [123, true, "abc"] },
   arrayOf(
     ...[0, 0, 0, 19],
