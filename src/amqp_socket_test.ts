@@ -17,13 +17,13 @@ function createConn() {
 }
 
 function createMockReader(data: Uint8Array) {
-  let offset: number = 0;
+  let offset = 0;
 
-  return async function mockRead(p: Uint8Array): Promise<number> {
+  return function mockRead(p: Uint8Array): Promise<number> {
     const slice = data.slice(offset, p.length + offset);
     offset += slice.length;
     p.set(slice, 0);
-    return slice.length;
+    return Promise.resolve(slice.length);
   };
 }
 
@@ -335,7 +335,7 @@ test("read - throws on broken reader", async () => {
   );
 });
 
-test("close - closes connection", async () => {
+test("close - closes connection", () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
 
@@ -344,7 +344,7 @@ test("close - closes connection", async () => {
   assertEquals(conn.close.mock.calls.length, 1);
 });
 
-test("close - closes connection when waiting for read", async () => {
+test("close - closes connection when waiting for read", () => {
   // Ensures we don't leak async ops
   const conn = createConn();
   const socket = new AmqpSocket(conn);
@@ -385,7 +385,7 @@ test("heartbeat - times out read after double", async () => {
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args: any): Promise<number | null> => {
+    async (...args): Promise<number | null> => {
       return await resolvable;
     },
   );
@@ -407,7 +407,7 @@ test("heartbeat - closes connection after time out", async () => {
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args: any): Promise<number | null> => {
+    async (...args): Promise<number | null> => {
       return await resolvable;
     },
   );
@@ -425,7 +425,7 @@ test("heartbeat - does not crash if reading throws _after_ timeout", async () =>
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args: any): Promise<number | null> => {
+    async (...args): Promise<number | null> => {
       return await resolvable;
     },
   );
@@ -449,8 +449,8 @@ test("heartbeat - does not crash if reading throws _before_ timeout", async () =
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args: any): Promise<number | null> => {
-      throw new Error("Damn");
+    (...args): Promise<number | null> => {
+      return Promise.reject(new Error("Damn"));
     },
   );
 

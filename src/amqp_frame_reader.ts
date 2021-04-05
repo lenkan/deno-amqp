@@ -74,7 +74,7 @@ export class AmqpFrameReader {
     throw new FrameError("BAD_FRAME", `unexpected frame type '${type}'`);
   };
 
-  async abort() {
+  abort() {
     if (this.#timer !== null) {
       clearTimeout(this.#timer);
     }
@@ -91,7 +91,7 @@ export class AmqpFrameReader {
 
     const timeoutMessage = `server heartbeat timeout ${timeout}ms`;
 
-    return new Promise<IncomingFrame>(async (resolve, reject) => {
+    return new Promise<IncomingFrame>((resolve, reject) => {
       this.#timer = setTimeout(() => {
         reject(new Error(timeoutMessage));
       }, timeout);

@@ -35,7 +35,7 @@ Deno.test("should wait for reply when sending sync", async () => {
   const resolvable = createResolvable<QueueDeclareOk>();
 
   const mux = mock.obj<AmqpMultiplexer>({
-    receive: mock.fn(async () => resolvable),
+    receive: mock.fn(() => resolvable),
     send: mock.fn(() => Promise.resolve()),
     receiveContent: mock.fn(() => Promise.resolve()),
     sendContent: mock.fn(),

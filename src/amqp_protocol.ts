@@ -400,35 +400,35 @@ export class AmqpProtocol {
     return this.mux.receive(channel, 85, 11);
   }
 
-  async receiveConnectionStart(channel: number): Promise<t.ConnectionStart> {
+  receiveConnectionStart(channel: number): Promise<t.ConnectionStart> {
     return this.mux.receive(channel, 10, 10);
   }
 
-  async receiveConnectionSecure(channel: number): Promise<t.ConnectionSecure> {
+  receiveConnectionSecure(channel: number): Promise<t.ConnectionSecure> {
     return this.mux.receive(channel, 10, 20);
   }
 
-  async receiveConnectionTune(channel: number): Promise<t.ConnectionTune> {
+  receiveConnectionTune(channel: number): Promise<t.ConnectionTune> {
     return this.mux.receive(channel, 10, 30);
   }
 
-  async receiveConnectionClose(channel: number): Promise<t.ConnectionClose> {
+  receiveConnectionClose(channel: number): Promise<t.ConnectionClose> {
     return this.mux.receive(channel, 10, 50);
   }
 
-  async receiveChannelFlow(channel: number): Promise<t.ChannelFlow> {
+  receiveChannelFlow(channel: number): Promise<t.ChannelFlow> {
     return this.mux.receive(channel, 20, 20);
   }
 
-  async receiveChannelClose(channel: number): Promise<t.ChannelClose> {
+  receiveChannelClose(channel: number): Promise<t.ChannelClose> {
     return this.mux.receive(channel, 20, 40);
   }
 
-  async receiveBasicAck(channel: number): Promise<t.BasicAck> {
+  receiveBasicAck(channel: number): Promise<t.BasicAck> {
     return this.mux.receive(channel, 60, 80);
   }
 
-  async receiveBasicNack(channel: number): Promise<t.BasicNack> {
+  receiveBasicNack(channel: number): Promise<t.BasicNack> {
     return this.mux.receive(channel, 60, 120);
   }
 

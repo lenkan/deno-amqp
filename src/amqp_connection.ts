@@ -58,8 +58,8 @@ function tune(ours: number | undefined, theirs: number) {
 }
 
 export class AmqpConnection implements AmqpConnection {
-  #channelMax: number = -1;
-  #isOpen: boolean = false;
+  #channelMax = -1;
+  #isOpen = false;
   #protocol: AmqpProtocol;
   #channelNumbers: number[] = [];
   #username: string;

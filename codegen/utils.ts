@@ -29,6 +29,7 @@ export interface ArgumentDefinition {
   type?: string;
   domain?: string;
   name: string;
+  // deno-lint-ignore ban-types
   ["default-value"]: string | number | boolean | object;
 }
 

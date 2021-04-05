@@ -11,24 +11,24 @@ import {
 } from "./amqp_field_types.ts";
 import { assertUnreachable, charCode, padArray } from "./utils.ts";
 
-const CHARCODE_A = charCode("A");
-const CHARCODE_Z = charCode("Z");
-const CHARCODE_a = charCode("a");
-const CHARCODE_z = charCode("z");
-const CHARCODE_underscore = charCode("_");
-const CHARCODE_dollar = charCode("$");
-const CHARCODE_hash = charCode("#");
-const CHARCODE_dash = charCode("-");
+const CharcodeA = charCode("A");
+const CharcodeZ = charCode("Z");
+const CharcodeLowerA = charCode("a");
+const CharcodeLowerZ = charCode("z");
+const CharcodeUnderscore = charCode("_");
+const CharcodeDollar = charCode("$");
+const CharcodeHash = charCode("#");
+const CharcodeDash = charCode("-");
 const validChars = [
-  CHARCODE_dollar,
-  CHARCODE_hash,
-  CHARCODE_underscore,
-  CHARCODE_dash,
+  CharcodeDollar,
+  CharcodeHash,
+  CharcodeUnderscore,
+  CharcodeDash,
 ];
 
 function isAlpha(code: number) {
-  return (code >= CHARCODE_A && code <= CHARCODE_Z) ||
-    (code >= CHARCODE_a && code <= CHARCODE_z);
+  return (code >= CharcodeA && code <= CharcodeZ) ||
+    (code >= CharcodeLowerA && code <= CharcodeLowerZ);
 }
 
 function isNumeric(code: number) {

@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 export type MockImplementation<T = any, Y extends any[] = any> = (
   ...args: Y
 ) => T;

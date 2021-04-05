@@ -13,7 +13,7 @@ import { assertUnreachable } from "./utils.ts";
 
 export class AmqpDecoder {
   #data: Uint8Array;
-  #offset: number = 0;
+  #offset = 0;
   #view: DataView;
   #textDecoder: TextDecoder;
   #bitField: number | null = null;

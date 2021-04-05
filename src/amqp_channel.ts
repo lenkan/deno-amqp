@@ -69,7 +69,7 @@ export class AmqpChannel {
   #channelNumber: number;
   #protocol: AmqpProtocol;
   #closedPromise: ResolvablePromise<void> = createResolvable();
-  #isOpen: boolean = true;
+  #isOpen = true;
 
   constructor(
     channelNumber: number,
@@ -103,7 +103,7 @@ export class AmqpChannel {
       });
   }
 
-  #handleCloseError = async (error: Error) => {
+  #handleCloseError = (error: Error) => {
     this.#cleanup();
     this.#closedPromise.reject(error);
   };
@@ -118,7 +118,7 @@ export class AmqpChannel {
     }
   };
 
-  #handleConnectionClose = async (args: ChannelClose) => {
+  #handleConnectionClose = (args: ChannelClose) => {
     if (this.#isOpen) {
       this.#cleanup();
       this.#closedPromise.reject(
@@ -178,7 +178,7 @@ export class AmqpChannel {
     this.#isOpen = false;
   }
 
-  async qos(args: BasicQosArgs): Promise<BasicQosOk> {
+  qos(args: BasicQosArgs): Promise<BasicQosOk> {
     return this.#protocol.sendBasicQos(this.#channelNumber, args);
   }
 
@@ -235,43 +235,43 @@ export class AmqpChannel {
     );
   }
 
-  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
+  declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
     return this.#protocol.sendQueueDeclare(this.#channelNumber, args);
   }
 
-  async deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
+  deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
     return this.#protocol.sendQueueDelete(this.#channelNumber, args);
   }
 
-  async bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
+  bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
     return this.#protocol.sendQueueBind(this.#channelNumber, args);
   }
 
-  async unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
+  unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
     return this.#protocol.sendQueueUnbind(this.#channelNumber, args);
   }
 
-  async purgeQueue(args: QueuePurgeArgs): Promise<QueuePurgeOk> {
+  purgeQueue(args: QueuePurgeArgs): Promise<QueuePurgeOk> {
     return this.#protocol.sendQueuePurge(this.#channelNumber, args);
   }
 
-  async deleteExchange(
+  deleteExchange(
     args: ExchangeDeleteArgs,
   ): Promise<ExchangeDeleteOk> {
     return this.#protocol.sendExchangeDelete(this.#channelNumber, args);
   }
 
-  async declareExchange(
+  declareExchange(
     args: ExchangeDeclareArgs,
   ): Promise<ExchangeDeclareOk> {
     return this.#protocol.sendExchangeDeclare(this.#channelNumber, args);
   }
 
-  async bindExchange(args: ExchangeBindArgs): Promise<ExchangeBindOk> {
+  bindExchange(args: ExchangeBindArgs): Promise<ExchangeBindOk> {
     return this.#protocol.sendExchangeBind(this.#channelNumber, args);
   }
 
-  async unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
+  unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
     return this.#protocol.sendExchangeUnbind(this.#channelNumber, args);
   }
 
