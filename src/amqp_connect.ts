@@ -21,9 +21,14 @@ export async function connect(
     loglevel,
     vhost,
     frameMax,
+    secure,
   } = parseOptions(optionsOrUrl);
 
-  const conn = await Deno.connect({ port, hostname });
+  const connect = secure
+    ? Deno.connectTls.bind(Deno, { port, hostname, certFile: typeof secure === "string" ? secure : undefined })
+    : Deno.connect.bind(Deno, { port, hostname });
+
+  const conn = await connect();
   const socket = new AmqpSocket(conn);
 
   const connection = new AmqpConnection(socket, {
