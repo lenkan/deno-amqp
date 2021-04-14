@@ -25,7 +25,11 @@ export async function connect(
   } = parseOptions(optionsOrUrl);
 
   const connect = secure
-    ? Deno.connectTls.bind(Deno, { port, hostname, certFile: typeof secure === "string" ? secure : undefined })
+    ? Deno.connectTls.bind(Deno, {
+        port,
+        hostname,
+        certFile: typeof secure === "string" ? secure : undefined,
+    })
     : Deno.connect.bind(Deno, { port, hostname });
 
   const conn = await connect();
