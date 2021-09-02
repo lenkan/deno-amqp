@@ -1,6 +1,3 @@
-import { AmqpConnection } from "./amqp_connection.ts";
-import { AmqpSocket } from "./amqp_socket.ts";
-
 /**
  * Options for the connection to an AMQP broker.
  */

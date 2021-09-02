@@ -28,7 +28,7 @@ function createMockReader(data: Uint8Array) {
 }
 
 function createEofReader() {
-  return function mockRead(p: Uint8Array) {
+  return function mockRead(_p: Uint8Array) {
     return Promise.resolve(null);
   };
 }
@@ -300,7 +300,7 @@ test("read - closes connection on EOF", async () => {
 
   conn.read.mock.setImplementation(createEofReader());
 
-  await socket.read().catch((e) => {});
+  await socket.read().catch((_e) => {});
 
   assertEquals(conn.close.mock.calls.length, 1);
 });
@@ -313,7 +313,7 @@ test("read - closes connection on EOF after heartbeat tuning", async () => {
 
   socket.tune({ readTimeout: 10 });
 
-  await socket.read().catch((e) => {});
+  await socket.read().catch((_e) => {});
 
   assertEquals(conn.close.mock.calls.length, 1);
 });
@@ -351,7 +351,7 @@ test("close - closes connection when waiting for read", () => {
 
   const resolvable = createResolvable<void>();
 
-  conn.read.mock.setImplementation(async (p: Uint8Array) => {
+  conn.read.mock.setImplementation(async (_p: Uint8Array) => {
     await resolvable;
     return 0;
   });
@@ -385,7 +385,7 @@ test("heartbeat - times out read after double", async () => {
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args): Promise<number | null> => {
+    async (..._args): Promise<number | null> => {
       return await resolvable;
     },
   );
@@ -407,14 +407,14 @@ test("heartbeat - closes connection after time out", async () => {
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args): Promise<number | null> => {
+    async (..._args): Promise<number | null> => {
       return await resolvable;
     },
   );
 
   socket.tune({ readTimeout: 10, frameMax: 0 });
 
-  await socket.read().catch((e) => {});
+  await socket.read().catch((_e) => {});
 
   assertEquals(conn.close.mock.calls.length, 1);
 });
@@ -425,7 +425,7 @@ test("heartbeat - does not crash if reading throws _after_ timeout", async () =>
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    async (...args): Promise<number | null> => {
+    async (..._args): Promise<number | null> => {
       return await resolvable;
     },
   );
@@ -449,7 +449,7 @@ test("heartbeat - does not crash if reading throws _before_ timeout", async () =
 
   const resolvable = createResolvable<number | null>();
   conn.read.mock.setImplementation(
-    (...args): Promise<number | null> => {
+    (..._args): Promise<number | null> => {
       return Promise.reject(new Error("Damn"));
     },
   );

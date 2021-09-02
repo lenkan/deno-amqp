@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import * as enc from "./encoding/mod.ts";
 import * as t from "./amqp_types.ts";
 

@@ -11,6 +11,7 @@ const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
 
 function generateConnection() {
   return [
+    "// deno-lint-ignore-file",
     ...spec.classes.map(printClassPropertyInterface),
     ...spec.classes.flatMap((clazz) =>
       clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))

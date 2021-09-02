@@ -1,5 +1,4 @@
-import { assertThrowsAsync } from "../src/testing.ts";
-import { randomString, withConnection } from "./api.ts";
+import { withConnection } from "./api.ts";
 
 Deno.test(
   "large frames can be sent in chunks",

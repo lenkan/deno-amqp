@@ -23,6 +23,6 @@ try {
   const conn = await retry(() => connect({ hostname: "127.0.0.1" }));
   await conn.close();
   Deno.exit(0);
-} catch (error) {
+} catch (_error) {
   Deno.exit(1);
 }

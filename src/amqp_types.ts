@@ -1,3 +1,5 @@
+// deno-lint-ignore-file
+
 export interface ConnectionProperties {
 }
 

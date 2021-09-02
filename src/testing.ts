@@ -12,5 +12,6 @@ export function arrayOf(...a: number[]) {
 }
 
 export function bufferOf(...a: number[]) {
+  // deno-lint-ignore no-deprecated-deno-api
   return new Deno.Buffer(arrayOf(...a));
 }

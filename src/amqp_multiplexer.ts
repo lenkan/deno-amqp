@@ -224,6 +224,7 @@ function createSocketDemux(
       return [header.props, new Uint8Array(0)];
     }
 
+    // deno-lint-ignore no-deprecated-deno-api
     const buffer = new Deno.Buffer();
     return new Promise<[Header["props"], Uint8Array]>((resolve, reject) => {
       addSubscriber(createSubscriber((frame) => {

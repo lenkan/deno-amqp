@@ -190,7 +190,7 @@ Deno.test(
     );
 
     const args = await new Promise<BasicReturn>((resolve) => {
-      channel.on("return", (args, props, data) => {
+      channel.on("return", (args) => {
         resolve(args);
       });
     });
