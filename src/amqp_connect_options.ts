@@ -40,7 +40,7 @@ export interface AmqpConnectOptions {
 
   /**
    * Sets the maximum frame size in number of bytes.
-   * 
+   *
    * This is negotiated with the broker during the connection handshake.
    */
   frameMax?: number;

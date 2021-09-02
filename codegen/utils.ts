@@ -282,7 +282,7 @@ function encodeMethod(method: SendMethod): Uint8Array {
         }).join("\n")
       }
           default:
-            throw new Error("Unknown method " + method!.methodId + " for class '${clazz.name}'")
+            throw new Error("Unknown method " + (method as any).methodId + " for class '${clazz.name}'")
         }
         break;
       }
@@ -290,7 +290,7 @@ function encodeMethod(method: SendMethod): Uint8Array {
     }).join("\n")
   }
     default:
-      throw new Error("Unknown class " + method!.classId);
+      throw new Error("Unknown class " + (method as any).classId);
   }
   return encoder.result();
 }
@@ -394,7 +394,7 @@ function encodeHeader(header: Header) : Uint8Array {
     }).join("\n")
   }
     default:
-      throw new Error("Unknown class " + header!.classId);
+      throw new Error("Unknown class " + (header as any).classId);
   }
 
   return encoder.result();

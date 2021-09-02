@@ -179,9 +179,9 @@ export class AmqpConnection implements AmqpConnection {
 
   /**
    * Returns a promise that is settled when this connection is closed.
-   * 
+   *
    * If the connection is gracefully closed, the promise will _resolve_.
-   * 
+   *
    * If the connection is unexpectedly closed by the server or from an error, the promise
    * will _reject_ with the reason.
    */
