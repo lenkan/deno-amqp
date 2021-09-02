@@ -1,5 +1,5 @@
 import { connect } from "../mod.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.92.0/testing/asserts.ts";
+import { assertThrowsAsync } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
 Deno.test(
   "connect url",
