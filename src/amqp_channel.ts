@@ -12,8 +12,6 @@ import type {
   BasicQosOk,
   BasicReturn,
   ChannelClose,
-  ChannelCloseArgs,
-  ChannelCloseOk,
   ExchangeBindArgs,
   ExchangeBindOk,
   ExchangeDeclareArgs,

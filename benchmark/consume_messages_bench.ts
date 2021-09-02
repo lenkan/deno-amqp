@@ -24,8 +24,8 @@ try {
 
   await benchmark("consume_messages", async () => {
     let count = 0;
-    await new Promise((resolve, reject) => {
-      channel.consume({ queue: queue }, (args, props, data) => {
+    await new Promise<void>((resolve, reject) => {
+      channel.consume({ queue: queue }, () => {
         count++;
         if (count === COUNT) {
           resolve();

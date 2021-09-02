@@ -68,7 +68,7 @@ export interface AmqpConnectionTest {
 function tryCheckEnv(name: string) {
   try {
     return !!Deno.env.get(name);
-  } catch (e) {
+  } catch (_e) {
     // do nothing
   }
 }

@@ -1,5 +1,5 @@
-import type { AmqpMultiplexer } from "./amqp_multiplexer.ts";
-import type * as t from "./amqp_types.ts";
+import { AmqpMultiplexer } from "./amqp_multiplexer.ts";
+import * as t from "./amqp_types.ts";
 
 export class AmqpProtocol {
   constructor(private mux: AmqpMultiplexer) {}
@@ -400,36 +400,36 @@ export class AmqpProtocol {
     return this.mux.receive(channel, 85, 11);
   }
 
-  receiveConnectionStart(channel: number): Promise<t.ConnectionStart> {
-    return this.mux.receive(channel, 10, 10);
+  async receiveConnectionStart(channel: number): Promise<t.ConnectionStart> {
+    return await this.mux.receive(channel, 10, 10);
   }
 
-  receiveConnectionSecure(channel: number): Promise<t.ConnectionSecure> {
-    return this.mux.receive(channel, 10, 20);
+  async receiveConnectionSecure(channel: number): Promise<t.ConnectionSecure> {
+    return await this.mux.receive(channel, 10, 20);
   }
 
-  receiveConnectionTune(channel: number): Promise<t.ConnectionTune> {
-    return this.mux.receive(channel, 10, 30);
+  async receiveConnectionTune(channel: number): Promise<t.ConnectionTune> {
+    return await this.mux.receive(channel, 10, 30);
   }
 
-  receiveConnectionClose(channel: number): Promise<t.ConnectionClose> {
-    return this.mux.receive(channel, 10, 50);
+  async receiveConnectionClose(channel: number): Promise<t.ConnectionClose> {
+    return await this.mux.receive(channel, 10, 50);
   }
 
-  receiveChannelFlow(channel: number): Promise<t.ChannelFlow> {
-    return this.mux.receive(channel, 20, 20);
+  async receiveChannelFlow(channel: number): Promise<t.ChannelFlow> {
+    return await this.mux.receive(channel, 20, 20);
   }
 
-  receiveChannelClose(channel: number): Promise<t.ChannelClose> {
-    return this.mux.receive(channel, 20, 40);
+  async receiveChannelClose(channel: number): Promise<t.ChannelClose> {
+    return await this.mux.receive(channel, 20, 40);
   }
 
-  receiveBasicAck(channel: number): Promise<t.BasicAck> {
-    return this.mux.receive(channel, 60, 80);
+  async receiveBasicAck(channel: number): Promise<t.BasicAck> {
+    return await this.mux.receive(channel, 60, 80);
   }
 
-  receiveBasicNack(channel: number): Promise<t.BasicNack> {
-    return this.mux.receive(channel, 60, 120);
+  async receiveBasicNack(channel: number): Promise<t.BasicNack> {
+    return await this.mux.receive(channel, 60, 120);
   }
 
   subscribeConnectionStart(

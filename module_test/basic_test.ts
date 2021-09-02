@@ -2,7 +2,7 @@ import { BasicDeliverArgs, BasicProperties } from "../mod.ts";
 import {
   assertEquals,
   assertThrowsAsync,
-} from "https://deno.land/std@0.92.0/testing/asserts.ts";
+} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { createResolvable } from "../src/resolvable.ts";
 import { randomString, withConnection } from "./api.ts";
 import { BasicReturn } from "../src/amqp_types.ts";
@@ -190,7 +190,7 @@ Deno.test(
     );
 
     const args = await new Promise<BasicReturn>((resolve) => {
-      channel.on("return", (args, props, data) => {
+      channel.on("return", (args) => {
         resolve(args);
       });
     });

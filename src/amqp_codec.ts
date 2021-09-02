@@ -1,5 +1,6 @@
+// deno-lint-ignore-file no-explicit-any
 import * as enc from "./encoding/mod.ts";
-import type * as t from "./amqp_types.ts";
+import * as t from "./amqp_types.ts";
 
 const methodNames: Record<number, Record<number, string>> = {
   [10]: {
@@ -1946,7 +1947,8 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'connection'",
+            "Unknown method " + (method as any).methodId +
+              " for class 'connection'",
           );
       }
       break;
@@ -1991,7 +1993,8 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'channel'",
+            "Unknown method " + (method as any).methodId +
+              " for class 'channel'",
           );
       }
       break;
@@ -2035,7 +2038,8 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'access'",
+            "Unknown method " + (method as any).methodId +
+              " for class 'access'",
           );
       }
       break;
@@ -2153,7 +2157,8 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'exchange'",
+            "Unknown method " + (method as any).methodId +
+              " for class 'exchange'",
           );
       }
       break;
@@ -2302,7 +2307,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'queue'",
+            "Unknown method " + (method as any).methodId + " for class 'queue'",
           );
       }
       break;
@@ -2519,7 +2524,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'basic'",
+            "Unknown method " + (method as any).methodId + " for class 'basic'",
           );
       }
       break;
@@ -2547,7 +2552,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'tx'",
+            "Unknown method " + (method as any).methodId + " for class 'tx'",
           );
       }
       break;
@@ -2567,14 +2572,15 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         default:
           throw new Error(
-            "Unknown method " + method!.methodId + " for class 'confirm'",
+            "Unknown method " + (method as any).methodId +
+              " for class 'confirm'",
           );
       }
       break;
     }
 
     default:
-      throw new Error("Unknown class " + method!.classId);
+      throw new Error("Unknown class " + (method as any).classId);
   }
   return encoder.result();
 }
@@ -2765,7 +2771,7 @@ export function encodeHeader(header: Header): Uint8Array {
 
       break;
     default:
-      throw new Error("Unknown class " + header!.classId);
+      throw new Error("Unknown class " + (header as any).classId);
   }
 
   return encoder.result();

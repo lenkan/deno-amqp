@@ -1,4 +1,4 @@
-import { BufReader } from "https://deno.land/std@0.92.0/io/bufio.ts";
+import { BufReader } from "https://deno.land/std@0.106.0/io/bufio.ts";
 import { FrameError } from "./frame_error.ts";
 import { decodeHeader, decodeMethod } from "./amqp_codec.ts";
 import type { IncomingFrame } from "./amqp_frame.ts";

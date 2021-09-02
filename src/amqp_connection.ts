@@ -33,18 +33,6 @@ const clientProperties = Object.freeze({
   information: "https://deno.land/x/amqp/",
 });
 
-function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
-  const chunks: Uint8Array[] = [];
-  let index = 0;
-
-  while (index < arr.length) {
-    chunks.push(arr.slice(index, size + index));
-    index += size;
-  }
-
-  return chunks;
-}
-
 function tune(ours: number | undefined, theirs: number) {
   if (ours === undefined) {
     return theirs;
@@ -93,7 +81,7 @@ export class AmqpConnection implements AmqpConnection {
     this.#socket.close();
   };
 
-  #handleStart = async (args: ConnectionStart) => {
+  #handleStart = async (_args: ConnectionStart) => {
     await this.#protocol.sendConnectionStartOk(0, {
       clientProperties,
       response: credentials(this.#username, this.#password),
@@ -179,9 +167,9 @@ export class AmqpConnection implements AmqpConnection {
 
   /**
    * Returns a promise that is settled when this connection is closed.
-   * 
+   *
    * If the connection is gracefully closed, the promise will _resolve_.
-   * 
+   *
    * If the connection is unexpectedly closed by the server or from an error, the promise
    * will _reject_ with the reason.
    */

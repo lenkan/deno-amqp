@@ -8,11 +8,11 @@ async function benchmarkFunction(
 
 function existsSync(path: string) {
   try {
-    if (!Deno.statSync("./benchmark/out").isDirectory) {
+    if (!Deno.statSync(path).isDirectory) {
       return false;
     }
     return true;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
