@@ -1,7 +1,6 @@
 import {
   assertEquals,
   assertNotEquals,
-  assertStringIncludes,
   assertThrowsAsync,
 } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import {
@@ -30,18 +29,12 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    const error = await assertThrowsAsync(
+    await assertThrowsAsync(
       async () => {
         await channel.declareExchange({ exchange: name });
       },
       Error,
-    );
-
-    assertStringIncludes(error.message, "Channel 1 closed by server");
-    assertStringIncludes(error.message, "403 ACCESS_REFUSED");
-    assertStringIncludes(
-      error.message,
-      `exchange name '${name}' contains reserved prefix`,
+      `Channel 1 closed by server - 403 ACCESS_REFUSED - exchange name '${name}' contains reserved prefix`,
     );
 
     const exchange = await getExchange(name);
@@ -56,18 +49,12 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    const error = await assertThrowsAsync(
+    await assertThrowsAsync(
       async () => {
         await channel.declareExchange({ exchange: name });
       },
       Error,
-    );
-
-    assertStringIncludes(error.message, "Channel 1 closed by server");
-    assertStringIncludes(error.message, "403 ACCESS_REFUSED");
-    assertStringIncludes(
-      error.message,
-      `exchange name '${name}' contains reserved prefix`,
+      `Channel 1 closed by server - 403 ACCESS_REFUSED - exchange name '${name}' contains reserved prefix`,
     );
 
     const exchange = await getExchange(name);

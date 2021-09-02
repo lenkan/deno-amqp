@@ -1,7 +1,6 @@
 import {
   assertEquals,
   assertNotEquals,
-  assertStringIncludes,
   assertThrowsAsync,
 } from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import {
@@ -61,15 +60,11 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    const error = await assertThrowsAsync(
+    await assertThrowsAsync(
       async () => {
         await channel.declareQueue({ queue: name });
       },
       Error,
-    );
-
-    assertStringIncludes(
-      error.message,
       `Channel 1 closed by server - 403 ACCESS_REFUSED - queue name '${name}' contains reserved prefix`,
     );
 
