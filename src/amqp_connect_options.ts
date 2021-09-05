@@ -3,6 +3,11 @@
  */
 export interface AmqpConnectOptions {
   /**
+   * Whether to use a secure connection using a certificate (optional).
+   */
+  secure?: true | string;
+
+  /**
    * Hostname or literal IP-address to the AMQP broker. Defaults to 'localhost'.
    */
   hostname?: string;
@@ -59,15 +64,17 @@ export interface AmqpConnectParameters {
   vhost: string;
   heartbeatInterval?: number;
   frameMax?: number;
+  secure?: true | string;
   loglevel: "debug" | "none";
 }
 
 function parseUrl(value: string): AmqpConnectOptions {
-  if (!value.startsWith("amqp:")) {
+  const protocol = !value.match(/^amqps?:/);
+  if (!protocol) {
     throw new Error("Unsupported protocol");
   }
 
-  const url = new URL(value.replace("amqp:", "http:"));
+  const url = new URL(value.replace(/^amqp/, "http"));
 
   const heartbeatParam = url.searchParams.get("heartbeat");
   const heartbeat = heartbeatParam ? parseInt(heartbeatParam) : undefined;
@@ -104,6 +111,7 @@ export function parseOptions(
     loglevel = "none",
     vhost = "/",
     frameMax,
+    secure,
   } = typeof optionsOrString === "string"
     ? parseUrl(optionsOrString)
     : optionsOrString;
@@ -117,5 +125,6 @@ export function parseOptions(
     loglevel,
     vhost,
     frameMax,
+    secure,
   };
 }
