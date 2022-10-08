@@ -67,7 +67,7 @@ function parseUrl(value: string): AmqpConnectOptions {
     throw new Error("Unsupported protocol");
   }
 
-  const url = new URL(value.replace("amqp:", "http:"));
+  const url = new URL(value);
 
   const heartbeatParam = url.searchParams.get("heartbeat");
   const heartbeat = heartbeatParam ? parseInt(heartbeatParam) : undefined;
