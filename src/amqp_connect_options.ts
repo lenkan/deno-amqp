@@ -86,7 +86,9 @@ function parseUrl(value: string): AmqpConnectOptions {
     port: parseInt(url.port || "5672"),
     username: url.username || "guest",
     password: url.password || "guest",
-    vhost: url.pathname,
+    vhost: url.pathname.length > 0
+      ? decodeURIComponent(url.pathname.substring(1))
+      : "/",
     heartbeatInterval: heartbeat,
     frameMax: frameMax,
   };
