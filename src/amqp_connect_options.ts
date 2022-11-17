@@ -67,7 +67,7 @@ function parseUrl(value: string): AmqpConnectOptions {
     throw new Error("Unsupported protocol");
   }
 
-  const url = new URL(value.replace("amqp:", "http:"));
+  const url = new URL(value);
 
   const heartbeatParam = url.searchParams.get("heartbeat");
   const heartbeat = heartbeatParam ? parseInt(heartbeatParam) : undefined;
@@ -86,7 +86,9 @@ function parseUrl(value: string): AmqpConnectOptions {
     port: parseInt(url.port || "5672"),
     username: url.username || "guest",
     password: url.password || "guest",
-    vhost: url.pathname,
+    vhost: url.pathname.length > 0
+      ? decodeURIComponent(url.pathname.substring(1))
+      : "/",
     heartbeatInterval: heartbeat,
     frameMax: frameMax,
   };

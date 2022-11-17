@@ -79,14 +79,24 @@ Deno.test(...testUrl("amqp://user:pass@somehost.com:123", {
   password: "pass",
 }));
 
+Deno.test(...testUrl("amqp://localhost/%2f", {
+  ...defaultParams,
+  vhost: "/",
+}));
+
+Deno.test(...testUrl("amqp://localhost/%2fsomevhostwithslash", {
+  ...defaultParams,
+  vhost: "/somevhostwithslash",
+}));
+
 Deno.test(...testUrl("amqp://localhost/somevhost", {
   ...defaultParams,
-  vhost: "/somevhost",
+  vhost: "somevhost",
 }));
 
 Deno.test(...testUrl("amqp://localhost:123/somevhost", {
   ...defaultParams,
-  vhost: "/somevhost",
+  vhost: "somevhost",
   port: 123,
 }));
 
