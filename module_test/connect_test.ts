@@ -42,16 +42,3 @@ Deno.test(
     );
   },
 );
-
-Deno.test(
-  "connect url - does not support amqps",
-  async () => {
-    await assertThrowsAsync(
-      async () => {
-        await connect("amqps://guest:guest@127.0.0.1:5672");
-      },
-      Error,
-      "Unsupported protocol",
-    );
-  },
-);

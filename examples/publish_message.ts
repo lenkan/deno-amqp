@@ -2,7 +2,8 @@ import { connect } from "../mod.ts";
 
 const queueName = Deno.args[0];
 
-const connection = await connect({ hostname: "127.0.0.1" });
+const url = Deno.env.get("AMQP_URL");
+const connection = await connect(url);
 
 const channel = await connection.openChannel();
 
