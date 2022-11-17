@@ -49,6 +49,7 @@ export interface AmqpConnectOptions {
    * This should eventually be able to turn logging on and off on different levels such as framing/methods/connection.
    */
   loglevel?: "debug" | "none";
+  tls?: boolean;
 }
 
 export interface AmqpConnectParameters {
@@ -60,14 +61,35 @@ export interface AmqpConnectParameters {
   heartbeatInterval?: number;
   frameMax?: number;
   loglevel: "debug" | "none";
+  tls?: boolean;
+}
+
+function resolvePort(url: URL): number {
+  if (url.port) {
+    return parseInt(url.port);
+  }
+
+  if (url.protocol === "amqp:") {
+    return 5672;
+  }
+
+  if (url.protocol === "amqps:") {
+    return 5671;
+  }
+
+  throw new Error("Unsupported protocol");
+}
+
+function resolveTls(url: URL): boolean {
+  return url.protocol === "amqps:";
 }
 
 function parseUrl(value: string): AmqpConnectOptions {
-  if (!value.startsWith("amqp:")) {
+  const url = new URL(value);
+
+  if (!["amqp:", "amqps:"].includes(url.protocol)) {
     throw new Error("Unsupported protocol");
   }
-
-  const url = new URL(value);
 
   const heartbeatParam = url.searchParams.get("heartbeat");
   const heartbeat = heartbeatParam ? parseInt(heartbeatParam) : undefined;
@@ -83,9 +105,10 @@ function parseUrl(value: string): AmqpConnectOptions {
 
   return {
     hostname: url.hostname,
-    port: parseInt(url.port || "5672"),
+    port: resolvePort(url),
     username: url.username || "guest",
     password: url.password || "guest",
+    tls: resolveTls(url),
     vhost: url.pathname.length > 0
       ? decodeURIComponent(url.pathname.substring(1))
       : "/",
@@ -106,6 +129,7 @@ export function parseOptions(
     loglevel = "none",
     vhost = "/",
     frameMax,
+    tls = false,
   } = typeof optionsOrString === "string"
     ? parseUrl(optionsOrString)
     : optionsOrString;
@@ -119,5 +143,6 @@ export function parseOptions(
     loglevel,
     vhost,
     frameMax,
+    tls,
   };
 }

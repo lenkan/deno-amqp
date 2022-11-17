@@ -32,10 +32,7 @@ function testOpts(
   ];
 }
 
-function testUrlError(
-  url: string,
-  message?: string,
-): [string, () => void] {
+function testUrlError(url: string, message?: string): [string, () => void] {
   return [
     `parse ${url} - throws ${message}`,
     () => {
@@ -53,61 +50,96 @@ const defaultParams: AmqpConnectParameters = {
   loglevel: "none",
   frameMax: undefined,
   vhost: "/",
+  tls: false,
 };
 
-Deno.test(...testUrl("amqp://user:pass@localhost:5672", {
-  ...defaultParams,
-  username: "user",
-  password: "pass",
-}));
-
-Deno.test(...testUrl("amqp://localhost", {
-  ...defaultParams,
-}));
-
-Deno.test(...testUrl("amqp://somehost.com:123", {
-  ...defaultParams,
-  hostname: "somehost.com",
-  port: 123,
-}));
-
-Deno.test(...testUrl("amqp://user:pass@somehost.com:123", {
-  ...defaultParams,
-  hostname: "somehost.com",
-  port: 123,
-  username: "user",
-  password: "pass",
-}));
-
-Deno.test(...testUrl("amqp://localhost/%2f", {
-  ...defaultParams,
-  vhost: "/",
-}));
-
-Deno.test(...testUrl("amqp://localhost/%2fsomevhostwithslash", {
-  ...defaultParams,
-  vhost: "/somevhostwithslash",
-}));
-
-Deno.test(...testUrl("amqp://localhost/somevhost", {
-  ...defaultParams,
-  vhost: "somevhost",
-}));
-
-Deno.test(...testUrl("amqp://localhost:123/somevhost", {
-  ...defaultParams,
-  vhost: "somevhost",
-  port: 123,
-}));
-
 Deno.test(
-  ...testUrlError("amqps://localhost:123/somevhost", "Unsupported protocol"),
+  ...testUrl("amqp://user:pass@localhost:5672", {
+    ...defaultParams,
+    username: "user",
+    password: "pass",
+  }),
 );
 
-Deno.test(...testUrl("amqp://localhost?heartbeat=10", {
-  ...defaultParams,
-  heartbeatInterval: 10,
-}));
+Deno.test(
+  ...testUrl("amqp://localhost", {
+    ...defaultParams,
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqps://localhost", {
+    ...defaultParams,
+    port: 5671,
+    tls: true,
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqps://localhost:123", {
+    ...defaultParams,
+    port: 123,
+    tls: true,
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://somehost.com:123", {
+    ...defaultParams,
+    hostname: "somehost.com",
+    port: 123,
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://user:pass@somehost.com:123", {
+    ...defaultParams,
+    hostname: "somehost.com",
+    port: 123,
+    username: "user",
+    password: "pass",
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://localhost/%2f", {
+    ...defaultParams,
+    vhost: "/",
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://localhost/%2fsomevhostwithslash", {
+    ...defaultParams,
+    vhost: "/somevhostwithslash",
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://localhost/somevhost", {
+    ...defaultParams,
+    vhost: "somevhost",
+  }),
+);
+
+Deno.test(
+  ...testUrl("amqp://localhost:123/somevhost", {
+    ...defaultParams,
+    vhost: "somevhost",
+    port: 123,
+  }),
+);
+
+Deno.test(
+  ...testUrlError("badproto://localhost:123/somevhost", "Unsupported protocol"),
+);
+
+Deno.test(
+  ...testUrl("amqp://localhost?heartbeat=10", {
+    ...defaultParams,
+    heartbeatInterval: 10,
+  }),
+);
 
 Deno.test(
   ...testUrlError(
@@ -116,10 +148,12 @@ Deno.test(
   ),
 );
 
-Deno.test(...testUrl("amqp://localhost?frame_max=10", {
-  ...defaultParams,
-  frameMax: 10,
-}));
+Deno.test(
+  ...testUrl("amqp://localhost?frame_max=10", {
+    ...defaultParams,
+    frameMax: 10,
+  }),
+);
 
 Deno.test(
   ...testUrlError(
@@ -128,20 +162,48 @@ Deno.test(
   ),
 );
 
-Deno.test(...testOpts(undefined, {
-  ...defaultParams,
-}));
+Deno.test(
+  ...testOpts(undefined, {
+    ...defaultParams,
+  }),
+);
 
-Deno.test(...testOpts({}, {
-  ...defaultParams,
-}));
+Deno.test(
+  ...testOpts(
+    {},
+    {
+      ...defaultParams,
+    },
+  ),
+);
 
-Deno.test(...testOpts({ hostname: "somehost.com" }, {
-  ...defaultParams,
-  hostname: "somehost.com",
-}));
+Deno.test(
+  ...testOpts(
+    { hostname: "somehost.com" },
+    {
+      ...defaultParams,
+      hostname: "somehost.com",
+    },
+  ),
+);
 
-Deno.test(...testOpts({ port: 123 }, {
-  ...defaultParams,
-  port: 123,
-}));
+Deno.test(
+  ...testOpts(
+    { port: 123 },
+    {
+      ...defaultParams,
+      port: 123,
+    },
+  ),
+);
+
+Deno.test(
+  ...testOpts(
+    { port: 123, tls: true },
+    {
+      ...defaultParams,
+      port: 123,
+      tls: true,
+    },
+  ),
+);

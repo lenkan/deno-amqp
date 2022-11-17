@@ -6,24 +6,25 @@ if (!queueName) {
   Deno.exit(1);
 }
 
-const connection = await connect({ hostname: "127.0.0.1" });
+const url = Deno.env.get("AMQP_URL");
+const connection = await connect(url);
 
 const channel = await connection.openChannel();
 
 await channel.declareQueue({ queue: queueName });
-await channel.consume(
-  { queue: queueName },
-  async (args, props, data) => {
-    console.log(JSON.stringify(args));
-    console.log(JSON.stringify(props));
-    console.log(new TextDecoder().decode(data));
-    await channel.ack({ deliveryTag: args.deliveryTag });
-  },
-);
-
-connection.closed().then(() => {
-  console.log("Closed peacefully");
-}).catch((error) => {
-  console.error("Connection closed with error");
-  console.error(error.message);
+await channel.consume({ queue: queueName }, async (args, props, data) => {
+  console.log(JSON.stringify(args));
+  console.log(JSON.stringify(props));
+  console.log(new TextDecoder().decode(data));
+  await channel.ack({ deliveryTag: args.deliveryTag });
 });
+
+connection
+  .closed()
+  .then(() => {
+    console.log("Closed peacefully");
+  })
+  .catch((error) => {
+    console.error("Connection closed with error");
+    console.error(error.message);
+  });
