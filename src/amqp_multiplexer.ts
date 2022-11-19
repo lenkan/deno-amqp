@@ -23,17 +23,19 @@ type ExtractSendMethod<T extends number, U extends number> = Extract<
   SendMethod,
   { classId: T; methodId: U }
 >;
-type ExtractMethod<T extends number, U extends number> = ExtractReceiveMethod<
-  T,
-  U
->["args"];
+export type ExtractMethod<T extends number, U extends number> =
+  ExtractReceiveMethod<
+    T,
+    U
+  >["args"];
 
-type ExtractMethodArgs<T extends number, U extends number> = ExtractSendMethod<
-  T,
-  U
->["args"];
+export type ExtractMethodArgs<T extends number, U extends number> =
+  ExtractSendMethod<
+    T,
+    U
+  >["args"];
 
-type ExtractProps<T extends number> = Extract<
+export type ExtractProps<T extends number> = Extract<
   Header,
   { classId: T }
 >["props"];

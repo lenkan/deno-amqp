@@ -31,13 +31,57 @@ import type {
   QueueUnbindArgs,
   QueueUnbindOk,
 } from "./amqp_types.ts";
-import type { AmqpProtocol } from "./amqp_protocol.ts";
-import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
+import {
+  BASIC,
+  BASIC_ACK,
+  BASIC_CANCEL,
+  BASIC_CANCEL_OK,
+  BASIC_CONSUME,
+  BASIC_CONSUME_OK,
+  BASIC_DELIVER,
+  BASIC_NACK,
+  BASIC_PUBLISH,
+  BASIC_QOS,
+  BASIC_QOS_OK,
+  BASIC_RETURN,
+  CHANNEL,
+  CHANNEL_CLOSE,
+  CHANNEL_CLOSE_OK,
+  CONNECTION,
+  CONNECTION_CLOSE,
+  EXCHANGE,
+  EXCHANGE_BIND,
+  EXCHANGE_BIND_OK,
+  EXCHANGE_DECLARE,
+  EXCHANGE_DECLARE_OK,
+  EXCHANGE_DELETE,
+  EXCHANGE_DELETE_OK,
+  EXCHANGE_UNBIND,
+  EXCHANGE_UNBIND_OK,
+  HARD_ERROR_CONNECTION_FORCED,
+  QUEUE,
+  QUEUE_BIND,
+  QUEUE_BIND_OK,
+  QUEUE_DECLARE,
+  QUEUE_DECLARE_OK,
+  QUEUE_DELETE,
+  QUEUE_DELETE_OK,
+  QUEUE_PURGE,
+  QUEUE_PURGE_OK,
+  QUEUE_UNBIND,
+  QUEUE_UNBIND_OK,
+} from "./amqp_constants.ts";
 import { createResolvable, ResolvablePromise } from "./resolvable.ts";
 import {
   serializeChannelError,
   serializeConnectionError,
 } from "./error_handling.ts";
+import {
+  AmqpMultiplexer,
+  ExtractMethod,
+  ExtractMethodArgs,
+  ExtractProps,
+} from "./amqp_multiplexer.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
@@ -65,35 +109,74 @@ export class AmqpChannel {
   #cancelReturnSubscription: () => void;
   #subscribers: Subscriber[] = [];
   #channelNumber: number;
-  #protocol: AmqpProtocol;
   #closedPromise: ResolvablePromise<void> = createResolvable();
   #isOpen = true;
+  #mux: AmqpMultiplexer;
+
+  #send = <T extends number, U extends number>(
+    classId: T,
+    methodId: U,
+    args: ExtractMethodArgs<T, U>,
+  ): Promise<void> => {
+    return this.#mux.send(this.#channelNumber, classId, methodId, args);
+  };
+
+  #sendContent = <T extends number>(
+    classId: T,
+    props: ExtractProps<T>,
+    data: Uint8Array,
+  ): Promise<void> => {
+    return this.#mux.sendContent(this.#channelNumber, classId, props, data);
+  };
+
+  #receive = <T extends number, U extends number>(
+    classId: T,
+    methodId: U,
+  ): Promise<ExtractMethod<T, U>> => {
+    return this.#mux.receive(this.#channelNumber, classId, methodId);
+  };
+
+  receiveContent = <T extends number>(
+    classId: T,
+  ): Promise<[ExtractProps<T>, Uint8Array]> => {
+    return this.#mux.receiveContent(this.#channelNumber, classId);
+  };
 
   constructor(
     channelNumber: number,
-    protocol: AmqpProtocol,
+    mux: AmqpMultiplexer,
   ) {
-    this.#protocol = protocol;
+    this.#mux = mux;
     this.#channelNumber = channelNumber;
 
-    this.#cancelDeliverSubscription = protocol.subscribeBasicDeliver(
+    this.#cancelDeliverSubscription = mux.subscribe(
       channelNumber,
-      this.#handleDeliver,
+      BASIC,
+      BASIC_DELIVER,
+      async (args) => {
+        const [props, content] = await mux.receiveContent(channelNumber, BASIC);
+        return this.#handleDeliver(args, props, content);
+      },
     );
 
-    this.#cancelReturnSubscription = protocol.subscribeBasicReturn(
+    this.#cancelReturnSubscription = mux.subscribe(
       channelNumber,
-      this.#handleReturn,
+      BASIC,
+      BASIC_RETURN,
+      async (args) => {
+        const [props, content] = await mux.receiveContent(channelNumber, BASIC);
+        return this.#handleReturn(args, props, content);
+      },
     );
 
-    protocol.receiveChannelClose(channelNumber)
+    this.#receive(CHANNEL, CHANNEL_CLOSE)
       .then(this.#handleClose)
       .catch(this.#handleCloseError)
       .finally(() => {
         this.#isOpen = false;
       });
 
-    protocol.receiveConnectionClose(0)
+    mux.receive(0, CONNECTION, CONNECTION_CLOSE)
       .then(this.#handleConnectionClose)
       .catch(this.#handleCloseError)
       .finally(() => {
@@ -108,7 +191,7 @@ export class AmqpChannel {
 
   #handleClose = async (args: ChannelClose) => {
     if (this.#isOpen) {
-      await this.#protocol.sendChannelCloseOk(this.#channelNumber, {});
+      await this.#send(CHANNEL, CHANNEL_CLOSE_OK, {});
       this.#cleanup();
       this.#closedPromise.reject(
         new Error(serializeChannelError(this.#channelNumber, args)),
@@ -162,8 +245,9 @@ export class AmqpChannel {
   }
 
   async close() {
-    await this.#protocol.sendChannelClose(
-      this.#channelNumber,
+    await this.#send(
+      CHANNEL,
+      CHANNEL_CLOSE,
       {
         classId: 0,
         methodId: 0,
@@ -171,30 +255,37 @@ export class AmqpChannel {
         replyText: "Channel closed by client",
       },
     );
+    await this.#receive(CHANNEL, CHANNEL_CLOSE_OK);
     this.#cleanup();
     this.#closedPromise.resolve();
     this.#isOpen = false;
   }
 
-  qos(args: BasicQosArgs): Promise<BasicQosOk> {
-    return this.#protocol.sendBasicQos(this.#channelNumber, args);
+  async qos(args: BasicQosArgs): Promise<BasicQosOk> {
+    await this.#send(BASIC, BASIC_QOS, args);
+    return this.#receive(BASIC, BASIC_QOS_OK);
   }
 
   async ack(args: BasicAckArgs) {
-    await this.#protocol.sendBasicAck(this.#channelNumber, args);
+    await this.#send(BASIC, BASIC_ACK, args);
   }
 
   async nack(args: BasicNackArgs) {
-    await this.#protocol.sendBasicNack(this.#channelNumber, args);
+    await this.#send(BASIC, BASIC_NACK, args);
   }
 
   async consume(
     args: BasicConsumeArgs,
     handler: BasicDeliverHandler,
   ): Promise<BasicConsumeOk> {
-    const response = await this.#protocol.sendBasicConsume(
-      this.#channelNumber,
-      args,
+    await this.#send(BASIC, BASIC_CONSUME, {
+      ...args,
+      nowait: false,
+    });
+
+    const response = await this.#receive(
+      BASIC,
+      BASIC_CONSUME_OK,
     );
 
     this.#subscribers.push(
@@ -205,10 +296,8 @@ export class AmqpChannel {
   }
 
   async cancel(args: BasicCancelArgs): Promise<BasicCancelOk> {
-    const response = await this.#protocol.sendBasicCancel(
-      this.#channelNumber,
-      args,
-    );
+    await this.#send(BASIC, BASIC_CANCEL, { ...args, nowait: false });
+    const response = await this.#receive(BASIC, BASIC_CANCEL_OK);
 
     const index = this.#subscribers.findIndex((sub) =>
       sub.type === "deliver" && sub.tag === args.consumerTag
@@ -225,52 +314,59 @@ export class AmqpChannel {
     props: BasicProperties,
     data: Uint8Array,
   ): Promise<void> {
-    await this.#protocol.sendBasicPublish(
-      this.#channelNumber,
-      args,
-      props,
-      data,
-    );
+    await Promise.all([
+      this.#send(BASIC, BASIC_PUBLISH, args),
+      this.#sendContent(BASIC, props, data),
+    ]);
   }
 
-  declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
-    return this.#protocol.sendQueueDeclare(this.#channelNumber, args);
+  async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {
+    await this.#send(QUEUE, QUEUE_DECLARE, { ...args, nowait: false });
+    return this.#receive(QUEUE, QUEUE_DECLARE_OK);
   }
 
-  deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
-    return this.#protocol.sendQueueDelete(this.#channelNumber, args);
+  async deleteQueue(args: QueueDeleteArgs): Promise<QueueDeleteOk> {
+    await this.#send(QUEUE, QUEUE_DELETE, { ...args, nowait: false });
+    return this.#receive(QUEUE, QUEUE_DELETE_OK);
   }
 
-  bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
-    return this.#protocol.sendQueueBind(this.#channelNumber, args);
+  async bindQueue(args: QueueBindArgs): Promise<QueueBindOk> {
+    await this.#send(QUEUE, QUEUE_BIND, { ...args, nowait: false });
+    return this.#receive(QUEUE, QUEUE_BIND_OK);
   }
 
-  unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
-    return this.#protocol.sendQueueUnbind(this.#channelNumber, args);
+  async unbindQueue(args: QueueUnbindArgs): Promise<QueueUnbindOk> {
+    await this.#send(QUEUE, QUEUE_UNBIND, args);
+    return this.#receive(QUEUE, QUEUE_UNBIND_OK);
   }
 
-  purgeQueue(args: QueuePurgeArgs): Promise<QueuePurgeOk> {
-    return this.#protocol.sendQueuePurge(this.#channelNumber, args);
+  async purgeQueue(args: QueuePurgeArgs): Promise<QueuePurgeOk> {
+    await this.#send(QUEUE, QUEUE_PURGE, { ...args, nowait: false });
+    return this.#receive(QUEUE, QUEUE_PURGE_OK);
   }
 
-  deleteExchange(
+  async deleteExchange(
     args: ExchangeDeleteArgs,
   ): Promise<ExchangeDeleteOk> {
-    return this.#protocol.sendExchangeDelete(this.#channelNumber, args);
+    await this.#send(EXCHANGE, EXCHANGE_DELETE, { ...args, nowait: false });
+    return this.#receive(EXCHANGE, EXCHANGE_DELETE_OK);
   }
 
-  declareExchange(
+  async declareExchange(
     args: ExchangeDeclareArgs,
   ): Promise<ExchangeDeclareOk> {
-    return this.#protocol.sendExchangeDeclare(this.#channelNumber, args);
+    await this.#send(EXCHANGE, EXCHANGE_DECLARE, { ...args, nowait: false });
+    return this.#receive(EXCHANGE, EXCHANGE_DECLARE_OK);
   }
 
-  bindExchange(args: ExchangeBindArgs): Promise<ExchangeBindOk> {
-    return this.#protocol.sendExchangeBind(this.#channelNumber, args);
+  async bindExchange(args: ExchangeBindArgs): Promise<ExchangeBindOk> {
+    await this.#send(EXCHANGE, EXCHANGE_BIND, { ...args, nowait: false });
+    return this.#receive(EXCHANGE, EXCHANGE_BIND_OK);
   }
 
-  unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
-    return this.#protocol.sendExchangeUnbind(this.#channelNumber, args);
+  async unbindExchange(args: ExchangeUnbindArgs): Promise<ExchangeUnbindOk> {
+    await this.#send(EXCHANGE, EXCHANGE_UNBIND, { ...args, nowait: false });
+    return this.#receive(EXCHANGE, EXCHANGE_UNBIND_OK);
   }
 
   on(event: "deliver", handler: BasicDeliverHandler): void;

@@ -6,9 +6,22 @@ import type {
   ConnectionTune,
 } from "./amqp_types.ts";
 
-import { AmqpProtocol } from "./amqp_protocol.ts";
-import { HARD_ERROR_CONNECTION_FORCED } from "./amqp_constants.ts";
-import { createAmqpMux } from "./amqp_multiplexer.ts";
+import {
+  CHANNEL,
+  CHANNEL_OPEN,
+  CHANNEL_OPEN_OK,
+  CONNECTION,
+  CONNECTION_CLOSE,
+  CONNECTION_CLOSE_OK,
+  CONNECTION_OPEN,
+  CONNECTION_OPEN_OK,
+  CONNECTION_START,
+  CONNECTION_START_OK,
+  CONNECTION_TUNE,
+  CONNECTION_TUNE_OK,
+  HARD_ERROR_CONNECTION_FORCED,
+} from "./amqp_constants.ts";
+import { AmqpMultiplexer, createAmqpMux } from "./amqp_multiplexer.ts";
 import { serializeConnectionError } from "./error_handling.ts";
 import { createResolvable, ResolvablePromise } from "./resolvable.ts";
 
@@ -48,7 +61,6 @@ function tune(ours: number | undefined, theirs: number) {
 export class AmqpConnection implements AmqpConnection {
   #channelMax = -1;
   #isOpen = false;
-  #protocol: AmqpProtocol;
   #channelNumbers: number[] = [];
   #username: string;
   #password: string;
@@ -56,17 +68,18 @@ export class AmqpConnection implements AmqpConnection {
   #closedPromise: ResolvablePromise<void>;
   #options: AmqpConnectionOptions;
   #socket: AmqpSocket;
+  #mux: AmqpMultiplexer;
 
   constructor(socket: AmqpSocket, options: AmqpConnectionOptions) {
     this.#options = options;
     this.#socket = socket;
-    this.#protocol = new AmqpProtocol(createAmqpMux(this.#socket));
+    this.#mux = createAmqpMux(this.#socket);
     this.#username = options.username;
     this.#password = options.password;
     this.#vhost = options.vhost || "/";
     this.#closedPromise = createResolvable<void>();
 
-    this.#protocol.receiveConnectionClose(0)
+    this.#mux.receive(0, CONNECTION, CONNECTION_CLOSE)
       .then(this.#handleClose)
       .catch(this.#closedPromise.reject)
       .finally(() => {
@@ -76,13 +89,13 @@ export class AmqpConnection implements AmqpConnection {
 
   #handleClose = async (args: ConnectionClose) => {
     this.#isOpen = false;
-    await this.#protocol.sendConnectionCloseOk(0, {});
+    await this.#mux.send(0, CONNECTION, CONNECTION_CLOSE_OK, args);
     this.#closedPromise.reject(new Error(serializeConnectionError(args)));
     this.#socket.close();
   };
 
   #handleStart = async (_args: ConnectionStart) => {
-    await this.#protocol.sendConnectionStartOk(0, {
+    await this.#mux.send(0, CONNECTION, CONNECTION_START_OK, {
       clientProperties,
       response: credentials(this.#username, this.#password),
     });
@@ -97,7 +110,7 @@ export class AmqpConnection implements AmqpConnection {
     this.#channelMax = tune(undefined, args.channelMax);
     const frameMax = tune(this.#options.frameMax, args.frameMax);
 
-    await this.#protocol.sendConnectionTuneOk(0, {
+    await this.#mux.send(0, CONNECTION, CONNECTION_TUNE_OK, {
       heartbeat: heartbeatInterval,
       channelMax: this.#channelMax,
       frameMax,
@@ -109,9 +122,11 @@ export class AmqpConnection implements AmqpConnection {
       readTimeout: heartbeatInterval * 1000 * 2,
     });
 
-    await this.#protocol.sendConnectionOpen(0, {
+    await this.#mux.send(0, CONNECTION, CONNECTION_OPEN, {
       virtualHost: this.#vhost,
     });
+
+    await this.#mux.receive(0, CONNECTION, CONNECTION_OPEN_OK);
   };
 
   /**
@@ -120,8 +135,12 @@ export class AmqpConnection implements AmqpConnection {
   async open() {
     await this.#socket.start();
 
-    await this.#protocol.receiveConnectionStart(0).then(this.#handleStart);
-    await this.#protocol.receiveConnectionTune(0).then(this.#handleTune);
+    await this.#mux.receive(0, CONNECTION, CONNECTION_START).then(
+      this.#handleStart,
+    );
+    await this.#mux.receive(0, CONNECTION, CONNECTION_TUNE).then(
+      this.#handleTune,
+    );
 
     this.#isOpen = true;
   }
@@ -138,8 +157,9 @@ export class AmqpConnection implements AmqpConnection {
       if (!this.#channelNumbers.find((num) => num === channelNumber)) {
         this.#channelNumbers.push(channelNumber);
 
-        await this.#protocol.sendChannelOpen(channelNumber, {});
-        const channel = new AmqpChannel(channelNumber, this.#protocol);
+        await this.#mux.send(channelNumber, CHANNEL, CHANNEL_OPEN, {});
+        await this.#mux.receive(channelNumber, CHANNEL, CHANNEL_OPEN_OK);
+        const channel = new AmqpChannel(channelNumber, this.#mux);
 
         return channel;
       }
@@ -153,11 +173,13 @@ export class AmqpConnection implements AmqpConnection {
    */
   async close() {
     if (this.#isOpen) {
-      await this.#protocol.sendConnectionClose(0, {
+      await this.#mux.send(0, CONNECTION, CONNECTION_CLOSE, {
         classId: 0,
         methodId: 0,
         replyCode: HARD_ERROR_CONNECTION_FORCED,
       });
+
+      await this.#mux.receive(0, CONNECTION, CONNECTION_CLOSE_OK);
 
       this.#socket.close();
     }
