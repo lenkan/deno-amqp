@@ -3,10 +3,7 @@ import {
   AmqpConnectParameters,
   parseOptions,
 } from "./amqp_connect_options.ts";
-import {
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import { assertEquals, assertThrows } from "../deps_dev.ts";
 
 function testUrl(
   url: string,
@@ -36,7 +33,7 @@ function testUrlError(url: string, message?: string): [string, () => void] {
   return [
     `parse ${url} - throws ${message}`,
     () => {
-      assertThrows(() => parseOptions(url), undefined, message);
+      assertThrows(() => parseOptions(url), Error, message);
     },
   ];
 }

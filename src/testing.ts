@@ -1,10 +1,12 @@
+import { Buffer } from "../deps.ts";
+
 export {
   assert,
   assertEquals,
   assertMatch,
+  assertRejects,
   assertThrows,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+} from "../deps_dev.ts";
 export const { test } = Deno;
 
 export function arrayOf(...a: number[]) {
@@ -12,6 +14,5 @@ export function arrayOf(...a: number[]) {
 }
 
 export function bufferOf(...a: number[]) {
-  // deno-lint-ignore no-deprecated-deno-api
-  return new Deno.Buffer(arrayOf(...a));
+  return new Buffer(arrayOf(...a));
 }

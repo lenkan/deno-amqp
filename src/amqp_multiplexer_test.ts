@@ -1,4 +1,4 @@
-import { arrayOf, assertEquals, assertThrowsAsync, test } from "./testing.ts";
+import { arrayOf, assertEquals, assertRejects, test } from "./testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
 import { ContentFrame, HeaderFrame, IncomingFrame } from "./amqp_frame.ts";
 import {
@@ -157,7 +157,7 @@ test("receive content - throws error if not enough content", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receiveContent(1, 60);
     },
@@ -174,7 +174,7 @@ test("receive content - throws error if no header", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receiveContent(1, 60);
     },
@@ -252,7 +252,7 @@ test("receive - throws error if EOF", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receive(1, 10, 10);
     },
@@ -306,7 +306,7 @@ test("receive - rejects on channel close", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
     },
@@ -328,7 +328,7 @@ test("receive - rejects on connection close", async () => {
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
     },
@@ -350,7 +350,7 @@ test("receive - rejects on connection close with caused by method", async () => 
 
   const mux = createAmqpMux(conn);
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await mux.receive(1, QUEUE, QUEUE_DECLARE_OK);
     },
