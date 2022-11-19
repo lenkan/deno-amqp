@@ -1,4 +1,4 @@
-import { assertThrowsAsync } from "../src/testing.ts";
+import { assertRejects } from "../src/testing.ts";
 import { randomString, withConnection } from "./api.ts";
 
 Deno.test(
@@ -12,7 +12,7 @@ Deno.test(
 
     await channel.publish({ exchange, routingKey: "" }, {}, new Uint8Array());
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await conn.closed();
       },

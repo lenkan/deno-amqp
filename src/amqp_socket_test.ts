@@ -1,5 +1,5 @@
 import { AmqpSocket } from "./amqp_socket.ts";
-import { arrayOf, assertEquals, assertThrowsAsync, test } from "./testing.ts";
+import { arrayOf, assertEquals, assertRejects, test } from "./testing.ts";
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 import { createResolvable } from "./resolvable.ts";
@@ -248,7 +248,7 @@ test("read - throws on unknown frame type", async () => {
 
   conn.read.mock.setImplementation(createMockReader(data));
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -270,7 +270,7 @@ test("read - throws on bad frame end", async () => {
 
   conn.read.mock.setImplementation(createMockReader(data));
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -285,7 +285,7 @@ test("read - throws on EOF", async () => {
 
   conn.read.mock.setImplementation(createEofReader());
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -326,7 +326,7 @@ test("read - throws on broken reader", async () => {
     throw new Error("Damn");
   });
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -392,7 +392,7 @@ test("heartbeat - times out read after double", async () => {
 
   socket.tune({ readTimeout: 10, frameMax: 0 });
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -432,7 +432,7 @@ test("heartbeat - does not crash if reading throws _after_ timeout", async () =>
 
   socket.tune({ readTimeout: 10, frameMax: 0 });
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },
@@ -458,7 +458,7 @@ test("heartbeat - does not crash if reading throws _before_ timeout", async () =
 
   resolvable.reject(new Error("Damn"));
 
-  await assertThrowsAsync(
+  await assertRejects(
     async () => {
       await socket.read();
     },

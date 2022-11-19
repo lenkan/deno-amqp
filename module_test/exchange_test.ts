@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertNotEquals,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import { assertEquals, assertNotEquals, assertRejects } from "../deps_dev.ts";
 import {
   getExchange,
   getExchangeBindings,
@@ -29,7 +25,7 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.declareExchange({ exchange: name });
       },
@@ -49,7 +45,7 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.declareExchange({ exchange: name });
       },
@@ -85,7 +81,7 @@ Deno.test(
     const source = `exchange.source.${randomString(10)}`;
     const destination = `exchange.destination.${randomString(10)}`;
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.bindExchange({ source, destination });
       },
@@ -103,7 +99,7 @@ Deno.test(
     const destination = `exchange.destination.${randomString(10)}`;
 
     await channel.declareExchange({ exchange: source });
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.bindExchange({ source, destination });
       },

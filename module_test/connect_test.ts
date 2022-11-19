@@ -1,5 +1,5 @@
 import { connect } from "../mod.ts";
-import { assertThrowsAsync } from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import { assertRejects } from "../deps_dev.ts";
 
 Deno.test(
   "connect url",
@@ -20,11 +20,11 @@ Deno.test(
 Deno.test(
   "connect url - invalid username/password",
   async () => {
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await connect("amqp://invaliduser:somepass@127.0.0.1:5672");
       },
-      undefined,
+      Error,
       "EOF",
     );
     await Promise.resolve();
@@ -34,7 +34,7 @@ Deno.test(
 Deno.test(
   "connect url - wrong port",
   async () => {
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await connect("amqp://guest:guest@127.0.0.1:5673");
       },

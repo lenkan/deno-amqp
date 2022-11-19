@@ -12,6 +12,7 @@ import {
   serializeChannelError,
   serializeConnectionError,
 } from "./error_handling.ts";
+import { Buffer } from "../deps.ts";
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -224,8 +225,7 @@ function createSocketDemux(
       return [header.props, new Uint8Array(0)];
     }
 
-    // deno-lint-ignore no-deprecated-deno-api
-    const buffer = new Deno.Buffer();
+    const buffer = new Buffer();
     return new Promise<[Header["props"], Uint8Array]>((resolve, reject) => {
       addSubscriber(createSubscriber((frame) => {
         if (frame.channel === channel && frame.type === "content") {

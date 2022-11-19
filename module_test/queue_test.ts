@@ -1,8 +1,4 @@
-import {
-  assertEquals,
-  assertNotEquals,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import { assertEquals, assertNotEquals, assertRejects } from "../deps_dev.ts";
 import {
   getQueue,
   getQueueBindings,
@@ -60,7 +56,7 @@ Deno.test(
     const channel = await conn.openChannel();
     const name = `amq.${randomString(10)}`;
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.declareQueue({ queue: name });
       },
@@ -94,7 +90,7 @@ Deno.test(
   withConnection(async (conn) => {
     const chan1 = await conn.openChannel();
     // Should cause an error due to reserved queue name
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await chan1.declareQueue({ queue: "amq.help" });
       },
@@ -102,7 +98,7 @@ Deno.test(
       "Channel 1 closed by server - 403 ACCESS_REFUSED - queue name 'amq.help' contains reserved prefix 'amq.*' - caused by 'queue.declare'",
     );
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await chan1.declareQueue({});
       },
@@ -110,7 +106,7 @@ Deno.test(
       "Connection closed by server - 504 CHANNEL_ERROR - expected 'channel.open' - caused by 'queue.declare'",
     );
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await conn.closed();
       },
@@ -125,7 +121,7 @@ Deno.test(
   withConnection(async (conn) => {
     const channel = await conn.openChannel();
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.bindQueue({ exchange: "" });
       },

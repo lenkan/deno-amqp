@@ -1,8 +1,5 @@
+import { assertEquals, assertRejects } from "../deps_dev.ts";
 import { BasicDeliverArgs, BasicProperties } from "../mod.ts";
-import {
-  assertEquals,
-  assertThrowsAsync,
-} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 import { createResolvable } from "../src/resolvable.ts";
 import { randomString, withConnection } from "./api.ts";
 import { BasicReturn } from "../src/amqp_types.ts";
@@ -210,7 +207,7 @@ Deno.test(
 
     await channel.publish({ exchange, routingKey: "" }, {}, new Uint8Array());
 
-    await assertThrowsAsync(
+    await assertRejects(
       async () => {
         await channel.closed();
       },
