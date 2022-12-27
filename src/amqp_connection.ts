@@ -41,7 +41,7 @@ function credentials(username: string, password: string) {
 
 const clientProperties = Object.freeze({
   product: "deno-amqp",
-  platform: `Deno ${Deno.version.deno} https://deno.land`,
+  platform: `Deno ${Deno.version?.deno} https://deno.land`,
   version: "0",
   information: "https://deno.land/x/amqp/",
 });
