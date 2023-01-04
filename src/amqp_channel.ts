@@ -10,6 +10,7 @@ import type {
   BasicPublishArgs,
   BasicQosArgs,
   BasicQosOk,
+  BasicRejectArgs,
   BasicReturn,
   ChannelClose,
   ExchangeBindArgs,
@@ -43,6 +44,7 @@ import {
   BASIC_PUBLISH,
   BASIC_QOS,
   BASIC_QOS_OK,
+  BASIC_REJECT,
   BASIC_RETURN,
   CHANNEL,
   CHANNEL_CLOSE,
@@ -272,6 +274,10 @@ export class AmqpChannel {
 
   async nack(args: BasicNackArgs) {
     await this.#send(BASIC, BASIC_NACK, args);
+  }
+  
+  async reject(args: BasicRejectArgs) {
+    await this.#send(BASIC, BASIC_REJECT, args);
   }
 
   async consume(
