@@ -275,7 +275,7 @@ export class AmqpChannel {
   async nack(args: BasicNackArgs) {
     await this.#send(BASIC, BASIC_NACK, args);
   }
-  
+
   async reject(args: BasicRejectArgs) {
     await this.#send(BASIC, BASIC_REJECT, args);
   }

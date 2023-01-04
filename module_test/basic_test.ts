@@ -109,6 +109,38 @@ Deno.test(
 );
 
 Deno.test(
+  "consume queue with reject + requeue",
+  withConnection(async (conn) => {
+    const channel = await conn.openChannel();
+
+    const { queue } = await channel.declareQueue({ autoDelete: true });
+    const promise = createResolvable<
+      [BasicDeliverArgs, BasicProperties, Uint8Array]
+    >();
+
+    let receiveCount = 0;
+    await channel.consume({ queue }, async (args, props, content) => {
+      if (++receiveCount <= 1) {
+        await channel.reject({ deliveryTag: args.deliveryTag, requeue: true });
+      } else {
+        promise.resolve([args, props, content]);
+      }
+    });
+
+    const now = Date.now();
+    await channel.publish(
+      { routingKey: queue },
+      { timestamp: now },
+      encodeText(JSON.stringify({ foo: "bar" })),
+    );
+
+    const [_args, props, content] = await promise;
+    assertEquals(cleanObj(props), { timestamp: now });
+    assertEquals(JSON.parse(decodeText(content)), { foo: "bar" });
+  }),
+);
+
+Deno.test(
   "consume empty message",
   withConnection(async (conn) => {
     const channel = await conn.openChannel();
