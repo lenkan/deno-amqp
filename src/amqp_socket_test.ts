@@ -145,6 +145,30 @@ test("write - content frame - too big", async () => {
   );
 });
 
+test("write - content error on write", async () => {
+  const conn = createConn();
+  const socket = new AmqpSocket(conn);
+
+  socket.tune({
+    frameMax: 8 + 2,
+  });
+
+  conn.write.mock.setImplementation(async () => {
+    await Promise.resolve();
+    throw new Error("Damn");
+  });
+
+  await assertRejects(async () => {
+    await socket.write(
+      {
+        type: "content",
+        channel: 1,
+        payload: new Uint8Array([1, 2, 3]),
+      },
+    );
+  });
+});
+
 function wrap(type: number, channel: number, payload: Uint8Array) {
   return arrayOf(
     ...[type],

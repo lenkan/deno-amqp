@@ -133,7 +133,7 @@ export class AmqpSocket
     ) {
       await Promise.all(
         splitArray(frame.payload, this.#frameMax - 8).map((chunk) => {
-          this.#conn.write(encodeFrame({
+          return this.#conn.write(encodeFrame({
             type: "content",
             channel: frame.channel,
             payload: chunk,
