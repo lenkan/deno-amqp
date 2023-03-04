@@ -72,17 +72,6 @@ function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
   return chunks;
 }
 
-function joinUint8Arrays(arrays: Array<Uint8Array>) {
-  const length = arrays.reduce((a, b) => a + b.length, 0);
-  const result = new Uint8Array(length);
-  let offset = 0;
-  for (const array of arrays) {
-    result.set(array, offset);
-    offset += array.length;
-  }
-  return result;
-}
-
 interface AmqpSocketOptions {
   readTimeout?: number;
   sendTimeout?: number;
