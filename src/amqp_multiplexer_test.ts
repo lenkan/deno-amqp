@@ -209,41 +209,48 @@ test("send content - does not send content frame when there is no content", asyn
   const conn = createSocket();
   const mux = createAmqpMux(conn);
 
-  await mux.sendContent(1, 60, {}, new Uint8Array(0));
+  await mux.publish(1, {}, {}, new Uint8Array(0));
 
   assertEquals(conn.write.mock.calls.length, 1);
-  assertEquals(conn.write.mock.calls[0][0], {
-    type: "header",
-    channel: 1,
-    payload: {
-      classId: 60,
-      props: {},
-      size: 0,
+  assertEquals(conn.write.mock.calls[0][0], [
+    {
+      type: "method",
+      channel: 1,
+      payload: { classId: 60, methodId: 40, args: {} }
     },
-  });
+    {
+      type: "header",
+      channel: 1,
+      payload: { classId: 60, props: {}, size: 0 },
+    }
+  ]);
 });
 
 test("send content - sends header and content frame", async () => {
   const conn = createSocket();
   const mux = createAmqpMux(conn);
 
-  await mux.sendContent(1, 60, {}, new Uint8Array([1, 2]));
+  await mux.publish(1, {}, {}, new Uint8Array([1, 2]));
 
-  assertEquals(conn.write.mock.calls.length, 2);
-  assertEquals(conn.write.mock.calls[0][0], {
-    type: "header",
-    channel: 1,
-    payload: {
-      classId: 60,
-      props: {},
-      size: 2,
+  assertEquals(conn.write.mock.calls.length, 1);
+  assertEquals(conn.write.mock.calls[0][0], [
+    {
+      type: "method",
+      channel: 1,
+      payload: { classId: 60, methodId: 40, args: {} }
     },
-  });
-  assertEquals(conn.write.mock.calls[1][0], {
-    type: "content",
-    channel: 1,
-    payload: new Uint8Array([1, 2]),
-  });
+    {
+      type: "header",
+      channel: 1,
+      payload: { classId: 60, props: {}, size: 2 },
+    },
+    {
+      type: "content",
+      channel: 1,
+      payload: new Uint8Array([1, 2]),
+    }
+  ]);
+
 });
 
 test("receive - throws error if EOF", async () => {

@@ -123,14 +123,6 @@ export class AmqpChannel {
     return this.#mux.send(this.#channelNumber, classId, methodId, args);
   };
 
-  #sendContent = <T extends number>(
-    classId: T,
-    props: ExtractProps<T>,
-    data: Uint8Array,
-  ): Promise<void> => {
-    return this.#mux.sendContent(this.#channelNumber, classId, props, data);
-  };
-
   #receive = <T extends number, U extends number>(
     classId: T,
     methodId: U,
@@ -320,10 +312,7 @@ export class AmqpChannel {
     props: BasicProperties,
     data: Uint8Array,
   ): Promise<void> {
-    await Promise.all([
-      this.#send(BASIC, BASIC_PUBLISH, args),
-      this.#sendContent(BASIC, props, data),
-    ]);
+    return await this.#mux.publish(this.#channelNumber, args, props, data);
   }
 
   async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {

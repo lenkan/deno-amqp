@@ -36,12 +36,12 @@ function createEofReader() {
 test("write - method frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
-  await socket.write(
+  await socket.write([
     {
       type: "method",
       channel: 0,
       payload: { classId: 10, methodId: 10, args: { serverProperties: {} } },
-    },
+    }]
   );
 
   assertEquals(
@@ -87,11 +87,11 @@ test("write - content frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
   await socket.write(
-    {
+    [{
       type: "content",
       channel: 1,
       payload: new Uint8Array([1, 2, 3]),
-    },
+    }],
   );
 
   assertEquals(
@@ -115,11 +115,11 @@ test("write - content frame - too big", async () => {
   );
 
   await socket.write(
-    {
+    [{
       type: "content",
       channel: 1,
       payload: new Uint8Array([1, 2, 3]),
-    },
+    }],
   );
 
   assertEquals(
@@ -160,11 +160,11 @@ test("write - content error on write", async () => {
 
   await assertRejects(async () => {
     await socket.write(
-      {
+      [{
         type: "content",
         channel: 1,
         payload: new Uint8Array([1, 2, 3]),
-      },
+      }],
     );
   });
 });

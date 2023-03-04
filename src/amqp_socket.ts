@@ -1,9 +1,10 @@
 import { encodeHeader, encodeMethod } from "./amqp_codec.ts";
 import { AmqpFrameReader } from "./amqp_frame_reader.ts";
 import type { IncomingFrame, OutgoingFrame } from "./amqp_frame.ts";
+import { writeAll } from "../deps.ts";
 
 export interface AmqpSocketWriter {
-  write(frame: OutgoingFrame): Promise<void>;
+  write(frames: Array<OutgoingFrame>): Promise<void>;
 }
 
 export interface AmqpSocketReader {
@@ -71,6 +72,17 @@ function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
   return chunks;
 }
 
+function joinUint8Arrays(arrays: Array<Uint8Array>) {
+  const length = arrays.reduce((a, b) => a + b.length, 0);
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+  return result;
+}
+
 interface AmqpSocketOptions {
   readTimeout?: number;
   sendTimeout?: number;
@@ -85,10 +97,12 @@ export class AmqpSocket
   #sendTimeout = 0;
   #readTimeout = 0;
   #frameMax = -1;
+  #guard: Promise<void>;
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
     this.#conn = conn;
     this.#reader = new AmqpFrameReader(conn);
+    this.#guard = Promise.resolve();
   }
 
   #resetSendTimer = () => {
@@ -124,27 +138,23 @@ export class AmqpSocket
     );
   }
 
-  async write(frame: OutgoingFrame): Promise<void> {
+  async write(frames: Array<OutgoingFrame>): Promise<void> {
     this.#resetSendTimer();
-    if (
-      frame.type === "content" &&
-      this.#frameMax > 8 &&
-      frame.payload.length > this.#frameMax - 8
-    ) {
-      await Promise.all(
-        splitArray(frame.payload, this.#frameMax - 8).map((chunk) => {
-          return this.#conn.write(encodeFrame({
-            type: "content",
-            channel: frame.channel,
-            payload: chunk,
-          }));
-        }),
-      );
-
-      return;
+    for (const frame of frames) {
+      if (frame.type === "content") {
+        const chunks = this.#frameMax > 8 && frame.payload.length > this.#frameMax - 8 ? splitArray(
+          frame.payload, this.#frameMax - 8).map((chunk) => encodeFrame({ type: "content", channel: frame.channel, payload: chunk }))
+          : [encodeFrame(frame)];
+        for (const chunk of chunks) {
+          this.#guard = this.#guard.then(() => writeAll(this.#conn, chunk))
+        }
+      } else {
+        this.#guard = this.#guard.then(() => writeAll(this.#conn, encodeFrame(frame)))
+      }
     }
 
-    await this.#conn.write(encodeFrame(frame));
+    await this.#guard;
+
   }
 
   #clear = () => {
