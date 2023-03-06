@@ -1,6 +1,6 @@
-import type { Header, ReceiveMethod, SendBasicPublish, SendMethod } from "./amqp_codec.ts";
+import type { Header, ReceiveMethod, SendMethod } from "./amqp_codec.ts";
 import type { AmqpSocketReader, AmqpSocketWriter } from "./amqp_socket.ts";
-import type { IncomingFrame, OutgoingFrame } from "./amqp_frame.ts";
+import type { IncomingFrame } from "./amqp_frame.ts";
 
 import {
   CHANNEL,
@@ -13,8 +13,6 @@ import {
   serializeConnectionError,
 } from "./error_handling.ts";
 import { Buffer } from "../deps.ts";
-import { BasicProperties, BasicPublishArgs } from "./amqp_types.ts";
-
 
 type ExtractReceiveMethod<T extends number, U extends number> = Extract<
   ReceiveMethod,
@@ -59,23 +57,6 @@ export interface AmqpSource {
     classId: T,
   ): Promise<[ExtractProps<T>, Uint8Array]>;
 }
-
-export interface AmqpSink {
-  send<T extends number, U extends number>(
-    channel: number,
-    classId: T,
-    methodId: U,
-    args: ExtractMethodArgs<T, U>,
-  ): Promise<void>;
-  publish(
-    channel: number,
-    publishArgs: BasicPublishArgs,
-    props: BasicProperties,
-    data: Uint8Array
-  ): Promise<void>
-}
-
-export interface AmqpMultiplexer extends AmqpSource, AmqpSink {}
 
 interface FrameSubscriber {
   handle(frame: IncomingFrame): boolean;
@@ -256,59 +237,10 @@ function createSocketDemux(
   };
 }
 
-function createSocketMux(writer: AmqpSocketWriter): AmqpSink {
-  function send(
-    channel: number,
-    classId: number,
-    methodId: number,
-    // deno-lint-ignore ban-types
-    args: object,
-  ) {
-    return writer.write(
-      [{
-        type: "method",
-        channel,
-        payload: { classId, methodId, args } as SendMethod,
-      }],
-    );
-  }
-
-  function publish(
-    channel: number,
-    publishArgs: BasicPublishArgs,
-    props: BasicProperties,
-    data: Uint8Array
-  ) {
-    const size = data.length;
-    const frames: Array<OutgoingFrame> = [{
-      type: "method",
-      channel,
-      payload: { classId: 60, methodId: 40, args: publishArgs } as SendBasicPublish
-    },
-    {
-      type: "header",
-      channel,
-      payload: { classId: 60, props, size } as Header
-    }
-    ]
-    if (size > 0) {
-      frames.push({
-        type: "content",
-        channel,
-        payload: data
-      })
-    }
-    return writer.write(frames);
-  }
-
-  return { send, publish };
-}
-
 export function createAmqpMux(
   socket: AmqpSocketReader & AmqpSocketWriter,
-): AmqpMultiplexer {
+): AmqpSource {
   const subscribers: FrameSubscriber[] = [];
   const demux = createSocketDemux(socket, subscribers);
-  const mux = createSocketMux(socket);
-  return { ...demux, ...mux };
+  return demux;
 }

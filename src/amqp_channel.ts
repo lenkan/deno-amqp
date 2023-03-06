@@ -79,11 +79,14 @@ import {
   serializeConnectionError,
 } from "./error_handling.ts";
 import {
-  AmqpMultiplexer,
+  AmqpSource,
   ExtractMethod,
   ExtractMethodArgs,
   ExtractProps,
 } from "./amqp_multiplexer.ts";
+import { OutgoingFrame } from "./amqp_frame.ts";
+import { AmqpSocketWriter } from "./amqp_socket.ts";
+import { SendMethod } from "./amqp_codec.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
@@ -106,6 +109,25 @@ interface BasicDeliverSubscriber {
 
 type Subscriber = BasicReturnSubscriber | BasicDeliverSubscriber;
 
+function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
+  const chunks: Uint8Array[] = [];
+  let index = 0;
+
+  while (index < arr.length) {
+    chunks.push(arr.slice(index, size + index));
+    index += size;
+  }
+
+  return chunks;
+}
+
+export interface AmqpChannelDeps {
+  channelNumber: number;
+  writer: AmqpSocketWriter;
+  mux: AmqpSource;
+  frameMax: number;
+}
+
 export class AmqpChannel {
   #cancelDeliverSubscription: () => void;
   #cancelReturnSubscription: () => void;
@@ -113,14 +135,41 @@ export class AmqpChannel {
   #channelNumber: number;
   #closedPromise: ResolvablePromise<void> = createResolvable();
   #isOpen = true;
-  #mux: AmqpMultiplexer;
+  #mux: AmqpSource;
+  #pending: OutgoingFrame[] = [];
+  #writing = false;
+
+  #write = async (...frames: OutgoingFrame[]) => {
+    this.#pending.push(...frames);
+
+    if (!this.#writing) {
+      this.#writing = true;
+    }
+
+    let frame = this.#pending.shift();
+
+    while (frame) {
+      await this.deps.writer.write(frame);
+      frame = this.#pending.shift();
+    }
+
+    this.#writing = false;
+  };
 
   #send = <T extends number, U extends number>(
     classId: T,
     methodId: U,
     args: ExtractMethodArgs<T, U>,
   ): Promise<void> => {
-    return this.#mux.send(this.#channelNumber, classId, methodId, args);
+    return this.#write({
+      type: "method",
+      channel: this.#channelNumber,
+      payload: {
+        classId,
+        methodId,
+        args,
+      } as SendMethod,
+    });
   };
 
   #receive = <T extends number, U extends number>(
@@ -136,29 +185,32 @@ export class AmqpChannel {
     return this.#mux.receiveContent(this.#channelNumber, classId);
   };
 
-  constructor(
-    channelNumber: number,
-    mux: AmqpMultiplexer,
-  ) {
-    this.#mux = mux;
-    this.#channelNumber = channelNumber;
+  constructor(private deps: AmqpChannelDeps) {
+    this.#mux = deps.mux;
+    this.#channelNumber = deps.channelNumber;
 
-    this.#cancelDeliverSubscription = mux.subscribe(
-      channelNumber,
+    this.#cancelDeliverSubscription = deps.mux.subscribe(
+      deps.channelNumber,
       BASIC,
       BASIC_DELIVER,
       async (args) => {
-        const [props, content] = await mux.receiveContent(channelNumber, BASIC);
+        const [props, content] = await deps.mux.receiveContent(
+          deps.channelNumber,
+          BASIC,
+        );
         return this.#handleDeliver(args, props, content);
       },
     );
 
-    this.#cancelReturnSubscription = mux.subscribe(
-      channelNumber,
+    this.#cancelReturnSubscription = deps.mux.subscribe(
+      deps.channelNumber,
       BASIC,
       BASIC_RETURN,
       async (args) => {
-        const [props, content] = await mux.receiveContent(channelNumber, BASIC);
+        const [props, content] = await deps.mux.receiveContent(
+          deps.channelNumber,
+          BASIC,
+        );
         return this.#handleReturn(args, props, content);
       },
     );
@@ -170,7 +222,7 @@ export class AmqpChannel {
         this.#isOpen = false;
       });
 
-    mux.receive(0, CONNECTION, CONNECTION_CLOSE)
+    deps.mux.receive(0, CONNECTION, CONNECTION_CLOSE)
       .then(this.#handleConnectionClose)
       .catch(this.#handleCloseError)
       .finally(() => {
@@ -312,7 +364,39 @@ export class AmqpChannel {
     props: BasicProperties,
     data: Uint8Array,
   ): Promise<void> {
-    return await this.#mux.publish(this.#channelNumber, args, props, data);
+    const frames: Array<OutgoingFrame> = [
+      {
+        type: "method",
+        channel: this.#channelNumber,
+        payload: {
+          classId: BASIC,
+          methodId: BASIC_PUBLISH,
+          args,
+        },
+      },
+      {
+        type: "header",
+        channel: this.#channelNumber,
+        payload: {
+          classId: BASIC,
+          props,
+          size: data.byteLength,
+        },
+      },
+    ];
+
+    if (data.byteLength > 0) {
+      const chunks = splitArray(data, this.deps.frameMax - 8);
+      for (const chunk of chunks) {
+        frames.push({
+          type: "content",
+          channel: this.#channelNumber,
+          payload: chunk,
+        });
+      }
+    }
+
+    await this.#write(...frames);
   }
 
   async declareQueue(args: QueueDeclareArgs): Promise<QueueDeclareOk> {

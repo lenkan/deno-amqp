@@ -1,10 +1,9 @@
 import { encodeHeader, encodeMethod } from "./amqp_codec.ts";
 import { AmqpFrameReader } from "./amqp_frame_reader.ts";
 import type { IncomingFrame, OutgoingFrame } from "./amqp_frame.ts";
-import { writeAll } from "../deps.ts";
 
 export interface AmqpSocketWriter {
-  write(frames: Array<OutgoingFrame>): Promise<void>;
+  write(frame: OutgoingFrame): Promise<void>;
 }
 
 export interface AmqpSocketReader {
@@ -60,22 +59,9 @@ const HEARTBEAT_FRAME = new Uint8Array([
   206,
 ]);
 
-function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
-  const chunks: Uint8Array[] = [];
-  let index = 0;
-
-  while (index < arr.length) {
-    chunks.push(arr.slice(index, size + index));
-    index += size;
-  }
-
-  return chunks;
-}
-
 interface AmqpSocketOptions {
   readTimeout?: number;
   sendTimeout?: number;
-  frameMax?: number;
 }
 
 export class AmqpSocket
@@ -85,13 +71,10 @@ export class AmqpSocket
   #sendTimer: number | null = null;
   #sendTimeout = 0;
   #readTimeout = 0;
-  #frameMax = -1;
-  #guard: Promise<void>;
 
   constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
     this.#conn = conn;
     this.#reader = new AmqpFrameReader(conn);
-    this.#guard = Promise.resolve();
   }
 
   #resetSendTimer = () => {
@@ -115,9 +98,6 @@ export class AmqpSocket
     this.#sendTimeout = options.sendTimeout !== undefined
       ? options.sendTimeout
       : this.#sendTimeout;
-    this.#frameMax = options.frameMax !== undefined
-      ? options.frameMax
-      : this.#frameMax;
     this.#resetSendTimer();
   }
 
@@ -127,23 +107,9 @@ export class AmqpSocket
     );
   }
 
-  async write(frames: Array<OutgoingFrame>): Promise<void> {
+  async write(frame: OutgoingFrame): Promise<void> {
     this.#resetSendTimer();
-    for (const frame of frames) {
-      if (frame.type === "content") {
-        const chunks = this.#frameMax > 8 && frame.payload.length > this.#frameMax - 8 ? splitArray(
-          frame.payload, this.#frameMax - 8).map((chunk) => encodeFrame({ type: "content", channel: frame.channel, payload: chunk }))
-          : [encodeFrame(frame)];
-        for (const chunk of chunks) {
-          this.#guard = this.#guard.then(() => writeAll(this.#conn, chunk))
-        }
-      } else {
-        this.#guard = this.#guard.then(() => writeAll(this.#conn, encodeFrame(frame)))
-      }
-    }
-
-    await this.#guard;
-
+    await this.#conn.write(encodeFrame(frame));
   }
 
   #clear = () => {

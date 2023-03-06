@@ -36,12 +36,12 @@ function createEofReader() {
 test("write - method frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
-  await socket.write([
+  await socket.write(
     {
       type: "method",
       channel: 0,
       payload: { classId: 10, methodId: 10, args: { serverProperties: {} } },
-    }]
+    },
   );
 
   assertEquals(
@@ -87,11 +87,11 @@ test("write - content frame", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
   await socket.write(
-    [{
+    {
       type: "content",
       channel: 1,
       payload: new Uint8Array([1, 2, 3]),
-    }],
+    },
   );
 
   assertEquals(
@@ -106,52 +106,9 @@ test("write - content frame", async () => {
   );
 });
 
-test("write - content frame - too big", async () => {
-  const conn = createConn();
-  const socket = new AmqpSocket(conn);
-  socket.tune({
-    frameMax: 8 + 2,
-  } // prefix(7) + payload(2) + end(1)
-  );
-
-  await socket.write(
-    [{
-      type: "content",
-      channel: 1,
-      payload: new Uint8Array([1, 2, 3]),
-    }],
-  );
-
-  assertEquals(
-    conn.write.mock.calls[0][0],
-    arrayOf(
-      ...[3],
-      ...[0, 1],
-      ...[0, 0, 0, 2],
-      ...[1, 2],
-      ...[206],
-    ),
-  );
-
-  assertEquals(
-    conn.write.mock.calls[1][0],
-    arrayOf(
-      ...[3],
-      ...[0, 1],
-      ...[0, 0, 0, 1],
-      ...[3],
-      ...[206],
-    ),
-  );
-});
-
 test("write - content error on write", async () => {
   const conn = createConn();
   const socket = new AmqpSocket(conn);
-
-  socket.tune({
-    frameMax: 8 + 2,
-  });
 
   conn.write.mock.setImplementation(async () => {
     await Promise.resolve();
@@ -160,11 +117,11 @@ test("write - content error on write", async () => {
 
   await assertRejects(async () => {
     await socket.write(
-      [{
+      {
         type: "content",
         channel: 1,
         payload: new Uint8Array([1, 2, 3]),
-      }],
+      },
     );
   });
 });
@@ -414,7 +371,7 @@ test("heartbeat - times out read after double", async () => {
     },
   );
 
-  socket.tune({ readTimeout: 10, frameMax: 0 });
+  socket.tune({ readTimeout: 10 });
 
   await assertRejects(
     async () => {
@@ -436,7 +393,7 @@ test("heartbeat - closes connection after time out", async () => {
     },
   );
 
-  socket.tune({ readTimeout: 10, frameMax: 0 });
+  socket.tune({ readTimeout: 10 });
 
   await socket.read().catch((_e) => {});
 
@@ -454,7 +411,7 @@ test("heartbeat - does not crash if reading throws _after_ timeout", async () =>
     },
   );
 
-  socket.tune({ readTimeout: 10, frameMax: 0 });
+  socket.tune({ readTimeout: 10 });
 
   await assertRejects(
     async () => {
@@ -478,7 +435,7 @@ test("heartbeat - does not crash if reading throws _before_ timeout", async () =
     },
   );
 
-  socket.tune({ readTimeout: 0.01, frameMax: 0 });
+  socket.tune({ readTimeout: 0.01 });
 
   resolvable.reject(new Error("Damn"));
 

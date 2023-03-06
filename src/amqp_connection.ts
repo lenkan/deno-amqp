@@ -21,9 +21,10 @@ import {
   CONNECTION_TUNE_OK,
   HARD_ERROR_CONNECTION_FORCED,
 } from "./amqp_constants.ts";
-import { AmqpMultiplexer, createAmqpMux } from "./amqp_multiplexer.ts";
+import { AmqpSource, createAmqpMux } from "./amqp_multiplexer.ts";
 import { serializeConnectionError } from "./error_handling.ts";
 import { createResolvable, ResolvablePromise } from "./resolvable.ts";
+import { SendMethod } from "./amqp_codec.ts";
 
 export interface AmqpConnectionOptions {
   username: string;
@@ -68,7 +69,8 @@ export class AmqpConnection implements AmqpConnection {
   #closedPromise: ResolvablePromise<void>;
   #options: AmqpConnectionOptions;
   #socket: AmqpSocket;
-  #mux: AmqpMultiplexer;
+  #mux: AmqpSource;
+  #frameMax = 0;
 
   constructor(socket: AmqpSocket, options: AmqpConnectionOptions) {
     this.#options = options;
@@ -87,17 +89,29 @@ export class AmqpConnection implements AmqpConnection {
       });
   }
 
+  #send = async (method: SendMethod) => {
+    await this.#socket.write({ channel: 0, type: "method", payload: method });
+  };
+
   #handleClose = async (args: ConnectionClose) => {
     this.#isOpen = false;
-    await this.#mux.send(0, CONNECTION, CONNECTION_CLOSE_OK, args);
+    await this.#send({
+      classId: CONNECTION,
+      methodId: CONNECTION_CLOSE_OK,
+      args,
+    });
     this.#closedPromise.reject(new Error(serializeConnectionError(args)));
     this.#socket.close();
   };
 
   #handleStart = async (_args: ConnectionStart) => {
-    await this.#mux.send(0, CONNECTION, CONNECTION_START_OK, {
-      clientProperties,
-      response: credentials(this.#username, this.#password),
+    await this.#send({
+      classId: CONNECTION,
+      methodId: CONNECTION_START_OK,
+      args: {
+        clientProperties,
+        response: credentials(this.#username, this.#password),
+      },
     });
   };
 
@@ -108,22 +122,29 @@ export class AmqpConnection implements AmqpConnection {
     );
 
     this.#channelMax = tune(undefined, args.channelMax);
-    const frameMax = tune(this.#options.frameMax, args.frameMax);
+    this.#frameMax = tune(this.#options.frameMax, args.frameMax);
 
-    await this.#mux.send(0, CONNECTION, CONNECTION_TUNE_OK, {
-      heartbeat: heartbeatInterval,
-      channelMax: this.#channelMax,
-      frameMax,
+    await this.#send({
+      classId: CONNECTION,
+      methodId: CONNECTION_TUNE_OK,
+      args: {
+        heartbeat: heartbeatInterval,
+        channelMax: this.#channelMax,
+        frameMax: this.#frameMax,
+      },
     });
 
     this.#socket.tune({
-      frameMax,
       sendTimeout: heartbeatInterval * 1000,
       readTimeout: heartbeatInterval * 1000 * 2,
     });
 
-    await this.#mux.send(0, CONNECTION, CONNECTION_OPEN, {
-      virtualHost: this.#vhost,
+    await this.#send({
+      classId: CONNECTION,
+      methodId: CONNECTION_OPEN,
+      args: {
+        virtualHost: this.#vhost,
+      },
     });
 
     await this.#mux.receive(0, CONNECTION, CONNECTION_OPEN_OK);
@@ -157,9 +178,19 @@ export class AmqpConnection implements AmqpConnection {
       if (!this.#channelNumbers.find((num) => num === channelNumber)) {
         this.#channelNumbers.push(channelNumber);
 
-        await this.#mux.send(channelNumber, CHANNEL, CHANNEL_OPEN, {});
+        await this.#socket.write({
+          channel: channelNumber,
+          type: "method",
+          payload: { classId: CHANNEL, methodId: CHANNEL_OPEN, args: {} },
+        });
+
         await this.#mux.receive(channelNumber, CHANNEL, CHANNEL_OPEN_OK);
-        const channel = new AmqpChannel(channelNumber, this.#mux);
+        const channel = new AmqpChannel({
+          channelNumber,
+          mux: this.#mux,
+          writer: this.#socket,
+          frameMax: this.#frameMax,
+        });
 
         return channel;
       }
@@ -173,10 +204,14 @@ export class AmqpConnection implements AmqpConnection {
    */
   async close() {
     if (this.#isOpen) {
-      await this.#mux.send(0, CONNECTION, CONNECTION_CLOSE, {
-        classId: 0,
-        methodId: 0,
-        replyCode: HARD_ERROR_CONNECTION_FORCED,
+      await this.#send({
+        classId: CONNECTION,
+        methodId: CONNECTION_CLOSE,
+        args: {
+          classId: 0,
+          methodId: 0,
+          replyCode: HARD_ERROR_CONNECTION_FORCED,
+        },
       });
 
       await this.#mux.receive(0, CONNECTION, CONNECTION_CLOSE_OK);
