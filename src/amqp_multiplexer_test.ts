@@ -216,13 +216,13 @@ test("send content - does not send content frame when there is no content", asyn
     {
       type: "method",
       channel: 1,
-      payload: { classId: 60, methodId: 40, args: {} }
+      payload: { classId: 60, methodId: 40, args: {} },
     },
     {
       type: "header",
       channel: 1,
       payload: { classId: 60, props: {}, size: 0 },
-    }
+    },
   ]);
 });
 
@@ -237,7 +237,7 @@ test("send content - sends header and content frame", async () => {
     {
       type: "method",
       channel: 1,
-      payload: { classId: 60, methodId: 40, args: {} }
+      payload: { classId: 60, methodId: 40, args: {} },
     },
     {
       type: "header",
@@ -248,9 +248,8 @@ test("send content - sends header and content frame", async () => {
       type: "content",
       channel: 1,
       payload: new Uint8Array([1, 2]),
-    }
+    },
   ]);
-
 });
 
 test("receive - throws error if EOF", async () => {

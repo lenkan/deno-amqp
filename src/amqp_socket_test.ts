@@ -41,8 +41,8 @@ test("write - method frame", async () => {
       type: "method",
       channel: 0,
       payload: { classId: 10, methodId: 10, args: { serverProperties: {} } },
-    }]
-  );
+    },
+  ]);
 
   assertEquals(
     conn.write.mock.calls[0][0],
