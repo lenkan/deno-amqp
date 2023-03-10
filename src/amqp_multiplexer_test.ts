@@ -1,12 +1,7 @@
 import { arrayOf, assertEquals, assertRejects, test } from "./testing.ts";
 import { createAmqpMux } from "./amqp_multiplexer.ts";
 import { ContentFrame, HeaderFrame, IncomingFrame } from "./amqp_frame.ts";
-import {
-  BasicProperties,
-  ChannelCloseArgs,
-  ConnectionCloseArgs,
-  ConnectionStart,
-} from "./amqp_types.ts";
+import { BasicProperties, ChannelCloseArgs, ConnectionCloseArgs, ConnectionStart } from "./amqp_types.ts";
 import {
   CHANNEL,
   CHANNEL_CLOSE,

@@ -49,12 +49,8 @@ function generateConnection() {
     'import * as t from "./amqp_types.ts"',
     printMethodNameFunction(spec),
     withNowaitInterface,
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printReceiveMethodDefinition(clazz, m))
-    ),
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printSendMethodDefinition(clazz, m))
-    ),
+    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printReceiveMethodDefinition(clazz, m))),
+    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printSendMethodDefinition(clazz, m))),
     ...spec.classes.map(printHeaderDefinition),
     printReceiveMethodUnion(spec),
     printSendMethodUnion(spec),

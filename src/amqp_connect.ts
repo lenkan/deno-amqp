@@ -24,9 +24,7 @@ export async function connect(
     tls,
   } = parseOptions(optionsOrUrl);
 
-  const conn = tls
-    ? await Deno.connectTls({ port, hostname })
-    : await Deno.connect({ port, hostname });
+  const conn = tls ? await Deno.connectTls({ port, hostname }) : await Deno.connect({ port, hostname });
   const socket = new AmqpSocket(conn);
 
   const connection = new AmqpConnection(socket, {

@@ -7,9 +7,7 @@ const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
 function generateConnection() {
   return [
     ...spec.constants.map((c) => {
-      const name = c.class
-        ? constantName(c.class + "-" + c.name)
-        : constantName(c.name);
+      const name = c.class ? constantName(c.class + "-" + c.name) : constantName(c.name);
       return `export const ${name} = ${JSON.stringify(c.value)} as const`;
     }),
     ...spec.classes.flatMap((c) => {

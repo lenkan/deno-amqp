@@ -1,12 +1,6 @@
 import { Buffer } from "../deps.ts";
 
-export {
-  assert,
-  assertEquals,
-  assertMatch,
-  assertRejects,
-  assertThrows,
-} from "../deps_dev.ts";
+export { assert, assertEquals, assertMatch, assertRejects, assertThrows } from "../deps_dev.ts";
 export const { test } = Deno;
 
 export function arrayOf(...a: number[]) {

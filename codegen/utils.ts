@@ -137,13 +137,9 @@ export interface ${name} {
     ${
     method.arguments.filter((arg) => arg.name !== "nowait").map((arg) => {
       const isOptional = arg["default-value"] !== undefined;
-      const comment = isOptional
-        ? `/** Default ${JSON.stringify(arg["default-value"])} */`
-        : "";
+      const comment = isOptional ? `/** Default ${JSON.stringify(arg["default-value"])} */` : "";
       const type = resolveTypescriptType(resolveType(spec, arg));
-      return `${comment}${camelCase(arg.name)}${
-        isOptional ? "?" : ""
-      }: ${type};`;
+      return `${comment}${camelCase(arg.name)}${isOptional ? "?" : ""}: ${type};`;
     }).join("\n")
   }
 }
@@ -207,17 +203,13 @@ export function printSendMethodDefinition(
 
 export function printSendMethodUnion(spec: Spec) {
   return `export type SendMethod = ${
-    spec.classes.flatMap((c) =>
-      c.methods.map((m) => `Send${pascalCase(c.name)}${pascalCase(m.name)}`)
-    ).join(" | ")
+    spec.classes.flatMap((c) => c.methods.map((m) => `Send${pascalCase(c.name)}${pascalCase(m.name)}`)).join(" | ")
   }`;
 }
 
 export function printReceiveMethodUnion(spec: Spec) {
   return `export type ReceiveMethod = ${
-    spec.classes.flatMap((c) =>
-      c.methods.map((m) => `Receive${pascalCase(c.name)}${pascalCase(m.name)}`)
-    ).join(" | ")
+    spec.classes.flatMap((c) => c.methods.map((m) => `Receive${pascalCase(c.name)}${pascalCase(m.name)}`)).join(" | ")
   }`;
 }
 
@@ -234,9 +226,7 @@ export function printHeaderDefinition(
 }
 
 export function printHeaderUnion(spec: Spec) {
-  return `export type Header = ${
-    spec.classes.map((c) => `${pascalCase(c.name)}Header`).join(" | ")
-  }`;
+  return `export type Header = ${spec.classes.map((c) => `${pascalCase(c.name)}Header`).join(" | ")}`;
 }
 
 export function getDefaultValue(a: ArgumentDefinition) {

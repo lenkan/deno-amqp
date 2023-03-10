@@ -1,10 +1,6 @@
 import { AmqpChannel } from "./amqp_channel.ts";
 import type { AmqpSocket } from "./amqp_socket.ts";
-import type {
-  ConnectionClose,
-  ConnectionStart,
-  ConnectionTune,
-} from "./amqp_types.ts";
+import type { ConnectionClose, ConnectionStart, ConnectionTune } from "./amqp_types.ts";
 
 import {
   CHANNEL,

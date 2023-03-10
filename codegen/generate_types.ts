@@ -1,9 +1,4 @@
-import {
-  printClassPropertyInterface,
-  printMethodArgsInterface,
-  printMethodValueInterface,
-  Spec,
-} from "./utils.ts";
+import { printClassPropertyInterface, printMethodArgsInterface, printMethodValueInterface, Spec } from "./utils.ts";
 
 const { args, readFileSync, writeFileSync } = Deno;
 const decoder = new TextDecoder("utf-8");
@@ -13,12 +8,8 @@ function generateConnection() {
   return [
     "// deno-lint-ignore-file",
     ...spec.classes.map(printClassPropertyInterface),
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))
-    ),
-    ...spec.classes.flatMap((clazz) =>
-      clazz.methods.map((m) => printMethodValueInterface(spec, clazz, m))
-    ),
+    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))),
+    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodValueInterface(spec, clazz, m))),
   ].join("\n");
 }
 

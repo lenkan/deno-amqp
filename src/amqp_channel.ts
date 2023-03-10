@@ -73,16 +73,8 @@ import {
   QUEUE_UNBIND_OK,
 } from "./amqp_constants.ts";
 import { createResolvable, ResolvablePromise } from "./resolvable.ts";
-import {
-  serializeChannelError,
-  serializeConnectionError,
-} from "./error_handling.ts";
-import {
-  AmqpMultiplexer,
-  ExtractMethod,
-  ExtractMethodArgs,
-  ExtractProps,
-} from "./amqp_multiplexer.ts";
+import { serializeChannelError, serializeConnectionError } from "./error_handling.ts";
+import { AmqpMultiplexer, ExtractMethod, ExtractMethodArgs, ExtractProps } from "./amqp_multiplexer.ts";
 
 export interface BasicDeliverHandler {
   (args: BasicDeliver, props: BasicProperties, data: Uint8Array): void;
@@ -296,9 +288,7 @@ export class AmqpChannel {
     await this.#send(BASIC, BASIC_CANCEL, { ...args, nowait: false });
     const response = await this.#receive(BASIC, BASIC_CANCEL_OK);
 
-    const index = this.#subscribers.findIndex((sub) =>
-      sub.type === "deliver" && sub.tag === args.consumerTag
-    );
+    const index = this.#subscribers.findIndex((sub) => sub.type === "deliver" && sub.tag === args.consumerTag);
     if (index !== -1) {
       this.#subscribers.splice(index, index + 1);
     }
@@ -391,9 +381,7 @@ export class AmqpChannel {
     event: "deliver" | "return",
     handler: BasicDeliverHandler | BasicReturnHandler,
   ): void {
-    const index = this.#subscribers.findIndex((sub) =>
-      sub.type === event && sub.handler === handler
-    );
+    const index = this.#subscribers.findIndex((sub) => sub.type === event && sub.handler === handler);
     if (index !== -1) {
       this.#subscribers.splice(index, index + 1);
     }

@@ -1812,22 +1812,16 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 10:
           encoder.write(
             "uint8",
-            method.args.versionMajor !== undefined
-              ? method.args.versionMajor
-              : 0,
+            method.args.versionMajor !== undefined ? method.args.versionMajor : 0,
           );
           encoder.write(
             "uint8",
-            method.args.versionMinor !== undefined
-              ? method.args.versionMinor
-              : 9,
+            method.args.versionMinor !== undefined ? method.args.versionMinor : 9,
           );
           encoder.write("table", method.args.serverProperties);
           encoder.write(
             "longstr",
-            method.args.mechanisms !== undefined
-              ? method.args.mechanisms
-              : "PLAIN",
+            method.args.mechanisms !== undefined ? method.args.mechanisms : "PLAIN",
           );
           encoder.write(
             "longstr",
@@ -1839,9 +1833,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("table", method.args.clientProperties);
           encoder.write(
             "shortstr",
-            method.args.mechanism !== undefined
-              ? method.args.mechanism
-              : "PLAIN",
+            method.args.mechanism !== undefined ? method.args.mechanism : "PLAIN",
           );
           encoder.write("longstr", method.args.response);
           encoder.write(
@@ -1891,15 +1883,11 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 40:
           encoder.write(
             "shortstr",
-            method.args.virtualHost !== undefined
-              ? method.args.virtualHost
-              : "/",
+            method.args.virtualHost !== undefined ? method.args.virtualHost : "/",
           );
           encoder.write(
             "shortstr",
-            method.args.capabilities !== undefined
-              ? method.args.capabilities
-              : "",
+            method.args.capabilities !== undefined ? method.args.capabilities : "",
           );
           encoder.write(
             "bit",
@@ -2067,9 +2055,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "bit",
-            method.args.autoDelete !== undefined
-              ? method.args.autoDelete
-              : false,
+            method.args.autoDelete !== undefined ? method.args.autoDelete : false,
           );
           encoder.write(
             "bit",
@@ -2189,9 +2175,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "bit",
-            method.args.autoDelete !== undefined
-              ? method.args.autoDelete
-              : false,
+            method.args.autoDelete !== undefined ? method.args.autoDelete : false,
           );
           encoder.write(
             "bit",
@@ -2318,15 +2302,11 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 10:
           encoder.write(
             "uint32",
-            method.args.prefetchSize !== undefined
-              ? method.args.prefetchSize
-              : 0,
+            method.args.prefetchSize !== undefined ? method.args.prefetchSize : 0,
           );
           encoder.write(
             "uint16",
-            method.args.prefetchCount !== undefined
-              ? method.args.prefetchCount
-              : 0,
+            method.args.prefetchCount !== undefined ? method.args.prefetchCount : 0,
           );
           encoder.write(
             "bit",
@@ -2348,9 +2328,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           );
           encoder.write(
             "shortstr",
-            method.args.consumerTag !== undefined
-              ? method.args.consumerTag
-              : "",
+            method.args.consumerTag !== undefined ? method.args.consumerTag : "",
           );
           encoder.write(
             "bit",
@@ -2428,9 +2406,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("uint64", method.args.deliveryTag);
           encoder.write(
             "bit",
-            method.args.redelivered !== undefined
-              ? method.args.redelivered
-              : false,
+            method.args.redelivered !== undefined ? method.args.redelivered : false,
           );
           encoder.write("shortstr", method.args.exchange);
           encoder.write("shortstr", method.args.routingKey);
@@ -2455,9 +2431,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           encoder.write("uint64", method.args.deliveryTag);
           encoder.write(
             "bit",
-            method.args.redelivered !== undefined
-              ? method.args.redelivered
-              : false,
+            method.args.redelivered !== undefined ? method.args.redelivered : false,
           );
           encoder.write("shortstr", method.args.exchange);
           encoder.write("shortstr", method.args.routingKey);
