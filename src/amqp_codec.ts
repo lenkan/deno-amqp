@@ -87,10 +87,7 @@ const methodNames: Record<number, Record<number, string>> = {
   },
 };
 
-export function getMethodName(
-  classId: number,
-  methodId: number,
-): string | undefined {
+export function getMethodName(classId: number, methodId: number): string | undefined {
   return methodNames[classId] && methodNames[classId][methodId];
 }
 
@@ -1079,6 +1076,7 @@ export type Header =
   | BasicHeader
   | TxHeader
   | ConfirmHeader;
+
 export function decodeMethod(data: Uint8Array): ReceiveMethod {
   const decoder = new enc.AmqpDecoder(data);
   const classId = decoder.read("uint16");
@@ -1223,9 +1221,7 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
             args: {},
           };
         default:
-          throw new Error(
-            "Unknown method " + methodId + " for class 'connection'",
-          );
+          throw new Error("Unknown method " + methodId + " for class 'connection'");
       }
     }
 
@@ -1286,9 +1282,7 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
             args: {},
           };
         default:
-          throw new Error(
-            "Unknown method " + methodId + " for class 'channel'",
-          );
+          throw new Error("Unknown method " + methodId + " for class 'channel'");
       }
     }
 
@@ -1408,9 +1402,7 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
             args: {},
           };
         default:
-          throw new Error(
-            "Unknown method " + methodId + " for class 'exchange'",
-          );
+          throw new Error("Unknown method " + methodId + " for class 'exchange'");
       }
     }
 
@@ -1791,9 +1783,7 @@ export function decodeMethod(data: Uint8Array): ReceiveMethod {
             args: {},
           };
         default:
-          throw new Error(
-            "Unknown method " + methodId + " for class 'confirm'",
-          );
+          throw new Error("Unknown method " + methodId + " for class 'confirm'");
       }
     }
 
@@ -1810,36 +1800,18 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 10: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "uint8",
-            method.args.versionMajor !== undefined ? method.args.versionMajor : 0,
-          );
-          encoder.write(
-            "uint8",
-            method.args.versionMinor !== undefined ? method.args.versionMinor : 9,
-          );
+          encoder.write("uint8", method.args.versionMajor !== undefined ? method.args.versionMajor : 0);
+          encoder.write("uint8", method.args.versionMinor !== undefined ? method.args.versionMinor : 9);
           encoder.write("table", method.args.serverProperties);
-          encoder.write(
-            "longstr",
-            method.args.mechanisms !== undefined ? method.args.mechanisms : "PLAIN",
-          );
-          encoder.write(
-            "longstr",
-            method.args.locales !== undefined ? method.args.locales : "en_US",
-          );
+          encoder.write("longstr", method.args.mechanisms !== undefined ? method.args.mechanisms : "PLAIN");
+          encoder.write("longstr", method.args.locales !== undefined ? method.args.locales : "en_US");
           break;
 
         case 11:
           encoder.write("table", method.args.clientProperties);
-          encoder.write(
-            "shortstr",
-            method.args.mechanism !== undefined ? method.args.mechanism : "PLAIN",
-          );
+          encoder.write("shortstr", method.args.mechanism !== undefined ? method.args.mechanism : "PLAIN");
           encoder.write("longstr", method.args.response);
-          encoder.write(
-            "shortstr",
-            method.args.locale !== undefined ? method.args.locale : "en_US",
-          );
+          encoder.write("shortstr", method.args.locale !== undefined ? method.args.locale : "en_US");
           break;
 
         case 20:
@@ -1851,63 +1823,30 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 30:
-          encoder.write(
-            "uint16",
-            method.args.channelMax !== undefined ? method.args.channelMax : 0,
-          );
-          encoder.write(
-            "uint32",
-            method.args.frameMax !== undefined ? method.args.frameMax : 0,
-          );
-          encoder.write(
-            "uint16",
-            method.args.heartbeat !== undefined ? method.args.heartbeat : 0,
-          );
+          encoder.write("uint16", method.args.channelMax !== undefined ? method.args.channelMax : 0);
+          encoder.write("uint32", method.args.frameMax !== undefined ? method.args.frameMax : 0);
+          encoder.write("uint16", method.args.heartbeat !== undefined ? method.args.heartbeat : 0);
           break;
 
         case 31:
-          encoder.write(
-            "uint16",
-            method.args.channelMax !== undefined ? method.args.channelMax : 0,
-          );
-          encoder.write(
-            "uint32",
-            method.args.frameMax !== undefined ? method.args.frameMax : 0,
-          );
-          encoder.write(
-            "uint16",
-            method.args.heartbeat !== undefined ? method.args.heartbeat : 0,
-          );
+          encoder.write("uint16", method.args.channelMax !== undefined ? method.args.channelMax : 0);
+          encoder.write("uint32", method.args.frameMax !== undefined ? method.args.frameMax : 0);
+          encoder.write("uint16", method.args.heartbeat !== undefined ? method.args.heartbeat : 0);
           break;
 
         case 40:
-          encoder.write(
-            "shortstr",
-            method.args.virtualHost !== undefined ? method.args.virtualHost : "/",
-          );
-          encoder.write(
-            "shortstr",
-            method.args.capabilities !== undefined ? method.args.capabilities : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.insist !== undefined ? method.args.insist : false,
-          );
+          encoder.write("shortstr", method.args.virtualHost !== undefined ? method.args.virtualHost : "/");
+          encoder.write("shortstr", method.args.capabilities !== undefined ? method.args.capabilities : "");
+          encoder.write("bit", method.args.insist !== undefined ? method.args.insist : false);
           break;
 
         case 41:
-          encoder.write(
-            "shortstr",
-            method.args.knownHosts !== undefined ? method.args.knownHosts : "",
-          );
+          encoder.write("shortstr", method.args.knownHosts !== undefined ? method.args.knownHosts : "");
           break;
 
         case 50:
           encoder.write("uint16", method.args.replyCode);
-          encoder.write(
-            "shortstr",
-            method.args.replyText !== undefined ? method.args.replyText : "",
-          );
+          encoder.write("shortstr", method.args.replyText !== undefined ? method.args.replyText : "");
           encoder.write("uint16", method.args.classId);
           encoder.write("uint16", method.args.methodId);
           break;
@@ -1916,10 +1855,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 60:
-          encoder.write(
-            "shortstr",
-            method.args.reason !== undefined ? method.args.reason : "",
-          );
+          encoder.write("shortstr", method.args.reason !== undefined ? method.args.reason : "");
           break;
 
         case 61:
@@ -1934,10 +1870,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId +
-              " for class 'connection'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'connection'");
       }
       break;
     }
@@ -1945,17 +1878,11 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 20: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "shortstr",
-            method.args.outOfBand !== undefined ? method.args.outOfBand : "",
-          );
+          encoder.write("shortstr", method.args.outOfBand !== undefined ? method.args.outOfBand : "");
           break;
 
         case 11:
-          encoder.write(
-            "longstr",
-            method.args.channelId !== undefined ? method.args.channelId : "",
-          );
+          encoder.write("longstr", method.args.channelId !== undefined ? method.args.channelId : "");
           break;
 
         case 20:
@@ -1968,10 +1895,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         case 40:
           encoder.write("uint16", method.args.replyCode);
-          encoder.write(
-            "shortstr",
-            method.args.replyText !== undefined ? method.args.replyText : "",
-          );
+          encoder.write("shortstr", method.args.replyText !== undefined ? method.args.replyText : "");
           encoder.write("uint16", method.args.classId);
           encoder.write("uint16", method.args.methodId);
           break;
@@ -1980,10 +1904,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId +
-              " for class 'channel'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'channel'");
       }
       break;
     }
@@ -1991,44 +1912,20 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 30: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "shortstr",
-            method.args.realm !== undefined ? method.args.realm : "/data",
-          );
-          encoder.write(
-            "bit",
-            method.args.exclusive !== undefined ? method.args.exclusive : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.passive !== undefined ? method.args.passive : true,
-          );
-          encoder.write(
-            "bit",
-            method.args.active !== undefined ? method.args.active : true,
-          );
-          encoder.write(
-            "bit",
-            method.args.write !== undefined ? method.args.write : true,
-          );
-          encoder.write(
-            "bit",
-            method.args.read !== undefined ? method.args.read : true,
-          );
+          encoder.write("shortstr", method.args.realm !== undefined ? method.args.realm : "/data");
+          encoder.write("bit", method.args.exclusive !== undefined ? method.args.exclusive : false);
+          encoder.write("bit", method.args.passive !== undefined ? method.args.passive : true);
+          encoder.write("bit", method.args.active !== undefined ? method.args.active : true);
+          encoder.write("bit", method.args.write !== undefined ? method.args.write : true);
+          encoder.write("bit", method.args.read !== undefined ? method.args.read : true);
           break;
 
         case 11:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 1,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 1);
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId +
-              " for class 'access'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'access'");
       }
       break;
     }
@@ -2036,116 +1933,56 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 40: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
           encoder.write("shortstr", method.args.exchange);
-          encoder.write(
-            "shortstr",
-            method.args.type !== undefined ? method.args.type : "direct",
-          );
-          encoder.write(
-            "bit",
-            method.args.passive !== undefined ? method.args.passive : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.durable !== undefined ? method.args.durable : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.autoDelete !== undefined ? method.args.autoDelete : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.internal !== undefined ? method.args.internal : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("shortstr", method.args.type !== undefined ? method.args.type : "direct");
+          encoder.write("bit", method.args.passive !== undefined ? method.args.passive : false);
+          encoder.write("bit", method.args.durable !== undefined ? method.args.durable : false);
+          encoder.write("bit", method.args.autoDelete !== undefined ? method.args.autoDelete : false);
+          encoder.write("bit", method.args.internal !== undefined ? method.args.internal : false);
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 11:
           break;
 
         case 20:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
           encoder.write("shortstr", method.args.exchange);
-          encoder.write(
-            "bit",
-            method.args.ifUnused !== undefined ? method.args.ifUnused : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
+          encoder.write("bit", method.args.ifUnused !== undefined ? method.args.ifUnused : false);
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
           break;
 
         case 21:
           break;
 
         case 30:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
           encoder.write("shortstr", method.args.destination);
           encoder.write("shortstr", method.args.source);
-          encoder.write(
-            "shortstr",
-            method.args.routingKey !== undefined ? method.args.routingKey : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("shortstr", method.args.routingKey !== undefined ? method.args.routingKey : "");
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 31:
           break;
 
         case 40:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
           encoder.write("shortstr", method.args.destination);
           encoder.write("shortstr", method.args.source);
-          encoder.write(
-            "shortstr",
-            method.args.routingKey !== undefined ? method.args.routingKey : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("shortstr", method.args.routingKey !== undefined ? method.args.routingKey : "");
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 51:
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId +
-              " for class 'exchange'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'exchange'");
       }
       break;
     }
@@ -2153,38 +1990,14 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 50: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.passive !== undefined ? method.args.passive : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.durable !== undefined ? method.args.durable : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.exclusive !== undefined ? method.args.exclusive : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.autoDelete !== undefined ? method.args.autoDelete : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
+          encoder.write("bit", method.args.passive !== undefined ? method.args.passive : false);
+          encoder.write("bit", method.args.durable !== undefined ? method.args.durable : false);
+          encoder.write("bit", method.args.exclusive !== undefined ? method.args.exclusive : false);
+          encoder.write("bit", method.args.autoDelete !== undefined ? method.args.autoDelete : false);
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 11:
@@ -2194,45 +2007,21 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 20:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
           encoder.write("shortstr", method.args.exchange);
-          encoder.write(
-            "shortstr",
-            method.args.routingKey !== undefined ? method.args.routingKey : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("shortstr", method.args.routingKey !== undefined ? method.args.routingKey : "");
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 21:
           break;
 
         case 30:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
           break;
 
         case 31:
@@ -2240,26 +2029,11 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 40:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.ifUnused !== undefined ? method.args.ifUnused : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.ifEmpty !== undefined ? method.args.ifEmpty : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
+          encoder.write("bit", method.args.ifUnused !== undefined ? method.args.ifUnused : false);
+          encoder.write("bit", method.args.ifEmpty !== undefined ? method.args.ifEmpty : false);
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
           break;
 
         case 41:
@@ -2267,32 +2041,18 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 50:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
           encoder.write("shortstr", method.args.exchange);
-          encoder.write(
-            "shortstr",
-            method.args.routingKey !== undefined ? method.args.routingKey : "",
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("shortstr", method.args.routingKey !== undefined ? method.args.routingKey : "");
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 51:
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId + " for class 'queue'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'queue'");
       }
       break;
     }
@@ -2300,56 +2060,23 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 60: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "uint32",
-            method.args.prefetchSize !== undefined ? method.args.prefetchSize : 0,
-          );
-          encoder.write(
-            "uint16",
-            method.args.prefetchCount !== undefined ? method.args.prefetchCount : 0,
-          );
-          encoder.write(
-            "bit",
-            method.args.global !== undefined ? method.args.global : false,
-          );
+          encoder.write("uint32", method.args.prefetchSize !== undefined ? method.args.prefetchSize : 0);
+          encoder.write("uint16", method.args.prefetchCount !== undefined ? method.args.prefetchCount : 0);
+          encoder.write("bit", method.args.global !== undefined ? method.args.global : false);
           break;
 
         case 11:
           break;
 
         case 20:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
-          encoder.write(
-            "shortstr",
-            method.args.consumerTag !== undefined ? method.args.consumerTag : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.noLocal !== undefined ? method.args.noLocal : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.noAck !== undefined ? method.args.noAck : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.exclusive !== undefined ? method.args.exclusive : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
-          encoder.write(
-            "table",
-            method.args.arguments !== undefined ? method.args.arguments : {},
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
+          encoder.write("shortstr", method.args.consumerTag !== undefined ? method.args.consumerTag : "");
+          encoder.write("bit", method.args.noLocal !== undefined ? method.args.noLocal : false);
+          encoder.write("bit", method.args.noAck !== undefined ? method.args.noAck : false);
+          encoder.write("bit", method.args.exclusive !== undefined ? method.args.exclusive : false);
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
+          encoder.write("table", method.args.arguments !== undefined ? method.args.arguments : {});
           break;
 
         case 21:
@@ -2358,10 +2085,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
 
         case 30:
           encoder.write("shortstr", method.args.consumerTag);
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
           break;
 
         case 31:
@@ -2369,34 +2093,16 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         case 40:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.exchange !== undefined ? method.args.exchange : "",
-          );
-          encoder.write(
-            "shortstr",
-            method.args.routingKey !== undefined ? method.args.routingKey : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.mandatory !== undefined ? method.args.mandatory : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.immediate !== undefined ? method.args.immediate : false,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.exchange !== undefined ? method.args.exchange : "");
+          encoder.write("shortstr", method.args.routingKey !== undefined ? method.args.routingKey : "");
+          encoder.write("bit", method.args.mandatory !== undefined ? method.args.mandatory : false);
+          encoder.write("bit", method.args.immediate !== undefined ? method.args.immediate : false);
           break;
 
         case 50:
           encoder.write("uint16", method.args.replyCode);
-          encoder.write(
-            "shortstr",
-            method.args.replyText !== undefined ? method.args.replyText : "",
-          );
+          encoder.write("shortstr", method.args.replyText !== undefined ? method.args.replyText : "");
           encoder.write("shortstr", method.args.exchange);
           encoder.write("shortstr", method.args.routingKey);
           break;
@@ -2404,102 +2110,58 @@ export function encodeMethod(method: SendMethod): Uint8Array {
         case 60:
           encoder.write("shortstr", method.args.consumerTag);
           encoder.write("uint64", method.args.deliveryTag);
-          encoder.write(
-            "bit",
-            method.args.redelivered !== undefined ? method.args.redelivered : false,
-          );
+          encoder.write("bit", method.args.redelivered !== undefined ? method.args.redelivered : false);
           encoder.write("shortstr", method.args.exchange);
           encoder.write("shortstr", method.args.routingKey);
           break;
 
         case 70:
-          encoder.write(
-            "uint16",
-            method.args.ticket !== undefined ? method.args.ticket : 0,
-          );
-          encoder.write(
-            "shortstr",
-            method.args.queue !== undefined ? method.args.queue : "",
-          );
-          encoder.write(
-            "bit",
-            method.args.noAck !== undefined ? method.args.noAck : false,
-          );
+          encoder.write("uint16", method.args.ticket !== undefined ? method.args.ticket : 0);
+          encoder.write("shortstr", method.args.queue !== undefined ? method.args.queue : "");
+          encoder.write("bit", method.args.noAck !== undefined ? method.args.noAck : false);
           break;
 
         case 71:
           encoder.write("uint64", method.args.deliveryTag);
-          encoder.write(
-            "bit",
-            method.args.redelivered !== undefined ? method.args.redelivered : false,
-          );
+          encoder.write("bit", method.args.redelivered !== undefined ? method.args.redelivered : false);
           encoder.write("shortstr", method.args.exchange);
           encoder.write("shortstr", method.args.routingKey);
           encoder.write("uint32", method.args.messageCount);
           break;
 
         case 72:
-          encoder.write(
-            "shortstr",
-            method.args.clusterId !== undefined ? method.args.clusterId : "",
-          );
+          encoder.write("shortstr", method.args.clusterId !== undefined ? method.args.clusterId : "");
           break;
 
         case 80:
-          encoder.write(
-            "uint64",
-            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
-          );
-          encoder.write(
-            "bit",
-            method.args.multiple !== undefined ? method.args.multiple : false,
-          );
+          encoder.write("uint64", method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0);
+          encoder.write("bit", method.args.multiple !== undefined ? method.args.multiple : false);
           break;
 
         case 90:
           encoder.write("uint64", method.args.deliveryTag);
-          encoder.write(
-            "bit",
-            method.args.requeue !== undefined ? method.args.requeue : true,
-          );
+          encoder.write("bit", method.args.requeue !== undefined ? method.args.requeue : true);
           break;
 
         case 100:
-          encoder.write(
-            "bit",
-            method.args.requeue !== undefined ? method.args.requeue : false,
-          );
+          encoder.write("bit", method.args.requeue !== undefined ? method.args.requeue : false);
           break;
 
         case 110:
-          encoder.write(
-            "bit",
-            method.args.requeue !== undefined ? method.args.requeue : false,
-          );
+          encoder.write("bit", method.args.requeue !== undefined ? method.args.requeue : false);
           break;
 
         case 111:
           break;
 
         case 120:
-          encoder.write(
-            "uint64",
-            method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0,
-          );
-          encoder.write(
-            "bit",
-            method.args.multiple !== undefined ? method.args.multiple : false,
-          );
-          encoder.write(
-            "bit",
-            method.args.requeue !== undefined ? method.args.requeue : true,
-          );
+          encoder.write("uint64", method.args.deliveryTag !== undefined ? method.args.deliveryTag : 0);
+          encoder.write("bit", method.args.multiple !== undefined ? method.args.multiple : false);
+          encoder.write("bit", method.args.requeue !== undefined ? method.args.requeue : true);
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId + " for class 'basic'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'basic'");
       }
       break;
     }
@@ -2525,9 +2187,7 @@ export function encodeMethod(method: SendMethod): Uint8Array {
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId + " for class 'tx'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'tx'");
       }
       break;
     }
@@ -2535,20 +2195,14 @@ export function encodeMethod(method: SendMethod): Uint8Array {
     case 85: {
       switch (method.methodId) {
         case 10:
-          encoder.write(
-            "bit",
-            method.args.nowait !== undefined ? method.args.nowait : false,
-          );
+          encoder.write("bit", method.args.nowait !== undefined ? method.args.nowait : false);
           break;
 
         case 11:
           break;
 
         default:
-          throw new Error(
-            "Unknown method " + (method as any).methodId +
-              " for class 'confirm'",
-          );
+          throw new Error("Unknown method " + (method as any).methodId + " for class 'confirm'");
       }
       break;
     }

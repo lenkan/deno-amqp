@@ -1,31 +1,27 @@
-import { constantName, Spec } from "./utils.ts";
+import { constantName } from "./utils.ts";
+import spec, { ConstantDefinition, Spec } from "./amqp_spec.ts";
 
-const { args, readFileSync, writeFileSync } = Deno;
-const decoder = new TextDecoder("utf-8");
-const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
+function formatExport(name: string, value: number) {
+  return `export const ${name} = ${JSON.stringify(value)} as const;`;
+}
 
-function generateConnection() {
-  return [
-    ...spec.constants.map((c) => {
-      const name = c.class ? constantName(c.class + "-" + c.name) : constantName(c.name);
-      return `export const ${name} = ${JSON.stringify(c.value)} as const`;
-    }),
-    ...spec.classes.flatMap((c) => {
-      return [
-        `export const ${constantName(c.name)} = ${c.id} as const`,
-        ...c.methods.map((m) =>
-          `export const ${
-            constantName(
-              c.name + "_" + m.name,
-            )
-          } = ${m.id} as const`
-        ),
-      ];
-    }),
-  ].join("\n");
+function formatConstant(constant: ConstantDefinition) {
+  const name = constant.class ? constantName(constant.class, constant.name) : constantName(constant.name);
+  return formatExport(name, constant.value);
 }
 
 const encoder = new TextEncoder();
-const result = encoder.encode(generateConnection());
 
-writeFileSync(`./src/amqp_constants.ts`, result);
+const template = (spec: Spec) => `
+${spec.constants.map(formatConstant).join("\n")}
+${
+  spec.classes.flatMap((c) => {
+    return [
+      formatExport(constantName(c.name), c.id),
+      ...c.methods.map((m) => formatExport(constantName(c.name, m.name), m.id)),
+    ];
+  }).join("\n")
+}
+`;
+
+await Deno.stdout.write(encoder.encode(template(spec)));

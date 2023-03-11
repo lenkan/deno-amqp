@@ -4,5 +4,13 @@
       "lineWidth": 120,
       "indentWidth": 2
     }
+  },
+  "tasks": {
+    "test": "deno test src",
+    "test:mod": "deno test -A module_test/",
+    "codegen": "deno task codegen:codec && deno task codegen:types && deno task codegen:constants",
+    "codegen:codec": "deno run codegen/generate_codec.ts | deno fmt - > src/amqp_codec.ts",
+    "codegen:types": "deno run codegen/generate_types.ts | deno fmt - > src/amqp_types.ts",
+    "codegen:constants": "deno run codegen/generate_constants.ts | deno fmt - > src/amqp_constants.ts"
   }
 }

@@ -1,19 +1,14 @@
-import { printClassPropertyInterface, printMethodArgsInterface, printMethodValueInterface, Spec } from "./utils.ts";
+import { printClassPropertyInterface, printMethodArgsInterface, printMethodValueInterface } from "./utils.ts";
+import spec, { Spec } from "./amqp_spec.ts";
 
-const { args, readFileSync, writeFileSync } = Deno;
-const decoder = new TextDecoder("utf-8");
-const spec = JSON.parse(decoder.decode(readFileSync(args[0]))) as Spec;
-
-function generateConnection() {
-  return [
-    "// deno-lint-ignore-file",
-    ...spec.classes.map(printClassPropertyInterface),
-    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))),
-    ...spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodValueInterface(spec, clazz, m))),
-  ].join("\n");
-}
+const template = (spec: Spec) => `
+// deno-lint-ignore-file
+${spec.classes.map(printClassPropertyInterface).join("\n")}
+${spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodArgsInterface(spec, clazz, m))).join("\n")}
+${spec.classes.flatMap((clazz) => clazz.methods.map((m) => printMethodValueInterface(spec, clazz, m))).join("\n")}
+`;
 
 const encoder = new TextEncoder();
-const result = encoder.encode(generateConnection());
+const result = encoder.encode(template(spec));
 
-writeFileSync(`./src/amqp_types.ts`, result);
+await Deno.stdout.write(result);

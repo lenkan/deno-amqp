@@ -1,37 +1,4 @@
-export interface Spec {
-  classes: ClassDefinition[];
-  domains: [string, string];
-  constants: { name: string; value: number; class: string }[];
-}
-
-export interface ClassDefinition {
-  id: number;
-  methods: MethodDefinition[];
-  name: string;
-  properties?: PropertyDefinition[];
-}
-
-export interface MethodDefinition {
-  id: number;
-  arguments: ArgumentDefinition[];
-  synchronous: boolean;
-  response?: string;
-  name: string;
-  content: boolean;
-}
-
-export interface PropertyDefinition {
-  type: string;
-  name: string;
-}
-
-export interface ArgumentDefinition {
-  type?: string;
-  domain?: string;
-  name: string;
-  // deno-lint-ignore ban-types
-  ["default-value"]: string | number | boolean | object;
-}
+import { ArgumentDefinition, ClassDefinition, MethodDefinition, Spec } from "./amqp_spec.ts";
 
 export function resolveType(spec: Spec, arg: ArgumentDefinition) {
   if (arg.type !== undefined) {
@@ -50,13 +17,13 @@ export function capitalize(word: string) {
   return first + rest;
 }
 
-export function camelCase(name: string) {
-  const [first, ...rest] = name.split(/[-\.]/g);
+export function camelCase(...names: string[]) {
+  const [first, ...rest] = names.join("-").split(/[-\.]/g);
   return first + rest.map(capitalize).join("");
 }
 
-export function pascalCase(name: string) {
-  return name
+export function pascalCase(...names: string[]) {
+  return names.join("-")
     .split(/[-\.]/g)
     .map(capitalize)
     .join("");
@@ -106,8 +73,8 @@ export function resolveEncoderType(type: string) {
   }
 }
 
-export function constantName(name: string) {
-  return name.replace(/-/g, "_").toUpperCase();
+export function constantName(...names: string[]) {
+  return names.join("-").replace(/-/g, "_").toUpperCase();
 }
 
 export function printClassPropertyInterface(clazz: ClassDefinition) {
