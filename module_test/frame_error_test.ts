@@ -1,5 +1,4 @@
 import { connect } from "../src/amqp_connect.ts";
-import { crypto } from "../deps_dev.ts";
 
 Deno.test(
   "should not crash when sending large content frames concurrently",
