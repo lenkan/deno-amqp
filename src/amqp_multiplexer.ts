@@ -250,7 +250,6 @@ function createSocketMux(writer: AmqpSocketWriter): AmqpSink {
     channel: number,
     classId: number,
     methodId: number,
-    // deno-lint-ignore ban-types
     args: object,
   ) {
     return writer.write(

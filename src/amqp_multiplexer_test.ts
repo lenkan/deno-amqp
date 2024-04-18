@@ -22,13 +22,13 @@ function createSocket() {
   };
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function flush() {
+  return Promise.resolve();
 }
 
 function createMockReader(frames: IncomingFrame[]) {
   return async function mockRead() {
-    await sleep(0);
+    await flush();
     const frame = frames.shift();
     if (!frame) {
       throw new Error(`EOF`);
@@ -367,8 +367,8 @@ test("receive - stops reading on error", async () => {
   });
 
   createAmqpMux(conn);
-  await sleep(0);
-  await sleep(0);
+  await flush();
+  await flush();
   assertEquals(conn.read.mock.calls.length, 1);
 });
 
@@ -380,10 +380,10 @@ test("receive - reads until error", async () => {
   ]));
 
   createAmqpMux(conn);
-  await sleep(0);
-  await sleep(0);
-  await sleep(0);
-  await sleep(0);
+  await flush();
+  await flush();
+  await flush();
+  await flush();
   assertEquals(conn.read.mock.calls.length, 3);
 });
 

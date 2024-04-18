@@ -1,4 +1,4 @@
-import spec from "./amqp-rabbitmq-0.9.1.json" assert { type: "json" };
+import spec from "./amqp-rabbitmq-0.9.1.json" with { type: "json" };
 
 export interface Spec {
   classes: ClassDefinition[];

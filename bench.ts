@@ -6,25 +6,23 @@ function isBench(file: Deno.DirEntry) {
 
 async function runBench(name: string) {
   const path = await Deno.realPath("./benchmark/" + name);
-
   const now = Date.now();
-  const process = Deno.run(
-    {
-      cmd: [
-        "deno",
-        "run",
-        "--allow-net",
-        "--allow-write",
-        "--allow-read",
-        path,
-      ],
-    },
-  );
 
-  const status = await process.status();
+  const command = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      "--allow-net",
+      "--allow-write",
+      "--allow-read",
+      path,
+    ],
+  });
+
+  const { code, stderr } = command.outputSync();
   const time = Date.now() - now;
-  if (!status.success) {
-    throw new Error(`Failed ${path} - ${status}`);
+
+  if (code !== 0) {
+    throw new Error(`Failed ${path} - ${stderr}`);
   }
 
   return time;
