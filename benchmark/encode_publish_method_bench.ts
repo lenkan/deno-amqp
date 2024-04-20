@@ -1,6 +1,7 @@
 import { encodeHeader, encodeMethod } from "../src/amqp_codec.ts";
 import { BASIC_PUBLISH } from "../src/amqp_constants.ts";
 import { BASIC } from "../src/amqp_constants.ts";
+import { DeliveryMode } from "../src/amqp_types.ts";
 import { benchmark } from "./benchmark.ts";
 
 function randomString() {
@@ -37,7 +38,7 @@ await benchmark("encode_basic_properties", () => {
         contentEncoding: "gzip",
         contentType: "application/json",
         correlationId: randomStrings[i],
-        deliveryMode: 1,
+        deliveryMode: DeliveryMode.TRANSIENT,
         expiration: "123",
         headers: {
           "foo": "bar",

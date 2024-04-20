@@ -15,11 +15,16 @@ export interface ExchangeProperties {
 export interface QueueProperties {
 }
 
+export enum DeliveryMode {
+    TRANSIENT  = 1,
+    PERSISTENT = 2,
+}
+
 export interface BasicProperties {
   contentType?: string;
   contentEncoding?: string;
   headers?: Record<string, unknown>;
-  deliveryMode?: number;
+  deliveryMode?: DeliveryMode;
   priority?: number;
   correlationId?: string;
   replyTo?: string;
