@@ -3,6 +3,19 @@
 ![CI](https://github.com/lenkan/deno-amqp/workflows/CI/badge.svg)
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/amqp/mod.ts)
 
+> **This library is deprecated and no longer maintained.**
+>
+> Deno runs Node packages now, so a Deno-specific AMQP client is no longer needed. Use one of these instead:
+>
+> - [`amqplib`](https://github.com/amqp-node/amqplib) — `import amqp from "npm:amqplib"`
+> - [`@cloudamqp/amqp-client`](https://github.com/cloudamqp/amqp-client.js) —
+>   `import { AMQPClient } from "npm:@cloudamqp/amqp-client"`, if you want a TypeScript-native API
+>
+> Both connect to RabbitMQ over `amqp://` and `amqps://`.
+>
+> Existing `https://deno.land/x/amqp` imports will keep working — those URLs are immutable. But this library does not
+> type check on Deno 2, since it depends on the removed `Deno.Reader`, `Deno.Writer` and `Deno.Closer` types.
+
 AMQP 0.9.1 implementation for https://deno.land/. The library is implemented to connect to a RabbitMQ broker. For
 testing purposes, an instance can be started using docker:
 
