@@ -1,24 +1,25 @@
 import { FrameError } from "./frame_error.ts";
 import { decodeHeader, decodeMethod } from "./amqp_codec.ts";
 import type { IncomingFrame } from "./amqp_frame.ts";
-import { BufReader } from "../deps.ts";
+import type { Reader } from "jsr:@std/io/types";
 
 export class AmqpFrameReader {
   #timer: null | number = null;
-  #reader: BufReader;
+  #reader: Reader;
 
-  constructor(r: Deno.Reader) {
-    this.#reader = BufReader.create(r);
+  constructor(r: Reader) {
+    this.#reader = r;
   }
 
   #readBytes = async (length: number): Promise<Uint8Array> => {
-    const n = await this.#reader.readFull(new Uint8Array(length));
+    const buf = new Uint8Array(length);
+    const n = await this.#reader.read(buf);
 
     if (n === null) {
       throw new FrameError("EOF");
     }
 
-    return n;
+    return buf;
   };
 
   #readFrame = async (): Promise<IncomingFrame> => {
@@ -80,9 +81,7 @@ export class AmqpFrameReader {
     }
   }
 
-  read(
-    timeout: number,
-  ): Promise<IncomingFrame> {
+  read(timeout: number): Promise<IncomingFrame> {
     this.abort();
 
     if (timeout <= 0) {

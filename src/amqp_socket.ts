@@ -2,7 +2,7 @@ import { encodeHeader, encodeMethod } from "./amqp_codec.ts";
 import { AmqpFrameReader } from "./amqp_frame_reader.ts";
 import type { IncomingFrame, OutgoingFrame } from "./amqp_frame.ts";
 import { writeAll } from "../deps.ts";
-
+import type { Closer, Reader, Writer } from "jsr:@std/io/types";
 export interface AmqpSocketWriter {
   write(frames: Array<OutgoingFrame>): Promise<void>;
 }
@@ -49,16 +49,7 @@ function encodeFrame(frame: OutgoingFrame): Uint8Array {
   return data;
 }
 
-const HEARTBEAT_FRAME = new Uint8Array([
-  8,
-  0,
-  0,
-  0,
-  0,
-  0,
-  0,
-  206,
-]);
+const HEARTBEAT_FRAME = new Uint8Array([8, 0, 0, 0, 0, 0, 0, 206]);
 
 function splitArray(arr: Uint8Array, size: number): Uint8Array[] {
   const chunks: Uint8Array[] = [];
@@ -79,7 +70,7 @@ interface AmqpSocketOptions {
 }
 
 export class AmqpSocket implements AmqpSocketWriter, AmqpSocketReader, AmqpSocketCloser {
-  #conn: Deno.Reader & Deno.Writer & Deno.Closer;
+  #conn: Reader & Writer & Closer;
   #reader: AmqpFrameReader;
   #sendTimer: number | null = null;
   #sendTimeout = 0;
@@ -87,7 +78,7 @@ export class AmqpSocket implements AmqpSocketWriter, AmqpSocketReader, AmqpSocke
   #frameMax = -1;
   #guard: Promise<void>;
 
-  constructor(conn: Deno.Reader & Deno.Writer & Deno.Closer) {
+  constructor(conn: Reader & Writer & Closer) {
     this.#conn = conn;
     this.#reader = new AmqpFrameReader(conn);
     this.#guard = Promise.resolve();
@@ -125,10 +116,7 @@ export class AmqpSocket implements AmqpSocketWriter, AmqpSocketReader, AmqpSocke
     for (const frame of frames) {
       if (frame.type === "content") {
         const chunks = this.#frameMax > 8 && frame.payload.length > this.#frameMax - 8
-          ? splitArray(
-            frame.payload,
-            this.#frameMax - 8,
-          ).map((chunk) =>
+          ? splitArray(frame.payload, this.#frameMax - 8).map((chunk) =>
             encodeFrame({
               type: "content",
               channel: frame.channel,

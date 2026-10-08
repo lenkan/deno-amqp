@@ -1,3 +1,5 @@
+import type { Reader, ReaderSync } from "@std/io/types";
+
 export function splitArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
   let index = 0;
@@ -22,7 +24,7 @@ export function assertLength(arr: Uint8Array, length: number) {
 }
 
 export async function readBytes(
-  r: Deno.Reader,
+  r: Reader,
   length: number,
 ): Promise<Uint8Array | null> {
   const data = new Uint8Array(length);
@@ -39,7 +41,7 @@ export async function readBytes(
   return data;
 }
 
-export function readBytesSync(r: Deno.ReaderSync, length: number): Uint8Array {
+export function readBytesSync(r: ReaderSync, length: number): Uint8Array {
   const data = new Uint8Array(length);
   const result = r.readSync(data);
 

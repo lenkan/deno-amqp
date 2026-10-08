@@ -3,13 +3,14 @@ import { arrayOf, assertEquals, assertRejects, test } from "./testing.ts";
 import { mock } from "./mock.ts";
 import { FrameError } from "./frame_error.ts";
 import { createResolvable } from "./resolvable.ts";
+import type { Closer, Reader, Writer } from "jsr:@std/io/types";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function createConn() {
-  return mock.obj<Deno.Reader & Deno.Writer & Deno.Closer>({
+  return mock.obj<Reader & Writer & Closer>({
     read: mock.fn(),
     write: mock.fn(async () => {}),
     close: mock.fn(() => {}),

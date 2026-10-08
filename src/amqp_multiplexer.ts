@@ -109,7 +109,7 @@ function createSocketDemux(
         emit(frame);
       }
     } catch (error) {
-      handleError(error);
+      handleError(error as Error);
     }
   }
 
@@ -134,7 +134,7 @@ function createSocketDemux(
           removeSubscriber(subscriber);
         }
       } catch (error) {
-        subscriber.error(error);
+        subscriber.error(error as Error);
         removeSubscriber(subscriber);
       }
     }

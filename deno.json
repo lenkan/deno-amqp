@@ -1,9 +1,7 @@
 {
   "fmt": {
-    "options": {
-      "lineWidth": 120,
-      "indentWidth": 2
-    }
+    "lineWidth": 120,
+    "indentWidth": 2
   },
   "tasks": {
     "test": "deno test src",
@@ -12,5 +10,9 @@
     "codegen:codec": "deno run codegen/generate_codec.ts | deno fmt - > src/amqp_codec.ts",
     "codegen:types": "deno run codegen/generate_types.ts | deno fmt - > src/amqp_types.ts",
     "codegen:constants": "deno run codegen/generate_constants.ts | deno fmt - > src/amqp_constants.ts"
+  },
+  "imports": {
+    "@std/io": "jsr:@std/io@^0.225.0",
+    "@std/streams": "jsr:@std/streams@^1.0.7"
   }
 }
